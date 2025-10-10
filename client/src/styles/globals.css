@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Full-site gradient background */
+body {
+  @apply bg-gradient-to-br from-slate-50 via-blue-50 to-orange-50 min-h-screen;
+}
