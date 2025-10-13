@@ -231,11 +231,11 @@ export const ProductList = () => {
                           {product.badge}
                         </span>
                       )}
-                      {product.weight && (
+                      {/* {product.weight && (
                         <span className="px-2 py-1 text-xs font-semibold rounded bg-gray-800 text-white">
                           {product.weight}
                         </span>
-                      )}
+                      )} */}
                     </div>
                   )}
 

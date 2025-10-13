@@ -6,6 +6,7 @@ import Link from "next/link";
 import Header from "@/components/header";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
+import DeleteOutline from '@mui/icons-material/DeleteOutline';
 import Footer from "@/components/footer";
 
 const Cart = () => {
@@ -111,10 +112,13 @@ const Cart = () => {
                         Subtotal: ₹{item.price * item.quantity}
                       </p>
                       <button
-                        onClick={() => handleRemoveFromCart(item.id)}
-                        className="md:mt-0 text-sm md:text-base text-red-500 hover:text-red-700 transition-colors order-2 md:order-none md:ml-4"
+                          onClick={() => handleRemoveFromCart(item.id)}
+                          // Keep the same styling classes
+                          className="md:mt-0 text-sm md:text-base text-red-500 hover:text-red-700 transition-colors order-2 md:order-none md:ml-4 flex items-center justify-center"
+                          aria-label={`Remove ${item.name} from cart`} // Added ARIA label for accessibility
                       >
-                        Remove
+                          {/* Replaced 'Remove' text with the DeleteOutline icon */}
+                          <DeleteOutline fontSize="small" className="m-2 w-6 h-6" />
                       </button>
                     </div>
                   </div>
