@@ -52,7 +52,7 @@ exports.register = async (req, res) => {
     temporaryPasswords[email] = randomPassword;
 
     // Prepare the email content
-    const message = `Dear ${fullName},\n\nHere is your temporary password: ${randomPassword}\nfor this ${email}\nPlease use this password to complete your registration.\n\nRegards,\nKwality Ecom Team`;
+    const message = `Dear ${fullName},\n\nHere is your temporary password: ${randomPassword}\nfor this ${email}\nPlease use this password to complete your registration.\n\nRegards,\nMakeMee Cosmatics Team`;
 
     // Send password via email
     await sendEmail({

@@ -25,6 +25,7 @@ const OrderInvoice = () => {
   useEffect(() => {
     const fetchOrderDetails = async () => {
       setLoading(true);
+      // console.log("Fetching order with ID:", id);
       try {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/${id}`,

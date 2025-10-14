@@ -88,7 +88,7 @@ export default function OrdersPage() {
           },
         }
       );
-      // console.log("response",response.data);
+      console.log("response",response.data);
       setSelectedOrder(response.data);
       setOpen(true);
 
