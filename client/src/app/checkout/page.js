@@ -5,13 +5,20 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { clearCart } from "@/store/slices/cartSlice";
-import { TextField, Button, CircularProgress, Box, Typography } from "@mui/material";
+import {
+  TextField,
+  Button,
+  CircularProgress,
+  Box,
+  Typography,
+} from "@mui/material";
 import Link from "next/link";
 import Swal from "sweetalert2";
 import GoogleApiAutocomplete from "@/components/GoogleApiAutocomplete";
 import Footer from "@/components/footer";
 import UspsSection from "@/components/whychooseus";
 import BoltIcon from "@mui/icons-material/Bolt";
+import Script from "next/script";
 
 const Checkout = () => {
   const router = useRouter();
@@ -34,7 +41,7 @@ const Checkout = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [errors, setErrors] = useState({ email: '', phone: '' });
+  const [errors, setErrors] = useState({ email: "", phone: "" });
   const [apartment_address, setApartment_address] = useState("");
   const [addressComponents, setAddressComponents] = useState({});
   const [shippingAddress, setShippingAddress] = useState({
@@ -58,7 +65,6 @@ const Checkout = () => {
     return phoneRegex.test(phone);
   };
 
-
   const [paymentMethod, setPaymentMethod] = useState("cashOnDelivery"); // Default payment method
 
   const handleAddressSelect = (selectedAddressComponents) => {
@@ -73,7 +79,7 @@ const Checkout = () => {
       country: selectedAddressComponents.country || "",
       lat: selectedAddressComponents.latitude || "",
       lng: selectedAddressComponents.longitude || "",
-      apartment_address, 
+      apartment_address,
     });
   };
 
@@ -88,7 +94,7 @@ const Checkout = () => {
 
   const handleApartmentAddressChange = (e) => {
     const { value } = e.target;
-    setApartment_address(value); 
+    setApartment_address(value);
     setShippingAddress((prevAddress) => ({
       ...prevAddress,
       apartment_address: value,
@@ -96,17 +102,17 @@ const Checkout = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();    
+    e.preventDefault();
 
     // Reset errors
-    const newErrors = { email: '', phone: '' };
+    const newErrors = { email: "", phone: "" };
 
     if (!validateEmail(email)) {
-      newErrors.email = 'Please enter a valid email address.';
+      newErrors.email = "Please enter a valid email address.";
     }
 
     if (!validatePhone(phone)) {
-      newErrors.phone = 'Phone number must be a 10-digit number.';
+      newErrors.phone = "Phone number must be a 10-digit number.";
     }
 
     setErrors(newErrors);
@@ -140,7 +146,7 @@ const Checkout = () => {
 
       const customerId = customerResponse.data.customer._id;
       // console.log("customerResponse.data.customer", customerResponse.data);
-      
+
       // Step 2: Create Order
       const orderData = {
         customer: customerId,
@@ -149,7 +155,7 @@ const Checkout = () => {
           name: item.name,
           price: item.price,
           quantity: item.quantity,
-          productModel: 'Product', 
+          productModel: "Product",
         })),
         totalQuantity,
         totalAmount: totalAmount,
@@ -175,6 +181,82 @@ const Checkout = () => {
       }
 
       console.log("orderResponse", orderResponse.data);
+
+            // 3. If Online Payment, trigger Razorpay Checkout
+      if (paymentMethod === "onlinePayment") {
+        // Call backend to create Razorpay order
+        const razorpayOrderRes = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/payment/razorpay/order`,
+          {
+            amount: totalAmount * 100, // Razorpay expects amount in paise
+            currency: "INR",
+            receipt: orderResponse.data._id,
+            customer: {
+              name: fullName,
+              email,
+              contact: phone,
+            },
+          }
+        );
+
+        const { orderId, key } = razorpayOrderRes.data;
+
+        console.log("Razorpay order created:", orderId, key);
+
+        const options = {
+          key,
+          amount: totalAmount * 100,
+          currency: "INR",
+          name: "PhantomTech",
+          description: "Order Payment",
+          order_id: orderId,
+          handler: async function (response) {
+            // Verify payment on backend
+            try {
+              const verifyRes = await axios.post(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/payment/razorpay/verify`,
+                {
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  orderId: orderResponse.data._id,
+                }
+              );
+              if (verifyRes.data.success) {
+                await Swal.fire({
+                  title: "Payment Successful!",
+                  text: "Your order has been placed successfully!",
+                  icon: "success",
+                });
+                // dispatch(clearCart());
+                router.push(`/payment/order-success?order_id=${orderResponse.data._id}`)
+              } else {
+                throw new Error("Payment verification failed");
+              }
+            } catch (err) {
+              await Swal.fire({
+                title: "Payment Failed",
+                text: "Payment verification failed. Please contact support.",
+                icon: "error",
+              });
+            }
+          },
+          prefill: {
+            name: fullName,
+            email,
+            contact: phone,
+          },
+          theme: {
+            color: "#3399cc",
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+        setLoading(false);
+        return; // Don't show success alert here, wait for payment handler
+      }
+
 
       // // Step 3: Call Porter API to create order
       // const porterOrderData = {
@@ -245,6 +327,10 @@ const Checkout = () => {
 
   return (
     <>
+    <Script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        strategy="afterInteractive"
+      />
       <div className="container mx-auto px-6 py-10">
         <h1 className="text-4xl font-bold mb-6 text-center">Checkout</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -277,7 +363,7 @@ const Checkout = () => {
                   fullWidth
                   sx={{ mb: 2 }}
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}                  
+                  onChange={(e) => setEmail(e.target.value)}
                   error={!!errors.email}
                   helperText={errors.email}
                   required
@@ -289,7 +375,7 @@ const Checkout = () => {
                   fullWidth
                   sx={{ mb: 2 }}
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}                  
+                  onChange={(e) => setPhone(e.target.value)}
                   error={!!errors.phone}
                   helperText={errors.phone}
                   required
@@ -360,27 +446,27 @@ const Checkout = () => {
                     />
                     <label htmlFor="cashOnDelivery" className="ml-2 flex">
                       <img
-                        src="/rupee.png" 
+                        src="/rupee.png"
                         alt="Cash on Delivery Icon"
-                        className="mr-2" 
-                        style={{ width: "20px", height: "20px" }} 
+                        className="mr-2"
+                        style={{ width: "20px", height: "20px" }}
                       />
                       Cash on Delivery
                     </label>
                   </div>
-                  {/* <div className="flex items-center" sx={{ mb: 1 }}>
-                  <input
-                    type="radio"
-                    id="onlinePayment"
-                    name="paymentMethod"
-                    value="onlinePayment"
-                    checked={paymentMethod === "onlinePayment"}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                  />
-                  <label htmlFor="onlinePayment" className="ml-2">
-                    Online Payment
-                  </label>
-                </div> */}
+                  <div className="flex items-center" sx={{ mb: 1 }}>
+                    <input
+                      type="radio"
+                      id="onlinePayment"
+                      name="paymentMethod"
+                      value="onlinePayment"
+                      checked={paymentMethod === "onlinePayment"}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                    />
+                    <label htmlFor="onlinePayment" className="ml-2">
+                      Online Payment
+                    </label>
+                  </div>
                 </fieldset>
 
                 <Button
@@ -388,9 +474,9 @@ const Checkout = () => {
                   variant="contained"
                   fullWidth
                   sx={{
-                    backgroundColor: 'green',
-                    '&:hover': {
-                      backgroundColor: 'darkgreen',
+                    backgroundColor: "green",
+                    "&:hover": {
+                      backgroundColor: "darkgreen",
                     },
                   }}
                   className={loading ? "opacity-50 cursor-not-allowed" : ""}
@@ -403,65 +489,73 @@ const Checkout = () => {
           </div>
 
           {/* Right Column - Order Summary */}
-          <div className="p-4 sm:p-6 lg:p-8 bg-white rounded-lg shadow-lg transition-shadow duration-300 hover:shadow-xl" style={{position:"sticky",top:"20px"}}>
-  <h2 className="text-2xl font-semibold mb-4">Order Summary</h2>
+          <div
+            className="p-4 sm:p-6 lg:p-8 bg-white rounded-lg shadow-lg transition-shadow duration-300 hover:shadow-xl"
+            style={{ position: "sticky", top: "20px" }}
+          >
+            <h2 className="text-2xl font-semibold mb-4">Order Summary</h2>
 
-  {/* Cart Items */}
-  {cartItems.length > 0 ? (
-    <>
-      {cartItems.map((item) => (
-        <div
-          key={item.id}
-          className="flex flex-col sm:flex-row justify-between items-center mb-4"
-        >
-          <div className="flex items-center mb-4 sm:mb-0">
-            <img
-              src={`${item.image}`}
-              alt={item.name}
-              className="w-16 h-16 object-cover rounded-lg mr-4"
-            />
-            <div>
-              <h3 className="text-lg font-medium">{item.name}</h3>
-              <p className="text-sm text-gray-500">{item.weight}</p>
-              <p className="text-gray-600">
-                {item.quantity} x ₹{item.price.toFixed(2)}
-              </p>
-            </div>
+            {/* Cart Items */}
+            {cartItems.length > 0 ? (
+              <>
+                {cartItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col sm:flex-row justify-between items-center mb-4"
+                  >
+                    <div className="flex items-center mb-4 sm:mb-0">
+                      <img
+                        src={`${item.image}`}
+                        alt={item.name}
+                        className="w-16 h-16 object-cover rounded-lg mr-4"
+                      />
+                      <div>
+                        <h3 className="text-lg font-medium">{item.name}</h3>
+                        <p className="text-sm text-gray-500">{item.weight}</p>
+                        <p className="text-gray-600">
+                          {item.quantity} x ₹{item.price.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="font-semibold">
+                      ₹{(item.price * item.quantity).toFixed(2)}
+                    </p>
+                  </div>
+                ))}
+
+                {/* Button to Modify Cart */}
+                <Box className="flex flex-col sm:flex-row justify-between items-center sm:items-start mb-4">
+                  <Link href="/cart" passHref>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      className="w-full sm:w-auto mt-4 sm:mt-0"
+                    >
+                      Modify Cart
+                    </Button>
+                  </Link>
+                </Box>
+
+                {/* Total Price */}
+                <div className="border-t mt-4 pt-4">
+                  <div className="flex flex-col sm:flex-row justify-between mb-2">
+                    <p>Total Items: {totalQuantity}</p>
+                    <p>Subtotal: ₹{totalAmount.toFixed(2)}</p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row justify-between mb-2">
+                    <p>Delivery Charges:</p>
+                    <p>₹ 0.00</p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row justify-between font-bold">
+                    <p>Total Amount:</p>
+                    <p>₹{totalAmount.toFixed(2)}</p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p>No items in the cart.</p>
+            )}
           </div>
-          <p className="font-semibold">₹{(item.price * item.quantity).toFixed(2)}</p>
-        </div>
-      ))}
-
-      {/* Button to Modify Cart */}
-      <Box className="flex flex-col sm:flex-row justify-between items-center sm:items-start mb-4">
-        <Link href="/cart" passHref>
-          <Button variant="outlined" color="secondary" className="w-full sm:w-auto mt-4 sm:mt-0">
-            Modify Cart
-          </Button>
-        </Link>
-      </Box>
-
-      {/* Total Price */}
-      <div className="border-t mt-4 pt-4">
-        <div className="flex flex-col sm:flex-row justify-between mb-2">
-          <p>Total Items: {totalQuantity}</p>
-          <p>Subtotal: ₹{totalAmount.toFixed(2)}</p>
-        </div>
-        <div className="flex flex-col sm:flex-row justify-between mb-2">
-          <p>Delivery Charges:</p>
-          <p>₹ 0.00</p>
-        </div>
-        <div className="flex flex-col sm:flex-row justify-between font-bold">
-          <p>Total Amount:</p>
-          <p>₹{totalAmount.toFixed(2)}</p>
-        </div>
-      </div>
-    </>
-  ) : (
-    <p>No items in the cart.</p>
-  )}
-          </div>
-
         </div>
       </div>
       <UspsSection />
