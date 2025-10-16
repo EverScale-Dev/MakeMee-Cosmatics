@@ -90,7 +90,7 @@
 //       await sendEmail({
 //         email: existingCustomer.email,
 //         subject: "Order Confirmation & Invoice",
-//         message: `Dear ${existingCustomer.fullName},\n\nThank you for your order! Please find your invoice attached.\n\nRegards,\nKwality Ecom Team`,
+//         message: `Dear ${existingCustomer.fullName},\n\nThank you for your order! Please find your invoice attached.\n\nRegards,\nMakeMee Cosmatics Team`,
 //         attachments: [
 //           {
 //             filename: `Invoice_${order._id}.pdf`,
@@ -130,7 +130,7 @@
 //       \n\nProducts:\n${productsList}
 //       \n\nNote:\n${order.note}
 //       \n\nThank you,
-//       \nKwality Ecom Team `,
+//       \nMakeMee Cosmatics Team`,
 //       });
 //     } catch (error) {
 //       console.error("Error sending email to admin:", error.message);
@@ -366,7 +366,7 @@ exports.createOrder = async (req, res) => {
       await sendEmail({
         email: existingCustomer.email,
         subject: "Order Confirmation & Invoice",
-        message: `Dear ${existingCustomer.fullName},\n\nThank you for your order! Please find your invoice attached.\n\nRegards,\nKwality Ecom Team`,
+        message: `Dear ${existingCustomer.fullName},\n\nThank you for your order! Please find your invoice attached.\n\nRegards,\nMakeMee Cosmatics Team`,
         attachments: [
           {
             filename: `Invoice_${order._id}.pdf`,

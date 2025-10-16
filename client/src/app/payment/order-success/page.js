@@ -15,7 +15,7 @@ function OrderSuccessInner() {
       if (!order_id) return;
 
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/payment/order-status/${order_id}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/payment/order-status/${order_id}`);
         const data = await res.json();
         setOrderStatus(data);
       } catch (error) {
@@ -44,7 +44,6 @@ function OrderSuccessInner() {
   const { orderId, totalAmount, products, paymentMethod, createdAt, status } = orderStatus;
 
   const singleProducts = products.filter(p => p.productModel === "Product");
-  const customPCProducts = products.filter(p => p.productModel === "custom-pc");
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-md my-10">
@@ -64,22 +63,6 @@ function OrderSuccessInner() {
           <div className="space-y-4">
             {singleProducts.map(item => (
               <div key={item._id} className="border rounded p-4 shadow-sm">
-                <p className="font-semibold">{item.name}</p>
-                <p>Qty: {item.quantity}</p>
-                <p>Price: ₹{item.price}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Custom PC Products Section */}
-      {customPCProducts.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-700 mb-2">💻 Custom PC Components</h2>
-          <div className="space-y-4">
-            {customPCProducts.map(item => (
-              <div key={item._id} className="border rounded p-4 shadow-sm bg-gray-50">
                 <p className="font-semibold">{item.name}</p>
                 <p>Qty: {item.quantity}</p>
                 <p>Price: ₹{item.price}</p>

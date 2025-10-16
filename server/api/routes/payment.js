@@ -23,10 +23,9 @@ router.post("/razorpay/order", async (req, res) => {
       payment_capture: 1,
     };
 
-    // console.log("Creating Razorpay order with options:", options);
     const order = await razorpay.orders.create(options);
 
-    console.log("✅ Razorpay order created:", order);
+    // console.log("✅ Razorpay order created:", order);
 
     res.status(200).json({
       orderId: order.id,
@@ -54,6 +53,8 @@ router.post("/razorpay/verify", async (req, res) => {
       .digest("hex");
 
     const isValid = generatedSignature === razorpay_signature;
+
+    console.log("🔍 Verifying payment:", generatedSignature, razorpay_signature);
 
     if (!isValid) {
       return res.status(400).json({ success: false, message: "Signature mismatch" });

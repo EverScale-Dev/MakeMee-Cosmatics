@@ -180,9 +180,9 @@ const Checkout = () => {
         return;
       }
 
-      console.log("orderResponse", orderResponse.data);
+      // console.log("orderResponse", orderResponse.data);
 
-            // 3. If Online Payment, trigger Razorpay Checkout
+      // 3. If Online Payment, trigger Razorpay Checkout
       if (paymentMethod === "onlinePayment") {
         // Call backend to create Razorpay order
         const razorpayOrderRes = await axios.post(
@@ -200,14 +200,14 @@ const Checkout = () => {
         );
 
         const { orderId, key } = razorpayOrderRes.data;
-
-        console.log("Razorpay order created:", orderId, key);
+        // console.log("Razorpay order response", razorpayOrderRes.data);
+        // console.log("Razorpay order created:", orderId, key);
 
         const options = {
           key,
           amount: totalAmount * 100,
           currency: "INR",
-          name: "PhantomTech",
+          name: "MakeMee Cosmatics",
           description: "Order Payment",
           order_id: orderId,
           handler: async function (response) {
@@ -229,7 +229,9 @@ const Checkout = () => {
                   icon: "success",
                 });
                 // dispatch(clearCart());
-                router.push(`/payment/order-success?order_id=${orderResponse.data._id}`)
+                router.push(`/payment/order-success?order_id=${orderResponse.data.order._id}`);
+                // router.push(`/payment/order-success?order_id=${orderResponse.data.order._id}`);
+
               } else {
                 throw new Error("Payment verification failed");
               }
