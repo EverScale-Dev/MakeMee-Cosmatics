@@ -42,9 +42,9 @@ const Contact = () => {
           <div className="space-y-6">
             <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
               <h3 className="text-2xl font-bold text-gray-800 mb-4">Contact Information</h3>
-              <InfoItem Icon={FaEnvelope} title="Email" text="phantomstechpcs@gmail.com" sub="We respond within 24 hours" />
+              <InfoItem Icon={FaEnvelope} title="Email" text="info@makemeecosmetics.com" sub="We respond within 24 hours" />
               <InfoItem Icon={FaPhone} title="Phone" text="+91 7249334274" sub="Mon-Fri: 9AM-6PM IST" />
-              <InfoItem Icon={FaMapMarkerAlt} title="Address" text="Teen Nal Chowk, Itwari, Nagpur 440018" />
+              <InfoItem Icon={FaMapMarkerAlt} title="Address" text="A/P Derde Korhale, Tal. Kopargaon, Dist. Ahilyanagar, Maharashtra 423601" />
             </div>
 
             <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
