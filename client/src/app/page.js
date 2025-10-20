@@ -7,7 +7,8 @@ import { ProductList } from "@/components/product";  // ⬅️ updated import
 import { Cta } from "@/components/cta";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-import UspsSection from "@/components/whychooseus";
+import UspsSection from "@/components/uspsSection";
+import WhyChooseMakeMee from "@/components/whyChooseUs";
 
 const Home = () => {
   return (
@@ -16,6 +17,7 @@ const Home = () => {
       <Banner />
       <ProductList />   {/* ⬅️ replaced Category with ProductList */}
       <UspsSection />
+      <WhyChooseMakeMee />
       <Footer />
     </div>
   );

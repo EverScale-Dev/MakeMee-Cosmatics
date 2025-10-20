@@ -378,7 +378,7 @@ import {
 // Component Imports
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-import UspsSection from "@/components/whychooseus";
+import UspsSection from "@/components/uspsSection";
 
 // --- COLOR PALETTE (Required for Theming) ---
 const PRIMARY_COLOR = "#284B76"; // Your requested color (Deep Blue)

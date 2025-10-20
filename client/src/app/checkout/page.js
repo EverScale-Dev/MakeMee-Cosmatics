@@ -16,7 +16,7 @@ import Link from "next/link";
 import Swal from "sweetalert2";
 import GoogleApiAutocomplete from "@/components/GoogleApiAutocomplete";
 import Footer from "@/components/footer";
-import UspsSection from "@/components/whychooseus";
+import UspsSection from "@/components/uspsSection";
 import BoltIcon from "@mui/icons-material/Bolt";
 import Script from "next/script";
 
