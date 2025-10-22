@@ -51,7 +51,7 @@ export default function WhyChooseMakeMee({ className = "" }) {
   ];
 
   return (
-    <section className={`relative overflow-hidden py-20 px-6 md:px-16 bg-gradient-to-br from-[#fffafc] to-[#f8f7ff] ${className}`}>
+    <section className={`relative overflow-hidden pb-20 px-6 md:px-16 ${className}`}>
       <div className="max-w-7xl mx-auto text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}

@@ -111,7 +111,6 @@
 //     formData.append("rating", selectedProduct.rating);
 //     formData.append("reviews", selectedProduct.reviews);
 
-
 //     images.forEach((image) => {
 //       formData.append("images", image);
 //     });
@@ -511,7 +510,6 @@
 
 // export default SingleProductList;
 
-
 "use client";
 import React, { useEffect, useState } from "react";
 import {
@@ -575,7 +573,7 @@ function SingleProductList() {
   const fetchCategories = async (token) => {
     try {
       const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/categories`, 
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/categories`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -614,7 +612,10 @@ function SingleProductList() {
       features: product.features || [],
       ingredients: product.ingredients || [],
       // Ensure category is ID, not object if your API returns the populated object
-      category: typeof product.category === 'object' ? product.category._id : product.category || '', 
+      category:
+        typeof product.category === "object"
+          ? product.category._id
+          : product.category || "",
     });
     setImages([]); // Clear files for upload
     setOpen(true);
@@ -638,12 +639,12 @@ function SingleProductList() {
   // Remove existing image (for UPDATE only)
   const handleRemoveExistingImage = (imgUrl) => {
     if (selectedProduct._id) {
-        setSelectedProduct((prev) => ({
-            ...prev,
-            images: prev.images.filter(img => img !== imgUrl)
-        }));
+      setSelectedProduct((prev) => ({
+        ...prev,
+        images: prev.images.filter((img) => img !== imgUrl),
+      }));
     }
-  }
+  };
 
   // Handle changes in the product modal inputs
   const handleInputChange = (e) => {
@@ -659,35 +660,34 @@ function SingleProductList() {
   const handleImageChange = (e) => {
     setImages([...e.target.files]);
   };
-  
+
   // NEW: Handle changes for features/ingredients array fields
   const handleArrayChange = (arrayName, index, field, value) => {
     setSelectedProduct((prevProduct) => {
-        const newArray = [...prevProduct[arrayName]];
-        newArray[index] = { ...newArray[index], [field]: value };
-        return {
-            ...prevProduct,
-            [arrayName]: newArray,
-        };
+      const newArray = [...prevProduct[arrayName]];
+      newArray[index] = { ...newArray[index], [field]: value };
+      return {
+        ...prevProduct,
+        [arrayName]: newArray,
+      };
     });
   };
 
   // NEW: Add new empty feature/ingredient
   const handleAddArrayItem = (arrayName, defaultItem) => {
     setSelectedProduct((prevProduct) => ({
-        ...prevProduct,
-        [arrayName]: [...prevProduct[arrayName], defaultItem],
+      ...prevProduct,
+      [arrayName]: [...prevProduct[arrayName], defaultItem],
     }));
   };
 
   // NEW: Remove feature/ingredient by index
   const handleRemoveArrayItem = (arrayName, index) => {
     setSelectedProduct((prevProduct) => ({
-        ...prevProduct,
-        [arrayName]: prevProduct[arrayName].filter((_, i) => i !== index),
+      ...prevProduct,
+      [arrayName]: prevProduct[arrayName].filter((_, i) => i !== index),
     }));
   };
-
 
   // Prepare FormData for both Add and Update
   const prepareFormData = () => {
@@ -705,24 +705,30 @@ function SingleProductList() {
     formData.append("weight", selectedProduct.weight || "");
     formData.append("rating", selectedProduct.rating || 0);
     formData.append("reviews", selectedProduct.reviews || 0);
-    
+
     // Complex Fields (Stringified JSON)
     formData.append("features", JSON.stringify(selectedProduct.features || []));
-    formData.append("ingredients", JSON.stringify(selectedProduct.ingredients || []));
-    
+    formData.append(
+      "ingredients",
+      JSON.stringify(selectedProduct.ingredients || [])
+    );
+
     // Existing Images (ONLY for Update)
     if (selectedProduct._id) {
-        // Send the list of image URLs that the user kept
-        formData.append("existingImages", JSON.stringify(selectedProduct.images || [])); 
+      // Send the list of image URLs that the user kept
+      formData.append(
+        "existingImages",
+        JSON.stringify(selectedProduct.images || [])
+      );
     }
 
     // New Images to Upload
     images.forEach((image) => {
       formData.append("images", image);
     });
-    
+
     return formData;
-  }
+  };
 
   // Update product details in modal
   const handleProductUpdate = async () => {
@@ -757,7 +763,7 @@ function SingleProductList() {
   // Handle adding a new product
   const handleAddProduct = async () => {
     const formData = prepareFormData();
-    
+
     try {
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/products`,
@@ -783,7 +789,6 @@ function SingleProductList() {
       setSnackbarOpen(true);
     }
   };
-
 
   // Delete product
   const handleProductDelete = async (productId) => {
@@ -814,96 +819,170 @@ function SingleProductList() {
   };
 
   return (
-    <Box p={2}>
+    <Box p={4}>
+      {/* Header */}
       <Box
         display="flex"
         justifyContent="space-between"
         alignItems="center"
-        mb={3}
+        mb={4}
       >
-        <Typography variant="h4">Products List</Typography>
+        <Typography variant="h4" fontWeight={600}>
+          Products List
+        </Typography>
         <Button
           variant="contained"
           color="primary"
+          sx={{
+            borderRadius: 2,
+            px: 3,
+            py: 1.2,
+            textTransform: "none",
+            boxShadow: 3,
+            "&:hover": { boxShadow: 6 },
+          }}
           onClick={() => {
-            setSelectedProduct({ 
-                // Initialize new product with required default values
-                name: '', brand: '', regularPrice: 0, salePrice: 0, 
-                description: '', shortDescription: '', sourcingInfo: '', 
-                badge: '', weight: '', rating: 4.5, reviews: 0, 
-                images: [], features: [], ingredients: []
+            setSelectedProduct({
+              name: "",
+              brand: "",
+              regularPrice: 0,
+              salePrice: 0,
+              description: "",
+              shortDescription: "",
+              sourcingInfo: "",
+              badge: "",
+              weight: "",
+              rating: 4.5,
+              reviews: 0,
+              images: [],
+              features: [],
+              ingredients: [],
             });
             setOpen(true);
           }}
-          sx={{ mr: 2 }}
         >
           Add Product
         </Button>
       </Box>
 
-      <TableContainer component={Paper} elevation={3}>
+      {/* Products Table */}
+      <TableContainer
+        component={Paper}
+        elevation={6}
+        sx={{ borderRadius: 2, overflow: "hidden" }}
+      >
         <Table>
-          <TableHead>
+          <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
             <TableRow>
-              <TableCell>
-                <strong>Product Name</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Regular Price</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Sale Price</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Badge</strong>
-              </TableCell>
-              <TableCell>
-                <strong>Actions</strong>
-              </TableCell>
+              {[
+                "Product Name",
+                "Regular Price",
+                "Sale Price",
+                "Badge",
+                "Actions",
+              ].map((header) => (
+                <TableCell key={header} sx={{ fontWeight: 600, color: "#333" }}>
+                  {header}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
-                  <CircularProgress />
+                <TableCell colSpan={5} align="center">
+                  <CircularProgress size={30} />
                 </TableCell>
               </TableRow>
-            ) : (
+            ) : products.length > 0 ? (
               products.map((product) => (
-                <TableRow key={product._id}>
+                <TableRow
+                  key={product._id}
+                  sx={{ "&:hover": { backgroundColor: "#f9f9f9" } }}
+                >
                   <TableCell>
                     <Box display="flex" alignItems="center">
-                        {product.images && product.images.length > 0 && (
-                            <img
-                                src={`${product.images[0]}`}
-                                alt={product.name}
-                                width={40}
-                                style={{marginRight: '12px', borderRadius: '4px'}}
-                            />
-                        )}
-                        {product.name}
+                      {product.images?.[0] && (
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          width={40}
+                          height={40}
+                          style={{
+                            marginRight: 12,
+                            borderRadius: 4,
+                            objectFit: "cover",
+                          }}
+                        />
+                      )}
+                      {product.name}
                     </Box>
                   </TableCell>
                   <TableCell>₹ {product.regularPrice}</TableCell>
                   <TableCell>₹ {product.salePrice || "-"}</TableCell>
-                  <TableCell>{product.badge || "-"}</TableCell>
+                  <TableCell>
+                    <Typography
+                      sx={{
+                        px: 1.5,
+                        py: 0.5,
+                        display: "inline-block",
+                        borderRadius: "20px",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        textTransform: "uppercase",
+                        backgroundColor:
+                          product.badge === "NEW LAUNCH"
+                            ? "rgba(59,130,246,0.15)"
+                            : product.badge === "BEST SELLER"
+                              ? "rgba(34,197,94,0.15)"
+                              : product.badge === "DISCOUNT"
+                                ? "rgba(249,115,22,0.15)"
+                                : product.badge === "LIMITED"
+                                  ? "rgba(217,70,239,0.15)"
+                                  : product.badge === "HOT"
+                                    ? "rgba(239,68,68,0.15)"
+                                    : "rgba(107,114,128,0.1)",
+                        color:
+                          product.badge === "NEW LAUNCH"
+                            ? "#1e3a8a"
+                            : product.badge === "BEST SELLER"
+                              ? "#166534"
+                              : product.badge === "DISCOUNT"
+                                ? "#9a3412"
+                                : product.badge === "LIMITED"
+                                  ? "#86198f"
+                                  : product.badge === "HOT"
+                                    ? "#991b1b"
+                                    : "#374151",
+                      }}
+                    >
+                      {product.badge || "-"}
+                    </Typography>
+                  </TableCell>
                   <TableCell>
                     <IconButton
                       color="primary"
                       onClick={() => handleOpen(product)}
+                      sx={{ "&:hover": { backgroundColor: "#e0f7fa" } }}
                     >
                       <EditIcon />
                     </IconButton>
                     <IconButton
                       color="error"
                       onClick={() => handleProductDelete(product._id)}
+                      sx={{ ml: 1, "&:hover": { backgroundColor: "#ffebee" } }}
                     >
                       <DeleteIcon />
                     </IconButton>
                   </TableCell>
                 </TableRow>
               ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  No products found.
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>
@@ -911,271 +990,433 @@ function SingleProductList() {
 
       {/* Product Modal */}
       {selectedProduct && (
-        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
-          <DialogTitle className="font-bold text-lg">
+        <Dialog
+          open={open}
+          onClose={handleClose}
+          fullWidth
+          maxWidth="lg"
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              boxShadow: "0 8px 30px rgba(0,0,0,0.1)",
+              overflow: "hidden",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              fontWeight: 700,
+              fontSize: "1.4rem",
+              color: "#1e293b",
+              background: "linear-gradient(90deg, #fdf2f8 0%, #fce7f3 100%)",
+              borderBottom: "1px solid #f1f1f1",
+              py: 2,
+              px: 3,
+            }}
+          >
             {selectedProduct._id ? "Edit Product" : "Add New Product"}
           </DialogTitle>
 
-          <DialogContent dividers>
+          <DialogContent
+            dividers
+            sx={{
+              backgroundColor: "#fafafa",
+              px: 3,
+              py: 3,
+              maxHeight: "80vh",
+              overflowY: "auto",
+            }}
+          >
             <Box
               component="form"
-              sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 3 }}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+              }}
             >
-              
-              {/* === SECTION 1: CORE INFO === */}
-              <Typography variant="h6" className="font-bold text-blue-600 border-b pb-1">Core Information</Typography>
-              <Box display="flex" gap={2}>
-                <TextField
-                  label="Product Name"
-                  fullWidth
-                  name="name"
-                  value={selectedProduct.name || ""}
-                  onChange={handleInputChange}
-                />
-                <TextField
-                  label="Brand Name" // NEW
-                  fullWidth
-                  name="brand"
-                  value={selectedProduct.brand || ""}
-                  onChange={handleInputChange}
-                />
-              </Box>
-              
-              {/* Category & Badge */}
-              <Box display="flex" gap={2}>
-                <FormControl fullWidth>
-                  <InputLabel id="badge-label">Badge</InputLabel>
-                  <Select
-                    labelId="badge-label"
-                    id="badge"
-                    name="badge"
-                    value={selectedProduct.badge || ""}
-                    label="Badge"
+              {/* Core Info */}
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: "#1d4ed8",
+                    fontWeight: 700,
+                    mb: 2,
+                    borderBottom: "2px solid #e0e0e0",
+                    pb: 0.5,
+                  }}
+                >
+                  Core Information
+                </Typography>
+
+                <Box display="flex" gap={2}>
+                  <TextField
+                    label="Product Name"
+                    fullWidth
+                    name="name"
+                    value={selectedProduct.name}
                     onChange={handleInputChange}
+                    variant="outlined"
+                    sx={{ backgroundColor: "#fff", borderRadius: 1 }}
+                  />
+                  <TextField
+                    label="Brand Name"
+                    fullWidth
+                    name="brand"
+                    value={selectedProduct.brand}
+                    onChange={handleInputChange}
+                    variant="outlined"
+                    sx={{ backgroundColor: "#fff", borderRadius: 1 }}
+                  />
+                </Box>
+
+                <Box display="flex" gap={2} mt={2}>
+                  <FormControl fullWidth>
+                    <InputLabel id="badge-label">Badge</InputLabel>
+                    <Select
+                      labelId="badge-label"
+                      id="badge"
+                      name="badge"
+                      value={selectedProduct.badge}
+                      onChange={handleInputChange}
+                      label="Badge"
+                      sx={{ backgroundColor: "#fff", borderRadius: 1 }}
+                    >
+                      <MenuItem value="">None</MenuItem>
+                      <MenuItem value="NEW LAUNCH">NEW LAUNCH</MenuItem>
+                      <MenuItem value="BEST SELLER">BEST SELLER</MenuItem>
+                      <MenuItem value="DISCOUNT">DISCOUNT</MenuItem>
+                      <MenuItem value="LIMITED">LIMITED</MenuItem>
+                      <MenuItem value="HOT">HOT</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                <Box mt={2} display="flex" flexDirection="column" gap={2}>
+                  <TextField
+                    label="Short Description"
+                    fullWidth
+                    multiline
+                    rows={2}
+                    name="shortDescription"
+                    value={selectedProduct.shortDescription}
+                    onChange={handleInputChange}
+                    sx={{ backgroundColor: "#fff", borderRadius: 1 }}
+                  />
+                  <TextField
+                    label="Detailed Description"
+                    fullWidth
+                    multiline
+                    rows={4}
+                    name="description"
+                    value={selectedProduct.description}
+                    onChange={handleInputChange}
+                    sx={{ backgroundColor: "#fff", borderRadius: 1 }}
+                  />
+                  <TextField
+                    label="Sourcing & Ingredients Info"
+                    fullWidth
+                    multiline
+                    rows={3}
+                    name="sourcingInfo"
+                    value={selectedProduct.sourcingInfo}
+                    onChange={handleInputChange}
+                    sx={{ backgroundColor: "#fff", borderRadius: 1 }}
+                  />
+                </Box>
+              </Box>
+
+              {/* Pricing & Metrics */}
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: "#1d4ed8",
+                    fontWeight: 700,
+                    mb: 2,
+                    borderBottom: "2px solid #e0e0e0",
+                    pb: 0.5,
+                  }}
+                >
+                  Pricing & Metrics
+                </Typography>
+
+                <Box display="flex" gap={2}>
+                  <TextField
+                    label="Regular Price"
+                    fullWidth
+                    type="number"
+                    name="regularPrice"
+                    value={selectedProduct.regularPrice}
+                    onChange={handleInputChange}
+                    sx={{ backgroundColor: "#fff", borderRadius: 1 }}
+                  />
+                  <TextField
+                    label="Sale Price"
+                    fullWidth
+                    type="number"
+                    name="salePrice"
+                    value={selectedProduct.salePrice}
+                    onChange={handleInputChange}
+                    sx={{ backgroundColor: "#fff", borderRadius: 1 }}
+                  />
+                </Box>
+
+                <Box display="flex" gap={2} mt={2}>
+                  <TextField
+                    label="Weight"
+                    fullWidth
+                    name="weight"
+                    value={selectedProduct.weight}
+                    onChange={handleInputChange}
+                    sx={{ backgroundColor: "#fff", borderRadius: 1 }}
+                  />
+                  <TextField
+                    label="Rating"
+                    fullWidth
+                    type="number"
+                    inputProps={{ step: 0.1, min: 0, max: 5 }}
+                    name="rating"
+                    value={selectedProduct.rating}
+                    onChange={handleInputChange}
+                    sx={{ backgroundColor: "#fff", borderRadius: 1 }}
+                  />
+                  <TextField
+                    label="Reviews Count"
+                    fullWidth
+                    type="number"
+                    inputProps={{ step: 1, min: 0 }}
+                    name="reviews"
+                    value={selectedProduct.reviews}
+                    onChange={handleInputChange}
+                    sx={{ backgroundColor: "#fff", borderRadius: 1 }}
+                  />
+                </Box>
+              </Box>
+
+              {/* Features */}
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: "#1d4ed8",
+                    fontWeight: 700,
+                    mb: 2,
+                    borderBottom: "2px solid #e0e0e0",
+                    pb: 0.5,
+                  }}
+                >
+                  Key Features / Benefits
+                </Typography>
+
+                {selectedProduct.features.map((feature, index) => (
+                  <Box
+                    key={index}
+                    display="flex"
+                    gap={2}
+                    alignItems="center"
+                    mb={1}
                   >
-                    <MenuItem value="">None</MenuItem>
-                    <MenuItem value="NEW LAUNCH">NEW LAUNCH</MenuItem>
-                    <MenuItem value="BEST SELLER">BEST SELLER</MenuItem>
-                    <MenuItem value="DISCOUNT">DISCOUNT</MenuItem>
-                    <MenuItem value="LIMITED">LIMITED</MenuItem>
-                    <MenuItem value="HOT">HOT</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-
-              {/* Descriptions & Sourcing */}
-              <TextField
-                label="Short Description (For Cards/Snippets)" // NEW
-                fullWidth
-                multiline
-                rows={2}
-                name="shortDescription"
-                value={selectedProduct.shortDescription || ""}
-                onChange={handleInputChange}
-              />
-              <TextField
-                label="Detailed Description"
-                fullWidth
-                multiline
-                rows={4}
-                name="description"
-                value={selectedProduct.description || ""}
-                onChange={handleInputChange}
-              />
-              <TextField
-                label="Sourcing & Ingredients Info (For Tab)" // NEW
-                fullWidth
-                multiline
-                rows={3}
-                name="sourcingInfo"
-                value={selectedProduct.sourcingInfo || ""}
-                onChange={handleInputChange}
-              />
-
-              {/* === SECTION 2: PRICING & METRICS === */}
-              <Typography variant="h6" className="font-bold text-blue-600 border-b pb-1 mt-3">Pricing & Metrics</Typography>
-              <Box display="flex" gap={2}>
-                <TextField
-                  label="Regular Price"
-                  fullWidth
-                  name="regularPrice"
-                  type="number"
-                  inputProps={{ step: "0.01", min: 0 }}
-                  value={selectedProduct.regularPrice || ""}
-                  onChange={handleInputChange}
-                />
-                <TextField
-                  label="Sale Price"
-                  fullWidth
-                  name="salePrice"
-                  type="number"
-                  inputProps={{ step: "0.01", min: 0 }}
-                  value={selectedProduct.salePrice || ""}
-                  onChange={handleInputChange}
-                />
-              </Box>
-
-              <Box display="flex" gap={2}>
-                <TextField
-                  label="Weight (e.g. 500ml, 1L)"
-                  fullWidth
-                  name="weight"
-                  value={selectedProduct.weight || ""}
-                  onChange={handleInputChange}
-                />
-                <TextField
-                  label="Rating"
-                  type="number"
-                  inputProps={{ step: "0.1", min: 0, max: 5 }}
-                  fullWidth
-                  name="rating"
-                  value={selectedProduct.rating || ""}
-                  onChange={handleInputChange}
-                />
-                <TextField
-                  label="Reviews Count"
-                  type="number"
-                  inputProps={{ step: "1", min: 0 }}
-                  fullWidth
-                  name="reviews"
-                  value={selectedProduct.reviews || ""}
-                  onChange={handleInputChange}
-                />
-              </Box>
-              
-              {/* === SECTION 3: FEATURES (Why You'll Love It) === */}
-              <Typography variant="h6" className="font-bold text-blue-600 border-b pb-1 mt-3">Key Features / Benefits</Typography>
-              {selectedProduct.features.map((feature, index) => (
-                <Box key={index} display="flex" gap={2} alignItems="center">
                     <TextField
-                        label="Feature Text"
-                        fullWidth
-                        value={feature.text || ""}
-                        onChange={(e) => handleArrayChange('features', index, 'text', e.target.value)}
+                      fullWidth
+                      value={feature.text}
+                      onChange={(e) =>
+                        handleArrayChange(
+                          "features",
+                          index,
+                          "text",
+                          e.target.value
+                        )
+                      }
+                      sx={{ backgroundColor: "#fff", borderRadius: 1 }}
                     />
-                    <IconButton 
-                        color="error" 
-                        onClick={() => handleRemoveArrayItem('features', index)}
+                    <IconButton
+                      color="error"
+                      onClick={() => handleRemoveArrayItem("features", index)}
                     >
-                        <RemoveIcon />
+                      <RemoveIcon />
                     </IconButton>
-                </Box>
-              ))}
-              <Button 
-                startIcon={<AddIcon />} 
-                onClick={() => handleAddArrayItem('features', {text: '', iconName: ''})}
-                variant="outlined"
-              >
-                Add Feature
-              </Button>
+                  </Box>
+                ))}
 
-              {/* === SECTION 4: INGREDIENTS (Spotlight) === */}
-              <Typography variant="h6" className="font-bold text-blue-600 border-b pb-1 mt-3">Key Ingredients</Typography>
-              {selectedProduct.ingredients.map((ingredient, index) => (
-                <Box key={index} display="flex" gap={2} alignItems="center">
+                <Button
+                  startIcon={<AddIcon />}
+                  onClick={() =>
+                    handleAddArrayItem("features", { text: "", iconName: "" })
+                  }
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 20,
+                    fontWeight: 600,
+                    textTransform: "none",
+                    mt: 1,
+                  }}
+                >
+                  Add Feature
+                </Button>
+              </Box>
+
+              {/* Ingredients */}
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: "#1d4ed8",
+                    fontWeight: 700,
+                    mb: 2,
+                    borderBottom: "2px solid #e0e0e0",
+                    pb: 0.5,
+                  }}
+                >
+                  Key Ingredients
+                </Typography>
+
+                {selectedProduct.ingredients.map((ingredient, index) => (
+                  <Box
+                    key={index}
+                    display="flex"
+                    gap={2}
+                    alignItems="center"
+                    mb={1}
+                  >
                     <TextField
-                        label="Ingredient Name"
-                        sx={{ flex: 1 }}
-                        value={ingredient.name || ""}
-                        onChange={(e) => handleArrayChange('ingredients', index, 'name', e.target.value)}
+                      fullWidth
+                      value={ingredient.name}
+                      onChange={(e) =>
+                        handleArrayChange(
+                          "ingredients",
+                          index,
+                          "name",
+                          e.target.value
+                        )
+                      }
+                      sx={{ backgroundColor: "#fff", borderRadius: 1 }}
                     />
                     <TextField
-                        label="Ingredient Benefit"
-                        sx={{ flex: 2 }}
-                        value={ingredient.benefit || ""}
-                        onChange={(e) => handleArrayChange('ingredients', index, 'benefit', e.target.value)}
+                      fullWidth
+                      value={ingredient.benefit}
+                      onChange={(e) =>
+                        handleArrayChange(
+                          "ingredients",
+                          index,
+                          "benefit",
+                          e.target.value
+                        )
+                      }
+                      sx={{ backgroundColor: "#fff", borderRadius: 1 }}
                     />
-                    <IconButton 
-                        color="error" 
-                        onClick={() => handleRemoveArrayItem('ingredients', index)}
+                    <IconButton
+                      color="error"
+                      onClick={() =>
+                        handleRemoveArrayItem("ingredients", index)
+                      }
                     >
-                        <RemoveIcon />
+                      <RemoveIcon />
                     </IconButton>
-                </Box>
-              ))}
-              <Button 
-                startIcon={<AddIcon />} 
-                onClick={() => handleAddArrayItem('ingredients', {name: '', benefit: ''})}
-                variant="outlined"
-              >
-                Add Ingredient
-              </Button>
+                  </Box>
+                ))}
 
+                <Button
+                  startIcon={<AddIcon />}
+                  onClick={() =>
+                    handleAddArrayItem("ingredients", { name: "", benefit: "" })
+                  }
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 20,
+                    fontWeight: 600,
+                    textTransform: "none",
+                    mt: 1,
+                  }}
+                >
+                  Add Ingredient
+                </Button>
+              </Box>
 
-              {/* === SECTION 5: IMAGE UPLOAD === */}
-              <Typography variant="h6" className="font-bold text-blue-600 border-b pb-1 mt-3">Images</Typography>
-              <div className="mt-3">
-                <label className="block font-semibold mb-2">
-                  Upload New Images (Files)
-                </label>
+              {/* Images */}
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: "#1d4ed8",
+                    fontWeight: 700,
+                    mb: 2,
+                    borderBottom: "2px solid #e0e0e0",
+                    pb: 0.5,
+                  }}
+                >
+                  Images
+                </Typography>
+
                 <input
                   type="file"
                   accept="image/*"
                   multiple
                   onChange={handleImageChange}
+                  style={{ marginBottom: "12px" }}
                 />
 
-                {/* Existing Image Previews (with delete option) */}
-                {selectedProduct._id && selectedProduct.images && selectedProduct.images.length > 0 && (
-                  <div className="mt-4">
-                      <Typography variant="subtitle1" className="mb-2">Existing Images:</Typography>
-                      <div className="flex flex-wrap gap-3">
-                      {selectedProduct.images.map((imgUrl, idx) => (
-                        <div
-                          key={idx}
-                          className="relative w-24 h-24 border rounded-md overflow-hidden group"
-                          title="Click 'X' to remove this image from the product."
-                        >
-                          <img
-                            src={imgUrl}
-                            alt={`Existing Preview ${idx}`}
-                            className="object-cover w-full h-full"
-                          />
-                          <IconButton
-                            type="button"
-                            size="small"
-                            onClick={() => handleRemoveExistingImage(imgUrl)}
-                            className="absolute top-0 right-0 bg-red-600 hover:bg-red-700 text-white p-1 text-xs opacity-80 group-hover:opacity-100 transition"
-                            sx={{
-                                '&:hover': {
-                                    bgcolor: 'error.main'
-                                }
-                            }}
-                          >
-                            <DeleteIcon fontSize="inherit" />
-                          </IconButton>
-                        </div>
-                      ))}
-                      </div>
-                  </div>
-                )}
-                
-                {/* New Image Previews */}
-                {images.length > 0 && (
-                    <div className="mt-4">
-                        <Typography variant="subtitle1" className="mb-2">New Images to Upload:</Typography>
-                        <div className="flex flex-wrap gap-3">
-                        {images.map((img, idx) => (
-                            <div
-                                key={idx}
-                                className="w-24 h-24 border rounded-md overflow-hidden"
-                            >
-                                <img
-                                    src={URL.createObjectURL(img)}
-                                    alt={`New Preview ${idx}`}
-                                    className="object-cover w-full h-full"
-                                />
-                            </div>
-                        ))}
-                        </div>
-                    </div>
-                )}
-              </div>
+                <Box display="flex" flexWrap="wrap" gap={2}>
+                  {selectedProduct.images?.map((img, idx) => (
+                    <Box
+                      key={idx}
+                      position="relative"
+                      sx={{
+                        width: 90,
+                        height: 90,
+                        borderRadius: 2,
+                        overflow: "hidden",
+                        boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+                        transition: "transform 0.2s",
+                        "&:hover": { transform: "scale(1.05)" },
+                      }}
+                    >
+                      <img
+                        src={img}
+                        alt={`img-${idx}`}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                      <IconButton
+                        size="small"
+                        color="error"
+                        sx={{
+                          position: "absolute",
+                          top: 2,
+                          right: 2,
+                          background: "rgba(255,255,255,0.7)",
+                          "&:hover": { background: "rgba(255,255,255,1)" },
+                        }}
+                        onClick={() => handleRemoveExistingImage(img)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
             </Box>
           </DialogContent>
 
-          <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
-            <Button onClick={handleClose} variant="outlined" color="secondary">
+          <DialogActions
+            sx={{
+              justifyContent: "space-between",
+              px: 3,
+              py: 2,
+              background: "#f9fafb",
+              borderTop: "1px solid #e5e7eb",
+            }}
+          >
+            <Button
+              onClick={handleClose}
+              variant="outlined"
+              color="secondary"
+              sx={{ borderRadius: 20, px: 3 }}
+            >
               Cancel
             </Button>
             <Button
@@ -1184,9 +1425,14 @@ function SingleProductList() {
               }
               variant="contained"
               sx={{
-                background: "linear-gradient(45deg, #ec4899, #db2777)", // Pink gradient
-                color: "white",
+                background: "linear-gradient(90deg, #ec4899, #db2777)",
+                color: "#fff",
+                fontWeight: 600,
                 px: 3,
+                borderRadius: 20,
+                "&:hover": {
+                  background: "linear-gradient(90deg, #db2777, #be185d)",
+                },
               }}
             >
               {selectedProduct._id ? "Update Product" : "Add Product"}
@@ -1195,7 +1441,7 @@ function SingleProductList() {
         </Dialog>
       )}
 
-      {/* Snackbar component for displaying success/error messages */}
+      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}

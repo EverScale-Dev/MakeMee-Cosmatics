@@ -131,7 +131,6 @@
 //     }
 //   };
 
-
 // // Handle opening the shipping modal
 // const handleOpenShippingModal = async (orderId) => {
 //   setLoading(true);
@@ -219,7 +218,7 @@
 //                         onClick={() => handleOpenShippingModal(order._id)}
 //                       >
 //                         <LocalShippingIcon color="secondary" />
-//                       </IconButton>                     
+//                       </IconButton>
 //                     </TableCell>
 //                   </TableRow>
 //                 ))}
@@ -246,7 +245,6 @@
 //          <ShippingModal open={openShippingModal} handleClose={handleCloseShippingModal} order={selectedOrder} />
 //         )}
 
-
 //           {/* Snackbar for Cancel Order Result */}
 //           <Snackbar
 //             open={snackbarOpen}
@@ -267,7 +265,6 @@
 //     </Box>
 //   );
 // }
-
 
 "use client";
 import React, { useEffect, useState } from "react";
@@ -296,8 +293,8 @@ import {
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
-import TrackChangesIcon from '@mui/icons-material/TrackChanges';
-import Swal from 'sweetalert2';
+import TrackChangesIcon from "@mui/icons-material/TrackChanges";
+import Swal from "sweetalert2";
 import ShippingModal from "./ShippingModal";
 import OrderDetailModal from "./OrderDetailModal";
 import useAuth from "../withauth";
@@ -415,24 +412,24 @@ export default function OrdersPage() {
         }
       );
 
-          // Success alert
-    Swal.fire({
-      title: 'Success!',
-      text: 'Order has been transferred to Shiprocket.',
-      icon: 'success',
-      confirmButtonText: 'OK'
-    });
+      // Success alert
+      Swal.fire({
+        title: "Success!",
+        text: "Order has been transferred to Shiprocket.",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
 
       // setSelectedOrder(response.data); // Store order details in state
       // setOpenShippingModal(true); // Open the modal
     } catch (error) {
       console.error("Error fetching order details for shipping:", error);
-       Swal.fire({
-      title: 'Error!',
-      text: 'Failed to transfer order to Shiprocket.',
-      icon: 'error',
-      confirmButtonText: 'OK'
-    });
+      Swal.fire({
+        title: "Error!",
+        text: "Failed to transfer order to Shiprocket.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
     } finally {
       setLoading(false);
     }
@@ -448,12 +445,15 @@ export default function OrdersPage() {
       );
 
       if (response.data.tracking_data.track_url) {
-        window.open(response.data.tracking_data.track_url, '_blank');
+        window.open(response.data.tracking_data.track_url, "_blank");
       } else {
-        console.error('Tracking failed:', response.message || 'No track_url found');
+        console.error(
+          "Tracking failed:",
+          response.message || "No track_url found"
+        );
       }
     } catch (error) {
-      console.error('Error tracking order:', error);
+      console.error("Error tracking order:", error);
     }
   };
 
@@ -463,108 +463,179 @@ export default function OrdersPage() {
   };
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
+    <Box p={4}>
+      <Typography variant="h4" fontWeight={600} gutterBottom>
         Orders
       </Typography>
 
-      {/* Loading Indicator */}
       {loading ? (
-        <Box display="flex" justifyContent="center" mt={2}>
-          <CircularProgress />
+        <Box display="flex" justifyContent="center" mt={4}>
+          <CircularProgress size={30} />
         </Box>
       ) : (
         <>
-          {/* Orders Table */}
-          <TableContainer component={Paper}>
+          <TableContainer
+            component={Paper}
+            elevation={6}
+            sx={{ borderRadius: 2, overflow: "hidden" }}
+          >
             <Table>
-              <TableHead>
+              <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
                 <TableRow>
-                  <TableCell>
-                    <strong>Order ID</strong>
-                  </TableCell>
-                  <TableCell>
-                    <strong>Customer</strong>
-                  </TableCell>
-                  <TableCell>
-                    <strong>Date</strong>
-                  </TableCell>
-                  <TableCell>
-                    <strong>Total Amount</strong>
-                  </TableCell>
-                  <TableCell>
-                    <strong>Status</strong>
-                  </TableCell>
-                  <TableCell>
-                    <strong>Actions</strong>
-                  </TableCell>
+                  {[
+                    "Order ID",
+                    "Customer",
+                    "Date",
+                    "Total Amount",
+                    "Status",
+                    "Actions",
+                  ].map((header) => (
+                    <TableCell
+                      key={header}
+                      sx={{ fontWeight: 600, color: "#333" }}
+                    >
+                      {header}
+                    </TableCell>
+                  ))}
                 </TableRow>
               </TableHead>
               <TableBody>
-                {orders.map((order) => (
-                  <TableRow
-                    key={order.orderId}
-                    sx={{
-                      backgroundColor: order.isViewed ? "#e0f7fa" : "#f9f9f9",
-                      fontWeight: order.isViewed ? "800" : "600",
-                    }}
-                  >
-                    <TableCell>{order.orderId}</TableCell>
-                    <TableCell>{order.customer?.fullName}</TableCell>
-                    <TableCell>
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>₹ {order.totalAmount}</TableCell>
-                    <TableCell>{order.status}</TableCell>
-                    <TableCell>
-                      <IconButton onClick={() => handleViewOrder(order._id)}>
-                        <VisibilityIcon color="primary" />
-                      </IconButton>
-                      <IconButton
-                        onClick={() => handleOpenShippingModal(order._id)}
-                      >
-                        <LocalShippingIcon color="secondary" />
-                      </IconButton>
-                      {order?.shiprocket?.awb && (
-                        <IconButton
-                          onClick={() => handleTrackOrder(order.shiprocket.awb)}
+                {orders.length > 0 ? (
+                  orders.map(
+                    (order) => (
+                      console.log("order", order),
+                      (
+                        <TableRow
+                          key={order.orderId}
+                          sx={{
+                            backgroundColor: order.isViewed
+                              ? "#e0f7fa"
+                              : "#f9f9f9",
+                            "&:hover": { backgroundColor: "#e8f0fe" },
+                          }}
                         >
-                          <TrackChangesIcon color="info" />
-
-                        </IconButton>
-                      )}
-
+                          <TableCell>{order.orderId}</TableCell>
+                          <TableCell>
+                            {order.customer?.fullName || "Guest"}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(order.createdAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>₹ {order.totalAmount}</TableCell>
+                          <TableCell>
+                            <Typography
+                              sx={{
+                                px: 1.5,
+                                py: 0.5,
+                                display: "inline-block",
+                                borderRadius: "20px",
+                                fontSize: 13,
+                                fontWeight: 500,
+                                backgroundColor:
+                                  order.status === "completed"
+                                  ? "rgba(34,197,94,0.1)"
+                                  : order.status === "processing"
+                                  ? "rgba(2,136,209,0.1)"
+                                  : order.status === "on hold"
+                                  ? "rgba(218,165,32,0.1)"
+                                  : order.status === "pending payment"
+                                  ? "rgba(255,165,0,0.1)"
+                                  : order.status === "refunded"
+                                  ? "rgba(0,128,128,0.1)"
+                                  : order.status === "cancelled"
+                                  ? "rgba(220,38,38,0.1)"
+                                  : order.status === "failed"
+                                  ? "rgba(107,114,128,0.1)"
+                                  : "rgba(30,41,59,0.05)",
+                              }}
+                            >
+                              {order.status}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <IconButton
+                              color="primary"
+                              onClick={() => handleViewOrder(order._id)}
+                              sx={{
+                                "&:hover": { backgroundColor: "#e3f2fd" },
+                                mr: 1,
+                              }}
+                            >
+                              <VisibilityIcon />
+                            </IconButton>
+                            <IconButton
+                              color="secondary"
+                              onClick={() => handleOpenShippingModal(order._id)}
+                              sx={{
+                                "&:hover": { backgroundColor: "#fff3e0" },
+                                mr: 1,
+                              }}
+                            >
+                              <LocalShippingIcon />
+                            </IconButton>
+                            {order?.shiprocket?.awb && (
+                              <IconButton
+                                color="info"
+                                onClick={() =>
+                                  handleTrackOrder(order.shiprocket.awb)
+                                }
+                                sx={{
+                                  "&:hover": { backgroundColor: "#e1f5fe" },
+                                }}
+                              >
+                                <TrackChangesIcon />
+                              </IconButton>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    )
+                  )
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      No orders found.
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </TableContainer>
 
           {/* Pagination */}
-          <Box mt={2} display="flex" justifyContent="center">
+          <Box mt={3} display="flex" justifyContent="center">
             <Pagination
               count={Math.ceil(totalOrders / limit)}
               page={page}
               onChange={(event, value) => setPage(value)}
+              color="primary"
+              shape="rounded"
             />
           </Box>
 
           {/* Order Detail Modal */}
           {selectedOrder && (
-            <OrderDetailModal order={selectedOrder} open={open} onClose={() => setOpen(false)} onUpdateStatus={updateOrderStatus} />
+            <OrderDetailModal
+              order={selectedOrder}
+              open={open}
+              onClose={() => setOpen(false)}
+              onUpdateStatus={updateOrderStatus}
+            />
           )}
 
           {/* Shipping Modal */}
           {selectedOrder && (
-            <ShippingModal open={openShippingModal} handleClose={handleCloseShippingModal} order={selectedOrder} />
+            <ShippingModal
+              open={openShippingModal}
+              handleClose={handleCloseShippingModal}
+              order={selectedOrder}
+            />
           )}
 
-
-          {/* Snackbar for Cancel Order Result */}
+          {/* Snackbar */}
           <Snackbar
             open={snackbarOpen}
-            autoHideDuration={4000} // Automatically close after 4 seconds
+            autoHideDuration={4000}
             onClose={() => setSnackbarOpen(false)}
             anchorOrigin={{ vertical: "top", horizontal: "center" }}
           >

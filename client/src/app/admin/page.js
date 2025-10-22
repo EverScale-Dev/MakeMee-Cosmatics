@@ -58,112 +58,246 @@ export default function AdminDashboard() {
     fetchOrders();
   }, []);
 
-  return (
-    <div>
+return (
+    <Box sx={{ p: { xs: 2, md: 4 }, backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+      {/* Dashboard Header */}
+      <Typography
+        variant="h4"
+        fontWeight="600"
+        sx={{
+          mb: 4,
+          color: '#1e293b',
+          textAlign: 'center',
+          letterSpacing: 0.5,
+        }}
+      >
+        Admin Dashboard
+      </Typography>
+
       {/* Dashboard Metrics */}
-      <Box display="flex" flexWrap="wrap" gap={3}>
-        {/* Total Orders Card */}
-        <Box flex="1 1 200px">
-          <Card sx={{ backgroundColor: blue[500], color: '#fff' }}>
-            <CardContent>
-              <Typography variant="h6" component="div">
-                Total Orders
+      <Box
+        display="grid"
+        gridTemplateColumns={{
+          xs: '1fr',
+          sm: 'repeat(2, 1fr)',
+          md: 'repeat(4, 1fr)',
+        }}
+        gap={3}
+      >
+        {/* Total Orders */}
+        <Card
+          sx={{
+            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+            color: '#fff',
+            borderRadius: 3,
+            boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+            },
+          }}
+        >
+          <CardContent>
+            <Typography variant="subtitle1" fontWeight="500">
+              Total Orders
+            </Typography>
+            <Box display="flex" alignItems="center" justifyContent="space-between" mt={1}>
+              <Typography variant="h4" fontWeight="700">
+                {metrics.totalOrders}
               </Typography>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Typography variant="h4" component="div">{metrics.totalOrders}</Typography>
-                <ShoppingCart fontSize="large" />
-              </Box>
-            </CardContent>
-          </Card>
-        </Box>
+              <ShoppingCart fontSize="large" />
+            </Box>
+          </CardContent>
+        </Card>
 
-        {/* Total Products Card */}
-        <Box flex="1 1 200px">
-          <Card sx={{ backgroundColor: green[500], color: '#fff' }}>
-            <CardContent>
-              <Typography variant="h6" component="div">
-                Total Products
+        {/* Total Products */}
+        <Card
+          sx={{
+            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+            color: '#fff',
+            borderRadius: 3,
+            boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+            },
+          }}
+        >
+          <CardContent>
+            <Typography variant="subtitle1" fontWeight="500">
+              Total Products
+            </Typography>
+            <Box display="flex" alignItems="center" justifyContent="space-between" mt={1}>
+              <Typography variant="h4" fontWeight="700">
+                {metrics.totalProducts}
               </Typography>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Typography variant="h4" component="div">{metrics.totalProducts}</Typography>
-                <Inventory fontSize="large" />
-              </Box>
-            </CardContent>
-          </Card>
-        </Box>
+              <Inventory fontSize="large" />
+            </Box>
+          </CardContent>
+        </Card>
 
-        {/* Total Customers Card */}
-        <Box flex="1 1 200px">
-          <Card sx={{ backgroundColor: red[500], color: '#fff' }}>
-            <CardContent>
-              <Typography variant="h6" component="div">
-                Total Customers
+        {/* Total Customers */}
+        <Card
+          sx={{
+            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            color: '#fff',
+            borderRadius: 3,
+            boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+            },
+          }}
+        >
+          <CardContent>
+            <Typography variant="subtitle1" fontWeight="500">
+              Total Customers
+            </Typography>
+            <Box display="flex" alignItems="center" justifyContent="space-between" mt={1}>
+              <Typography variant="h4" fontWeight="700">
+                {metrics.totalCustomers}
               </Typography>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Typography variant="h4" component="div">{metrics.totalCustomers}</Typography>
-                <People fontSize="large" />
-              </Box>
-            </CardContent>
-          </Card>
-        </Box>
+              <People fontSize="large" />
+            </Box>
+          </CardContent>
+        </Card>
 
-        {/* Total Revenue Card */}
-        <Box flex="1 1 200px">
-          <Card sx={{ backgroundColor: purple[500], color: '#fff' }}>
-            <CardContent>
-              <Typography variant="h6" component="div">
-                Total Revenue
+        {/* Total Revenue */}
+        <Card
+          sx={{
+            background: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)',
+            color: '#fff',
+            borderRadius: 3,
+            boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+            },
+          }}
+        >
+          <CardContent>
+            <Typography variant="subtitle1" fontWeight="500">
+              Total Revenue
+            </Typography>
+            <Box display="flex" alignItems="center" justifyContent="space-between" mt={1}>
+              <Typography variant="h4" fontWeight="700">
+                ₹{new Intl.NumberFormat('en-IN').format(metrics.totalRevenue)}
               </Typography>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Typography variant="h4" component="div">Rs.{new Intl.NumberFormat('en-IN').format(metrics.totalRevenue)}</Typography>
-                <CurrencyRupeeIcon fontSize="large" />
-              </Box>
-            </CardContent>
-          </Card>
-        </Box>
+              <CurrencyRupeeIcon fontSize="large" />
+            </Box>
+          </CardContent>
+        </Card>
       </Box>
 
       {/* Orders Table */}
-      <Box mt={4}>
-        <Typography variant="h6" gutterBottom>
+      <Box mt={6}>
+        <Typography
+          variant="h6"
+          fontWeight="600"
+          sx={{ mb: 2, color: '#1e293b' }}
+        >
           Recent Orders
         </Typography>
-        <TableContainer component={Paper}>
+
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: 3,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          }}
+        >
           <Table>
-            <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+            <TableHead sx={{ backgroundColor: '#f1f5f9' }}>
               <TableRow>
-                <TableCell><strong>Order ID</strong></TableCell>
-                <TableCell><strong>Customer</strong></TableCell>
-                <TableCell><strong>Date</strong></TableCell>
-                <TableCell><strong>Total</strong></TableCell>
-                <TableCell><strong>Status</strong></TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Order ID</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Customer</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Total</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {orders.map((order, index) => (
-                <TableRow key={order.orderId} sx={{ backgroundColor: index % 2 === 0 ? '#f9f9f9' : '#fff' }}>
+                <TableRow
+                  key={order.orderId}
+                  sx={{
+                    backgroundColor: index % 2 === 0 ? '#fff' : '#f9fafb',
+                    '&:hover': {
+                      backgroundColor: '#f1f5f9',
+                    },
+                    transition: 'background-color 0.2s ease',
+                  }}
+                >
                   <TableCell>{order.orderId}</TableCell>
-                  <TableCell>{order.customer?.fullName || "N/A"}</TableCell>
-                  <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>{order.customer?.fullName || 'N/A'}</TableCell>
+                  <TableCell>
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </TableCell>
                   <TableCell>₹ {order.totalAmount}</TableCell>
-                  <TableCell>{order.status}</TableCell>
+                  <TableCell>
+                    <Typography
+                      sx={{
+                        px: 1.5,
+                        py: 0.5,
+                        display: 'inline-block',
+                        borderRadius: '20px',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        backgroundColor:
+                          order.status === 'completed'
+                            ? 'rgba(34,197,94,0.1)'
+                            : order.status === 'processing'
+                            ? 'rgba(2,136,209,0.1)'
+                            : order.status === 'on hold'
+                            ? 'rgba(218,165,32,0.1)'
+                            : order.status === 'pending payment'
+                            ? 'rgba(255,165,0,0.1)'
+                            : order.status === 'refunded'
+                            ? 'rgba(0,128,128,0.1)'
+                            : order.status === 'cancelled'
+                            ? 'rgba(220,38,38,0.1)'
+                            : order.status === 'failed'
+                            ? 'rgba(107,114,128,0.1)'
+                            : 'rgba(30,41,59,0.05)',
+                      }}
+                    >
+                      {order.status}
+                    </Typography>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
-        <Box mt={2} textAlign="right">
+
+        <Box mt={3} textAlign="right">
           <Link href="/admin/orders" passHref>
-          <Button
-            variant="contained"
-            color="primary"
-            endIcon={<ArrowForwardIos />}
-          >
-            View All Orders
-          </Button>
+            <Button
+              variant="contained"
+              sx={{
+                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                borderRadius: '25px',
+                px: 3,
+                py: 1,
+                fontWeight: 600,
+                textTransform: 'none',
+                boxShadow: '0 4px 10px rgba(59,130,246,0.3)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                  boxShadow: '0 6px 14px rgba(59,130,246,0.4)',
+                },
+              }}
+              endIcon={<ArrowForwardIos />}
+            >
+              View All Orders
+            </Button>
           </Link>
         </Box>
       </Box>
-    </div>
+    </Box>
   );
 }

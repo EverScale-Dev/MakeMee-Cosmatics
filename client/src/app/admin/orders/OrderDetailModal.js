@@ -21,7 +21,7 @@ import {
   FormControl,
   Grid,
   Chip,
-  CircularProgress
+  CircularProgress,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
@@ -29,7 +29,12 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import Swal from "sweetalert2";
 import axios from "axios";
 
-export default function OrderDetailModal({ order, open, onClose, onUpdateStatus }) {
+export default function OrderDetailModal({
+  order,
+  open,
+  onClose,
+  onUpdateStatus,
+}) {
   const [newStatus, setNewStatus] = useState(order?.status || "processing");
   const [loading, setLoading] = useState(false);
 
@@ -52,6 +57,8 @@ export default function OrderDetailModal({ order, open, onClose, onUpdateStatus 
       case "on hold":
       case "pending payment":
         return "warning";
+      case "refunded":
+        return "secondary";
       case "shipped":
         return "primary";
       default:
@@ -104,7 +111,14 @@ export default function OrderDetailModal({ order, open, onClose, onUpdateStatus 
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pr: 5 }}>
+      <DialogTitle
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          pr: 5,
+        }}
+      >
         <Typography variant="h6">Order Details: #{order.orderId}</Typography>
         <Chip
           label={order.status.toUpperCase()}
@@ -115,7 +129,12 @@ export default function OrderDetailModal({ order, open, onClose, onUpdateStatus 
         <IconButton
           aria-label="close"
           onClick={onClose}
-          sx={{ position: "absolute", right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
+          sx={{
+            position: "absolute",
+            right: 8,
+            top: 8,
+            color: (theme) => theme.palette.grey[500],
+          }}
         >
           <CloseIcon />
         </IconButton>
@@ -164,12 +183,15 @@ export default function OrderDetailModal({ order, open, onClose, onUpdateStatus 
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
                   label="Update Status"
+                  fullWidth
                 >
                   <MenuItem value="pending payment">Pending Payment</MenuItem>
                   <MenuItem value="processing">Processing</MenuItem>
-                  <MenuItem value="shipped">Shipped</MenuItem>
+                  <MenuItem value="on hold">On Hold</MenuItem>
                   <MenuItem value="completed">Completed</MenuItem>
+                  <MenuItem value="refunded">Refunded</MenuItem>
                   <MenuItem value="cancelled">Cancelled</MenuItem>
+                  <MenuItem value="failed">Failed</MenuItem>
                 </Select>
               </FormControl>
               <Button
@@ -185,7 +207,13 @@ export default function OrderDetailModal({ order, open, onClose, onUpdateStatus 
               <Button
                 variant="contained"
                 color="primary"
-                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <LocalShippingIcon />}
+                startIcon={
+                  loading ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : (
+                    <LocalShippingIcon />
+                  )
+                }
                 onClick={handleInitiateShipment}
                 disabled={order.shiprocket?.awb_code || loading}
                 fullWidth
@@ -193,26 +221,32 @@ export default function OrderDetailModal({ order, open, onClose, onUpdateStatus 
                 {order.shiprocket?.awb_code
                   ? "Shipment Created"
                   : loading
-                  ? "Creating Shipment..."
-                  : "Create Shiprocket Shipment"}
+                    ? "Creating Shipment..."
+                    : "Create Shiprocket Shipment"}
               </Button>
             </Paper>
           </Grid>
 
           {/* ================= RIGHT: Shiprocket + Summary ================= */}
           <Grid item xs={12} md={6}>
-            <Paper elevation={1} sx={{ p: 3, mb: 4, backgroundColor: "#f5f5f5" }}>
+            <Paper
+              elevation={1}
+              sx={{ p: 3, mb: 4, backgroundColor: "#f5f5f5" }}
+            >
               <Typography variant="h5" gutterBottom>
                 Shipment Details (Shiprocket)
               </Typography>
               <Typography variant="body1">
-                <strong>Shiprocket ID:</strong> {order.shiprocket?.shiprocket_order_id || "N/A"}
+                <strong>Shiprocket ID:</strong>{" "}
+                {order.shiprocket?.shiprocket_order_id || "N/A"}
               </Typography>
               <Typography variant="body1">
-                <strong>AWB / Tracking:</strong> {order.shiprocket?.awb_code || "N/A"}
+                <strong>AWB / Tracking:</strong>{" "}
+                {order.shiprocket?.awb_code || "N/A"}
               </Typography>
               <Typography variant="body1">
-                <strong>Courier:</strong> {order.shiprocket?.courier_name || "N/A"}
+                <strong>Courier:</strong>{" "}
+                {order.shiprocket?.courier_name || "N/A"}
               </Typography>
               <Typography variant="body1" sx={{ mt: 1 }}>
                 <Button
@@ -248,11 +282,15 @@ export default function OrderDetailModal({ order, open, onClose, onUpdateStatus 
               </Typography>
               <Box display="flex" justifyContent="space-between" mt={1}>
                 <Typography variant="body1">Subtotal:</Typography>
-                <Typography variant="body1">₹ {order.subTotal?.toFixed(2) || "N/A"}</Typography>
+                <Typography variant="body1">
+                  ₹ {order.subTotal?.toFixed(2) || "N/A"}
+                </Typography>
               </Box>
               <Box display="flex" justifyContent="space-between">
                 <Typography variant="body1">Shipping:</Typography>
-                <Typography variant="body1">₹ {order.shippingFee?.toFixed(2) || "0.00"}</Typography>
+                <Typography variant="body1">
+                  ₹ {order.shippingFee?.toFixed(2) || "0.00"}
+                </Typography>
               </Box>
               <Divider sx={{ my: 1 }} />
               <Box display="flex" justifyContent="space-between">
@@ -274,7 +312,9 @@ export default function OrderDetailModal({ order, open, onClose, onUpdateStatus 
           </Typography>
           <TableContainer component={Paper} elevation={2}>
             <Table size="small">
-              <TableHead sx={{ backgroundColor: (theme) => theme.palette.grey[200] }}>
+              <TableHead
+                sx={{ backgroundColor: (theme) => theme.palette.grey[200] }}
+              >
                 <TableRow>
                   <TableCell>
                     <strong>Product</strong>
@@ -294,7 +334,9 @@ export default function OrderDetailModal({ order, open, onClose, onUpdateStatus 
                 {order.products.map((item) => (
                   <TableRow key={item.product?._id || item.name} hover>
                     <TableCell>{item.name}</TableCell>
-                    <TableCell align="right">₹ {item.price?.toFixed(2)}</TableCell>
+                    <TableCell align="right">
+                      ₹ {item.price?.toFixed(2)}
+                    </TableCell>
                     <TableCell align="right">{item.quantity}</TableCell>
                     <TableCell align="right">
                       ₹ {(item.price * item.quantity)?.toFixed(2)}
