@@ -176,7 +176,7 @@ const About = () => {
               >
                 <p>Every product we create is designed with care, using skin-friendly ingredients that work gently yet effectively. From refreshing face washes to nourishing serums and protective creams, MakeMee is here to be part of your everyday self-care ritual.</p>
                 <p>Our mission is to make skincare accessible, trustworthy, and joyful. We want every person to look in the mirror and see not just clear, radiant skin—but also the confidence that comes with it.</p>
-                <p>MakeMee is not just a cosmetic brand; it's a movement of self-love, where beauty meets wellness, and where your glow becomes our biggest reward. ✨</p>
+                <p>MakeMee is not just a cosmetic brand; it is a movement of self-love, where beauty meets wellness, and where your glow becomes our biggest reward. ✨</p>
               </motion.div>
 
               {/* Animated SVG */}
