@@ -3,11 +3,11 @@ import React from "react";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { Banner } from "@/components/banner";
-import { ProductList } from "@/components/product";  // ⬅️ updated import
+import { ProductList } from "@/components/product";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import UspsSection from "@/components/uspsSection";
-import WhyChooseUs from "@/components/whychooseus";
+import WhyChooseUs from "@/components/whyChooseUs";
 
 const Home = () => {
   return (

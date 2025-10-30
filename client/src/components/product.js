@@ -14,7 +14,7 @@ import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRound
 const NextArrow = ({ onClick }) => (
   <IconButton
     onClick={onClick}
-    className="absolute -right-4 top-1/2 -translate-y-1/2 bg-white text-blue-900 shadow-lg hover:bg-blue-900 hover:text-white transition-all duration-300 z-10"
+    className="absolute -right-2 top-1/2 -translate-y-1/2 bg-white text-blue-900 shadow-lg hover:bg-blue-900 hover:text-white transition-all duration-300 z-10"
     size="large"
   >
     <ArrowForwardIosRoundedIcon />
@@ -24,7 +24,7 @@ const NextArrow = ({ onClick }) => (
 const PrevArrow = ({ onClick }) => (
   <IconButton
     onClick={onClick}
-    className="absolute -left-4 top-1/2 -translate-y-1/2 bg-white text-blue-900 shadow-lg hover:bg-blue-900 hover:text-white transition-all duration-300 z-10"
+    className="absolute -left-2 top-1/2 -translate-y-1/2 bg-white text-blue-900 shadow-lg hover:bg-blue-900 hover:text-white transition-all duration-300 z-10"
     size="large"
   >
     <ArrowBackIosNewRoundedIcon />
