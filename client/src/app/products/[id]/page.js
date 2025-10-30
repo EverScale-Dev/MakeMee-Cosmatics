@@ -9,7 +9,6 @@ import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/slices/cartSlice";
 import api from "@/utils/axiosClient";
 
-
 // UI/MUI Imports
 import { motion } from "framer-motion";
 import { Rating, Button, Typography, IconButton } from "@mui/material";
@@ -106,7 +105,6 @@ const ProductDetail = () => {
     setCartSidebarOpen(true); // <-- open sidebar here
   };
 
-
   const handleBuyNow = () => {
     console.log(`Initiating Buy Now for ${product.name}.`);
   };
@@ -128,39 +126,37 @@ const ProductDetail = () => {
   };
   // ------------------------------------
 
-  // === API Logic (CLEANED to remove static fallback values in the response object) ===
   useEffect(() => {
-    if (id) {
-      api
-        .get(`/products/${id}`)
-        .then((response) => {
-          // Use a clean product object based purely on API response
-          const currentProduct = {
-            ...response.data,
-            reviewCount: response.data.reviews?.length || 0, // Fallback to 0, not static '520'
-            rating: response.data.rating || 0, // Fallback to 0, not static '4.9'
-          };
-          setProduct(currentProduct);
+    if (!id) return;
 
-          return api.get("/products");
-        })
-        .then((allProductsResponse) => {
-          // Filter and slice related products
-          const related = allProductsResponse.data
-            .filter((p) => p.category === product?.category && p._id !== id)
-            .slice(0, 4);
+    const fetchProductAndRelated = async () => {
+      try {
+        const productResponse = await api.get(`/products/${id}`);
+        const currentProduct = {
+          ...productResponse.data,
+          reviewCount: productResponse.data.reviews?.length || 0,
+          rating: productResponse.data.rating || 0,
+        };
+        setProduct(currentProduct);
 
-          setRelatedProducts(related);
-        })
-        .catch((error) => {
-          console.error("Error fetching product data:", error);
-          setError(
-            "Failed to fetch product details. Please try refreshing the page."
-          );
-          setProduct(defaultProductState);
-        });
-    }
-  }, [id, product?.category]); // dependency array is correct
+        // Now fetch related using the freshly fetched product’s category
+        const allProductsResponse = await api.get("/products");
+        const related = allProductsResponse.data
+          .filter((p) => p.category === currentProduct.category && p._id !== id)
+          .slice(0, 4);
+
+        setRelatedProducts(related);
+      } catch (error) {
+        console.error("Error fetching product data:", error);
+        setError(
+          "Failed to fetch product details. Please try refreshing the page."
+        );
+        setProduct(defaultProductState);
+      }
+    };
+
+    fetchProductAndRelated();
+  }, [id]); // ✅ only depend on id
 
   // Slider settings for Related Products (Not temporary data)
   const carouselSettings = {
@@ -209,226 +205,250 @@ const ProductDetail = () => {
           initial="hidden"
           animate="visible"
         >
-        {/* SECTION 1: PRODUCT HERO (Image & Info) */}
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-10 pb-12">
-
+          {/* SECTION 1: PRODUCT HERO (Image & Info) */}
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-10 pb-12">
             {/* === Product Image Gallery (Left Side) === */}
             <motion.div
-                // Width set for better balance (1/2 for lg, 5/12 for xl)
-                className="w-full lg:w-1/2 xl:w-5/12 flex flex-col lg:flex-row gap-3 items-center lg:items-start lg:sticky lg:top-4 lg:self-start" 
-                variants={itemVariants}
+              // Width set for better balance (1/2 for lg, 5/12 for xl)
+              className="w-full lg:w-1/2 xl:w-5/12 flex flex-col lg:flex-row gap-3 items-center lg:items-start lg:sticky lg:top-4 lg:self-start"
+              variants={itemVariants}
             >
-                
-                {/* === THUMBNAILS CONTAINER (Vertical for Desktop, Horizontal for Mobile) === */}
-                <div 
-                    // Reduced gap to 2 for tighter vertical stack
-                    className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-hidden w-full lg:w-auto order-2 lg:order-1 px-2 lg:px-0 lg:m-1 justify-center scrollbar-hide"
-                >
-                    {productImages.map((img, index) => (
-                        <motion.div
-                            key={index}
-                            onClick={() => setActiveIndex(index)}
-                            // Smaller thumbnail size (w-16 h-16) and reduced ring size
-                            className={`relative w-16 h-16 p-1 rounded-lg cursor-pointer transition-all duration-300 shadow-sm flex-shrink-0 
-                                ${activeIndex === index
-                                    ? 'border-2 ring-2 scale-105' 
-                                    : 'border border-gray-200 hover:border-gray-300'
+              {/* === THUMBNAILS CONTAINER (Vertical for Desktop, Horizontal for Mobile) === */}
+              <div
+                // Reduced gap to 2 for tighter vertical stack
+                className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-hidden w-full lg:w-auto order-2 lg:order-1 px-2 lg:px-0 lg:m-1 justify-center scrollbar-hide"
+              >
+                {productImages.map((img, index) => (
+                  <motion.div
+                    key={index}
+                    onClick={() => setActiveIndex(index)}
+                    // Smaller thumbnail size (w-16 h-16) and reduced ring size
+                    className={`relative w-16 h-16 p-1 rounded-lg cursor-pointer transition-all duration-300 shadow-sm flex-shrink-0 
+                                ${
+                                  activeIndex === index
+                                    ? "border-2 ring-2 scale-105"
+                                    : "border border-gray-200 hover:border-gray-300"
                                 }`}
-                            style={activeIndex === index ? {
-                                borderColor: PRIMARY_COLOR,
-                                boxShadow: `0 0 0 2px ${PRIMARY_COLOR}30`
-                            } : {}}
-                            // whileHover={{ scale: 1.08 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <img
-                                src={img}
-                                alt={`${product.name}-thumb-${index}`}
-                                className="h-full w-full object-contain rounded-md bg-white mix-blend-multiply"
-                            />
-                        </motion.div>
-                    ))}
-                </div>
-                
-                {/* === MAIN IMAGE CONTAINER (Main image and arrows) === */}
-                <div 
-                    // flex-1 forces the main image to take the remaining space next to the thumbnails
-                    className="relative w-full aspect-square max-w-md mx-auto lg:mx-0 bg-white p-4 rounded-xl shadow-xl overflow-hidden group order-1 lg:order-2 lg:flex-1 lg:max-w-none"
-                >
-
-                    {/* Weight badge (Highest z-index for visibility) */}
-                    {product.weight && (
-                        <div className="absolute top-4 right-4 bg-gray-900/80 text-white text-xs font-semibold px-2.5 py-1 rounded-full z-50 shadow-lg">
-                            {product.weight}
-                        </div>
-                    )}
-
-                    {/* Image Navigation Buttons: Switched to standard button elements with SVG */}
-                    {productImages.length > 1 && (
-                        <>
-                            {/* Previous Button */}
-                            <button
-                                onClick={goToPrevImage}
-                                // z-50, w-8 h-8 size, hover fade logic for desktop
-                                className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white transition duration-300 z-50 w-8 h-8 rounded-full shadow-lg flex items-center justify-center
-                                        lg:opacity-0 lg:group-hover:opacity-100"
-                                aria-label="Previous image"
-                            >
-                                {/* SVG Chevron Left Icon */}
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                                </svg>
-                            </button>
-
-                            {/* Next Button */}
-                            <button
-                                onClick={goToNextImage}
-                                // z-50, w-8 h-8 size, hover fade logic for desktop
-                                className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white transition duration-300 z-50 w-8 h-8 rounded-full shadow-lg flex items-center justify-center
-                                        lg:opacity-0 lg:group-hover:opacity-100"
-                                aria-label="Next image"
-                            >
-                                {/* SVG Chevron Right Icon */}
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
-                        </>
-                    )}
-
-                    <motion.img
-                        key={activeIndex}
-                        src={currentImage}
-                        alt={`${product.name} image ${activeIndex + 1}`}
-                        className="object-contain w-full h-full transition-transform duration-500 ease-in-out group-hover:scale-[1.02] mix-blend-multiply"
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.4 }}
+                    style={
+                      activeIndex === index
+                        ? {
+                            borderColor: PRIMARY_COLOR,
+                            boxShadow: `0 0 0 2px ${PRIMARY_COLOR}30`,
+                          }
+                        : {}
+                    }
+                    // whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.name}-thumb-${index}`}
+                      className="h-full w-full object-contain rounded-md bg-white mix-blend-multiply"
                     />
-                </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* === MAIN IMAGE CONTAINER (Main image and arrows) === */}
+              <div
+                // flex-1 forces the main image to take the remaining space next to the thumbnails
+                className="relative w-full aspect-square max-w-md mx-auto lg:mx-0 bg-white p-4 rounded-xl shadow-xl overflow-hidden group order-1 lg:order-2 lg:flex-1 lg:max-w-none"
+              >
+                {/* Weight badge (Highest z-index for visibility) */}
+                {product.weight && (
+                  <div className="absolute top-4 right-4 bg-gray-900/80 text-white text-xs font-semibold px-2.5 py-1 rounded-full z-50 shadow-lg">
+                    {product.weight}
+                  </div>
+                )}
+
+                {/* Image Navigation Buttons: Switched to standard button elements with SVG */}
+                {productImages.length > 1 && (
+                  <>
+                    {/* Previous Button */}
+                    <button
+                      onClick={goToPrevImage}
+                      // z-50, w-8 h-8 size, hover fade logic for desktop
+                      className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white transition duration-300 z-50 w-8 h-8 rounded-full shadow-lg flex items-center justify-center
+                                        lg:opacity-0 lg:group-hover:opacity-100"
+                      aria-label="Previous image"
+                    >
+                      {/* SVG Chevron Left Icon */}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-gray-700"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15 19l-7-7 7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    {/* Next Button */}
+                    <button
+                      onClick={goToNextImage}
+                      // z-50, w-8 h-8 size, hover fade logic for desktop
+                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white transition duration-300 z-50 w-8 h-8 rounded-full shadow-lg flex items-center justify-center
+                                        lg:opacity-0 lg:group-hover:opacity-100"
+                      aria-label="Next image"
+                    >
+                      {/* SVG Chevron Right Icon */}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-gray-700"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
+                  </>
+                )}
+
+                <motion.img
+                  key={activeIndex}
+                  src={currentImage}
+                  alt={`${product.name} image ${activeIndex + 1}`}
+                  className="object-contain w-full h-full transition-transform duration-500 ease-in-out group-hover:scale-[1.02] mix-blend-multiply"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4 }}
+                />
+              </div>
             </motion.div>
 
             {/* === Product Info & Actions (Right Side) === */}
             <motion.div
-                className="w-full lg:w-1/2 xl:w-7/12 space-y-6"
-                variants={itemVariants}
+              className="w-full lg:w-1/2 xl:w-7/12 space-y-6"
+              variants={itemVariants}
             >
-                <div className="space-y-3">
-                    <p className="text-sm font-medium text-gray-500 uppercase tracking-widest">
-                        {product.brand || "Brand Name"}
-                    </p>
-                    <h1 className="text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight">
-                        {product.name}
-                    </h1>
-
-                    {/* Rating and Reviews */}
-                    <div className="flex items-center space-x-3">
-                        <Rating
-                            name="product-rating"
-                            value={product.rating || 0}
-                            precision={0.1}
-                            readOnly
-                            emptyIcon={
-                                <Star style={{ opacity: 0.55 }} fontSize="inherit" />
-                            }
-                            sx={{ color: PRIMARY_COLOR }}
-                        />
-                        <Typography
-                            variant="body2"
-                            className="text-gray-600 font-medium"
-                        >
-                            {product.rating || 0} ({product.reviews || 0} Reviews)
-                        </Typography>
-                        <IconButton
-                            size="small"
-                            aria-label="add to wishlist"
-                            style={{ color: PRIMARY_COLOR }}
-                            className="text-gray-400 hover:opacity-80"
-                        >
-                            <FavoriteBorder fontSize="small" />
-                        </IconButton>
-                    </div>
-                </div>
-
-                {/* Price Block */}
-                <div className="flex items-baseline space-x-3 pt-2">
-                    <span className="text-3xl font-bold text-gray-900">
-                        ₹{salePrice.toLocaleString("en-IN")}
-                    </span>
-                    {discount > 0 && (
-                        <>
-                            <span className="text-xl text-gray-500 line-through">
-                                ₹{regularPrice.toLocaleString("en-IN")}
-                            </span>
-                            <span className="text-lg font-semibold text-red-600 bg-red-100 px-3 py-1 rounded-full">
-                                {discount}% OFF
-                            </span>
-                        </>
-                    )}
-                </div>
-
-                {/* Short ShortDescription */}
-                <p
-                    className={`text-lg text-gray-700 leading-relaxed border-l-4 pl-4 py-2 bg-gray-50 rounded-md`}
-                    style={{ borderColor: PRIMARY_LIGHT }}
-                >
-                    {product.shortDescription ||
-                        "A brief summary of the key product benefits."}
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-gray-500 uppercase tracking-widest">
+                  {product.brand || "Brand Name"}
                 </p>
+                <h1 className="text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight">
+                  {product.name}
+                </h1>
 
-                {/* Action Buttons */}
-                <motion.div
-                    className="flex flex-col sm:flex-row gap-4 pt-4"
-                    variants={itemVariants}
+                {/* Rating and Reviews */}
+                <div className="flex items-center space-x-3">
+                  <Rating
+                    name="product-rating"
+                    value={product.rating || 0}
+                    precision={0.1}
+                    readOnly
+                    emptyIcon={
+                      <Star style={{ opacity: 0.55 }} fontSize="inherit" />
+                    }
+                    sx={{ color: PRIMARY_COLOR }}
+                  />
+                  <Typography
+                    variant="body2"
+                    className="text-gray-600 font-medium"
+                  >
+                    {product.rating || 0} ({product.reviews || 0} Reviews)
+                  </Typography>
+                  <IconButton
+                    size="small"
+                    aria-label="add to wishlist"
+                    style={{ color: PRIMARY_COLOR }}
+                    className="text-gray-400 hover:opacity-80"
+                  >
+                    <FavoriteBorder fontSize="small" />
+                  </IconButton>
+                </div>
+              </div>
+
+              {/* Price Block */}
+              <div className="flex items-baseline space-x-3 pt-2">
+                <span className="text-3xl font-bold text-gray-900">
+                  ₹{salePrice.toLocaleString("en-IN")}
+                </span>
+                {discount > 0 && (
+                  <>
+                    <span className="text-xl text-gray-500 line-through">
+                      ₹{regularPrice.toLocaleString("en-IN")}
+                    </span>
+                    <span className="text-lg font-semibold text-red-600 bg-red-100 px-3 py-1 rounded-full">
+                      {discount}% OFF
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Short ShortDescription */}
+              <p
+                className={`text-lg text-gray-700 leading-relaxed border-l-4 pl-4 py-2 bg-gray-50 rounded-md`}
+                style={{ borderColor: PRIMARY_LIGHT }}
+              >
+                {product.shortDescription ||
+                  "A brief summary of the key product benefits."}
+              </p>
+
+              {/* Action Buttons */}
+              <motion.div
+                className="flex flex-col sm:flex-row gap-4 pt-4"
+                variants={itemVariants}
+              >
+                <Button
+                  variant="contained"
+                  onClick={() => handleAddToCart(product)}
+                  startIcon={<AddShoppingCartIcon />}
+                  className="w-full sm:w-1/2"
+                  sx={{
+                    py: 1.5,
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    bgcolor: PRIMARY_COLOR,
+                    "&:hover": {
+                      bgcolor: PRIMARY_HOVER,
+                      boxShadow: `0 4px 15px ${PRIMARY_COLOR}40`,
+                    },
+                    borderRadius: "10px",
+                    boxShadow: `0 2px 8px ${PRIMARY_COLOR}30`,
+                  }}
+                  component={motion.button}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                    <Button
-                        variant="contained"
-                        onClick={() => handleAddToCart(product)}
-                        startIcon={<AddShoppingCartIcon />}
-                        className="w-full sm:w-1/2"
-                        sx={{
-                            py: 1.5,
-                            fontSize: "1rem",
-                            fontWeight: 600,
-                            bgcolor: PRIMARY_COLOR,
-                            "&:hover": {
-                                bgcolor: PRIMARY_HOVER,
-                                boxShadow: `0 4px 15px ${PRIMARY_COLOR}40`,
-                            },
-                            borderRadius: "10px",
-                            boxShadow: `0 2px 8px ${PRIMARY_COLOR}30`,
-                        }}
-                        component={motion.button}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                    >
-                        Add to Cart
-                    </Button>
-                    <Button
-                        variant="outlined"
-                        onClick={handleBuyNow}
-                        className="w-full sm:w-1/2"
-                        sx={{
-                            py: 1.5,
-                            fontSize: "1rem",
-                            fontWeight: 600,
-                            color: PRIMARY_COLOR,
-                            borderColor: PRIMARY_COLOR,
-                            "&:hover": {
-                                borderColor: PRIMARY_HOVER,
-                                bgcolor: `${PRIMARY_COLOR}10`,
-                            },
-                            borderRadius: "10px",
-                        }}
-                        component={motion.button}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                    >
-                        Buy Now
-                    </Button>
-                </motion.div>
+                  Add to Cart
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={handleBuyNow}
+                  className="w-full sm:w-1/2"
+                  sx={{
+                    py: 1.5,
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    color: PRIMARY_COLOR,
+                    borderColor: PRIMARY_COLOR,
+                    "&:hover": {
+                      borderColor: PRIMARY_HOVER,
+                      bgcolor: `${PRIMARY_COLOR}10`,
+                    },
+                    borderRadius: "10px",
+                  }}
+                  component={motion.button}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Buy Now
+                </Button>
+              </motion.div>
             </motion.div>
-        </div>
+          </div>
 
           <hr className="my-8 border-gray-200" />
 
@@ -641,7 +661,10 @@ const ProductDetail = () => {
           Product added to cart!
         </Alert>
       </Snackbar>
-      <CartSidebar open={cartSidebarOpen} onClose={() => setCartSidebarOpen(false)} />
+      <CartSidebar
+        open={cartSidebarOpen}
+        onClose={() => setCartSidebarOpen(false)}
+      />
       <Footer />
     </>
   );
