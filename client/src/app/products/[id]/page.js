@@ -1,349 +1,3 @@
-// "use client";
-// import "slick-carousel/slick/slick.css";
-// import "slick-carousel/slick/slick-theme.css";
-// import Link from "next/link";
-// import { useParams } from "next/navigation";
-// import React, { useEffect, useState } from "react";
-// import { useDispatch } from "react-redux";
-// import { addToCart } from "@/store/slices/cartSlice";
-// import Header from "@/components/header";
-// import Snackbar from "@mui/material/Snackbar";
-// import Alert from "@mui/material/Alert";
-// import Typography from "@mui/material/Typography";
-// import Footer from "@/components/footer";
-// import BoltIcon from "@mui/icons-material/Bolt";
-// import Box from "@mui/material/Box";
-// import Slider from "react-slick";
-// import UspsSection from "@/components/whychooseus";
-// import api from "@/utils/axiosClient";
-
-// const ProductDetail = () => {
-//   const { id } = useParams();
-//   const [product, setProduct] = useState(null);
-//   const [error, setError] = useState(null);
-//   const [activeTab, setActiveTab] = useState("description");
-//   const [snackbarOpen, setSnackbarOpen] = useState(false);
-//   const [relatedProducts, setRelatedProducts] = useState([]);
-//   const [activeIndex, setActiveIndex] = useState(0); // 👈 Added for image gallery
-
-//   const dispatch = useDispatch();
-
-//   const handleAddToCart = () => {
-//     const cartItem = {
-//       id: product._id,
-//       name: product.name,
-//       price: product.salePrice,
-//       quantity: 1,
-//       image: product.images[0],
-//     };
-//     dispatch(addToCart(cartItem));
-//     setSnackbarOpen(true);
-//   };
-
-//   // Fetch product + related products
-//   useEffect(() => {
-//     if (id) {
-//       api
-//         .get(`/products/${id}`)
-//         .then((response) => {
-//           const currentProduct = response.data;
-//           setProduct(currentProduct);
-
-//           return api.get("/products");
-//         })
-//         .then((allProductsResponse) => {
-//           const related = allProductsResponse.data
-//             .filter((p) => p.category === product?.category)
-//             .filter((p) => p._id !== id)
-//             .slice(0, 4);
-
-//           setRelatedProducts(related);
-//         })
-//         .catch((error) => {
-//           console.error("Error fetching product data:", error);
-//           setError("Failed to fetch product details.");
-//         });
-//     }
-//   }, [id]);
-
-//   const handleSnackbarClose = () => {
-//     setSnackbarOpen(false);
-//   };
-
-//   const carouselSettings = {
-//     dots: true,
-//     speed: 500,
-//     slidesToShow: 4,
-//     slidesToScroll: 1,
-//     responsive: [
-//       { breakpoint: 1024, settings: { slidesToShow: 3 } },
-//       { breakpoint: 768, settings: { slidesToShow: 2 } },
-//       { breakpoint: 480, settings: { slidesToShow: 1 } },
-//     ],
-//   };
-
-//   if (error) return <div className="text-center">{error}</div>;
-//   if (!product) return <div className="text-center">No product found.</div>;
-
-//   return (
-//     <>
-//       <Header />
-
-//       <div className="container mx-auto px-4 py-8 flex flex-col lg:flex-row space-y-10 lg:space-y-0 lg:space-x-10">
-//         {/* ✅ UPDATED IMAGE SECTION (Amazon-style) */}
-//         <div className="w-full lg:w-1/2 flex flex-col items-center">
-//           {/* Main Image */}
-//           <div className="relative w-80 h-80 flex justify-center items-center border rounded-lg shadow-md bg-white overflow-hidden">
-//             <img
-//               src={product.images[activeIndex]}
-//               alt={`${product.name}-${activeIndex}`}
-//               className="object-contain w-full h-full transition-transform duration-300 hover:scale-105"
-//             />
-
-//             {/* Weight badge */}
-//             {product.weight && (
-//               <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-md">
-//                 {product.weight}
-//               </div>
-//             )}
-
-//             {product.images.length > 1 && (
-//               <>
-//                 <button
-//                   onClick={() =>
-//                     setActiveIndex((prev) =>
-//                       prev === 0 ? product.images.length - 1 : prev - 1
-//                     )
-//                   }
-//                   className="absolute left-2 bg-gray-800/60 text-white rounded-full p-2 hover:bg-gray-900 transition"
-//                 >
-//                   ‹
-//                 </button>
-//                 <button
-//                   onClick={() =>
-//                     setActiveIndex((prev) =>
-//                       prev === product.images.length - 1 ? 0 : prev + 1
-//                     )
-//                   }
-//                   className="absolute right-2 bg-gray-800/60 text-white rounded-full p-2 hover:bg-gray-900 transition"
-//                 >
-//                   ›
-//                 </button>
-//               </>
-//             )}
-//           </div>
-
-//           {/* Thumbnails */}
-//           <div className="flex gap-3 mt-4 overflow-x-auto px-2 justify-center scrollbar-hide">
-//             {product.images.map((img, index) => (
-//               <div
-//                 key={index}
-//                 onClick={() => setActiveIndex(index)}
-//                 className={`border-2 rounded-md cursor-pointer transition-transform duration-200 ${
-//                   activeIndex === index
-//                     ? "border-blue-600 scale-105"
-//                     : "border-gray-300 hover:border-blue-400"
-//                 }`}
-//               >
-//                 <img
-//                   src={img}
-//                   alt={`${product.name}-thumb-${index}`}
-//                   className="h-16 w-16 object-contain rounded-md"
-//                 />
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-
-//         {/* Product Details */}
-//         <div className="w-full lg:w-3/5">
-//           <div className="bg-white rounded-lg shadow-lg p-6">
-//             <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
-//             <p className="text-gray-700 mb-4">{product.description}</p>
-//             <Typography
-//               variant="body2"
-//               sx={{ color: "green", fontWeight: "bold", mb: "4px" }}
-//             >
-//               <BoltIcon sx={{ color: "yellow" }} /> Get Delivered in 2 Hours
-//             </Typography>
-
-//             <div className="mb-4 flex items-center">
-//               <span className="text-xl text-gray-500 line-through mr-2">
-//                 ₹{product.regularPrice}
-//               </span>
-//               <span className="text-2xl font-semibold text-red-600">
-//                 ₹{product.salePrice}
-//               </span>
-//             </div>
-
-//             <button
-//               className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-400 hover:to-blue-500 transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
-//               onClick={handleAddToCart}
-//             >
-//               Add to Cart
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Tabs Section */}
-//       <div className="container my-4 flex justify-center w-9/12 mx-auto">
-//         <div className="shadow-lg rounded-lg p-5 w-full">
-//           <div className="flex space-x-4 justify-center">
-//             <button
-//               className={`${
-//                 activeTab === "description"
-//                   ? "text-blue-600 border-b-2 border-blue-600"
-//                   : "text-gray-600"
-//               } py-2 px-4 font-semibold`}
-//               onClick={() => setActiveTab("description")}
-//             >
-//               Description
-//             </button>
-//             <button
-//               className={`${
-//                 activeTab === "sourcing"
-//                   ? "text-blue-600 border-b-2 border-blue-600"
-//                   : "text-gray-600"
-//               } py-2 px-4 font-semibold`}
-//               onClick={() => setActiveTab("sourcing")}
-//             >
-//               Sourcing
-//             </button>
-//           </div>
-
-//           <div className="mt-6">
-//             {activeTab === "description" && (
-//               <p className="text-gray-700">
-//                 {product.description || "No description available."}
-//               </p>
-//             )}
-//             {activeTab === "sourcing" && (
-//               <p className="text-gray-700">
-//                 {product.sourcingInfo || "No sourcing information available."}
-//               </p>
-//             )}
-//           </div>
-//         </div>
-//       </div>
-
-//       <UspsSection />
-
-//       {/* Related Products Section */}
-//       <div className="container p-6 mx-auto">
-//         <Slider {...carouselSettings}>
-//           {relatedProducts.map((product) => (
-//             <div key={product._id} className="p-3">
-//               <div className="relative bg-white border rounded-lg shadow-sm hover:shadow-lg transition-shadow duration-300 flex flex-col">
-//                 <Link
-//                   href={`/products/${product._id}`}
-//                   className="flex-1 flex flex-col"
-//                 >
-//                   <div className="flex justify-center items-center p-4">
-//                     <img
-//                       src={
-//                         Array.isArray(product.images)
-//                           ? product.images[0]
-//                           : product.images
-//                       }
-//                       alt={product.name}
-//                       className="h-60 w-60 object-contain"
-//                     />
-//                   </div>
-
-//                   <div className="px-4 pb-4 flex-1 flex flex-col">
-//                     <h5 className="text-gray-800 font-semibold text-lg mb-1">
-//                       {product.name}
-//                     </h5>
-//                     <p className="text-gray-500 text-base mb-2 line-clamp-2">
-//                       {product.description || "Key benefits of the product..."}
-//                     </p>
-
-//                     <div className="flex items-center text-yellow-400 text-sm mb-2">
-//                       <span>★</span>
-//                       <span className="ml-1">{product.rating || 4.5}</span>
-//                       <span className="ml-2 text-gray-500 text-xs">
-//                         ({product.reviews || 10} Reviews)
-//                       </span>
-//                     </div>
-
-//                     <Box display="flex" alignItems="center" gap={1} my={1}>
-//                       {product.regularPrice &&
-//                         product.salePrice < product.regularPrice && (
-//                           <Typography
-//                             variant="body1"
-//                             color="text.secondary"
-//                             sx={{
-//                               textDecoration: "line-through",
-//                               fontWeight: "bold",
-//                             }}
-//                           >
-//                             ₹{product.regularPrice}
-//                           </Typography>
-//                         )}
-//                       <Typography
-//                         variant="h6"
-//                         sx={{ fontWeight: "bold", color: "#C00000" }}
-//                       >
-//                         ₹{product.salePrice}
-//                       </Typography>
-//                       {product.regularPrice &&
-//                         product.salePrice < product.regularPrice && (
-//                           <Typography
-//                             variant="caption"
-//                             sx={{
-//                               fontWeight: "bold",
-//                               color: "green",
-//                               ml: 1,
-//                             }}
-//                           >
-//                             {Math.round(
-//                               ((product.regularPrice - product.salePrice) /
-//                                 product.regularPrice) *
-//                                 100
-//                             )}
-//                             % off
-//                           </Typography>
-//                         )}
-//                     </Box>
-//                   </div>
-//                 </Link>
-
-//                 <button
-//                   onClick={(e) => handleAddToCart(product, e)}
-//                   className="w-full bg-blue-900 hover:bg-blue-800 text-white py-2 rounded-b-lg font-semibold transition"
-//                 >
-//                   ADD TO CART
-//                 </button>
-//               </div>
-//             </div>
-//           ))}
-//         </Slider>
-//       </div>
-
-//       {/* Snackbar */}
-//       <Snackbar
-//         open={snackbarOpen}
-//         autoHideDuration={3000}
-//         onClose={handleSnackbarClose}
-//         anchorOrigin={{ vertical: "top", horizontal: "center" }}
-//       >
-//         <Alert
-//           onClose={handleSnackbarClose}
-//           severity="success"
-//           sx={{ width: "100%" }}
-//         >
-//           Product added to cart!
-//         </Alert>
-//       </Snackbar>
-
-//       <Footer />
-//     </>
-//   );
-// };
-
-// export default ProductDetail;
-
 "use client";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -354,6 +8,7 @@ import { useParams } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/slices/cartSlice";
 import api from "@/utils/axiosClient";
+
 
 // UI/MUI Imports
 import { motion } from "framer-motion";
@@ -379,6 +34,7 @@ import {
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import UspsSection from "@/components/uspsSection";
+import CartSidebar from "@/components/CartSidebar";
 
 // --- COLOR PALETTE (Required for Theming) ---
 const PRIMARY_COLOR = "#284B76"; // Your requested color (Deep Blue)
@@ -426,6 +82,7 @@ const ProductDetail = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [cartSidebarOpen, setCartSidebarOpen] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -446,7 +103,9 @@ const ProductDetail = () => {
     };
     dispatch(addToCart(cartItem));
     setSnackbarOpen(true);
+    setCartSidebarOpen(true); // <-- open sidebar here
   };
+
 
   const handleBuyNow = () => {
     console.log(`Initiating Buy Now for ${product.name}.`);
@@ -982,7 +641,7 @@ const ProductDetail = () => {
           Product added to cart!
         </Alert>
       </Snackbar>
-
+      <CartSidebar open={cartSidebarOpen} onClose={() => setCartSidebarOpen(false)} />
       <Footer />
     </>
   );

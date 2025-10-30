@@ -4,7 +4,7 @@ import { Sparkles, Heart, Leaf, ShieldCheck, PackageOpen } from "lucide-react";
 
 // Elegant and minimal "Why Choose MakeMee" section with smooth organic shapes
 
-export default function WhyChooseMakeMee({ className = "" }) {
+export default function whyChooseUs({ className = "" }) {
   const features = [
     {
       id: "made",
