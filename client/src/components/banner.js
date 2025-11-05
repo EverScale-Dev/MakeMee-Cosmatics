@@ -1,13 +1,3 @@
-// "use client";
-// import Slider from "react-slick";
-// export const Banner = () => {
-//   return (
-//     <div className="flex justify-center">
-//           <img src="/banner.jpg" alt="Banner" style={{ maxHeight: '500px', width:'96vw',backgroundSize:'contain',borderRadius:'10px'}} />
-//     </div>
-//   );
-// };
-
 import React, { useState, useEffect } from 'react';
 import { motion, useInView } from 'framer-motion';
 

@@ -1,13 +1,29 @@
 "use client";
-import React, { useEffect, useState, useMemo } from "react";
+
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/slices/cartSlice";
-import { Box, Typography, Snackbar, Alert } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Snackbar,
+  Alert,
+  TextField,
+  MenuItem,
+  Drawer,
+  IconButton,
+  Divider,
+  Button,
+} from "@mui/material";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import CloseIcon from "@mui/icons-material/Close";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
@@ -17,19 +33,25 @@ const ProductsPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("");
+  const [added, setAdded] = useState({});
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [priceInput, setPriceInput] = useState({ min: "", max: "" });
+  const [priceRange, setPriceRange] = useState({ min: 0, max: Infinity });
 
   const dispatch = useDispatch();
 
-  // ✅ Fetch products once
+  // ✅ Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/products`);
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/products`
+        );
         setProducts(res.data);
         setFiltered(res.data);
       } catch (err) {
         console.error(err);
-        setError("Failed to fetch products. Please try again later.");
+        setError("Failed to load products. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -37,7 +59,7 @@ const ProductsPage = () => {
     fetchProducts();
   }, []);
 
-  // ✅ Handle Add to Cart
+  // ✅ Add to Cart
   const handleAddToCart = (product, e) => {
     e.stopPropagation();
     const cartItem = {
@@ -49,168 +71,256 @@ const ProductsPage = () => {
     };
     dispatch(addToCart(cartItem));
     setSnackbarOpen(true);
+    setAdded((prev) => ({ ...prev, [product._id]: true }));
+    setTimeout(
+      () => setAdded((prev) => ({ ...prev, [product._id]: false })),
+      2500
+    );
   };
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
-  // ✅ Handle Search
+  // ✅ Filter logic
   useEffect(() => {
     let updated = [...products];
 
+    // Search
     if (search.trim()) {
       updated = updated.filter(
         (p) =>
           p.name.toLowerCase().includes(search.toLowerCase()) ||
-          (p.description && p.description.toLowerCase().includes(search.toLowerCase()))
+          (p.description &&
+            p.description.toLowerCase().includes(search.toLowerCase()))
       );
     }
 
-    // ✅ Handle Sort
-    if (sort === "low-high") {
-      updated.sort((a, b) => a.salePrice - b.salePrice);
-    } else if (sort === "high-low") {
+    // Sort
+    if (sort === "low-high") updated.sort((a, b) => a.salePrice - b.salePrice);
+    else if (sort === "high-low")
       updated.sort((a, b) => b.salePrice - a.salePrice);
-    } else if (sort === "new") {
+    else if (sort === "new")
       updated.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
+
+    // Price range
+    const min = parseInt(priceRange.min) || 0;
+    const max = parseInt(priceRange.max) || Infinity;
+    updated = updated.filter((p) => p.salePrice >= min && p.salePrice <= max);
 
     setFiltered(updated);
-  }, [search, sort, products]);
+  }, [search, sort, priceRange, products]);
 
-  if (loading)
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <h2 className="text-2xl font-semibold text-gray-700">Loading products...</h2>
+  // ✅ Sidebar (Filter Panel)
+  const FilterPanel = (
+    <Box className="w-72 p-5">
+      <div className="flex justify-between items-center mb-3 sm:hidden">
+        <Typography variant="h6">Filters</Typography>
+        <IconButton onClick={() => setDrawerOpen(false)}>
+          <CloseIcon />
+        </IconButton>
       </div>
-    );
 
-  if (error)
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <h2 className="text-2xl text-red-500 font-semibold">{error}</h2>
+      {/* 🔍 Search */}
+      <Typography variant="subtitle1" fontWeight="bold" mb={1}>
+        Search
+      </Typography>
+      <TextField
+        fullWidth
+        size="small"
+        placeholder="Search products..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      <Divider sx={{ my: 3 }} />
+
+      {/* 🔽 Sort */}
+      <Typography variant="subtitle1" fontWeight="bold" mb={1}>
+        Sort by
+      </Typography>
+      <TextField
+        select
+        value={sort}
+        onChange={(e) => setSort(e.target.value)}
+        fullWidth
+        size="small"
+      >
+        <MenuItem value="">Default</MenuItem>
+        <MenuItem value="low-high">Price: Low to High</MenuItem>
+        <MenuItem value="high-low">Price: High to Low</MenuItem>
+        <MenuItem value="new">Newest First</MenuItem>
+      </TextField>
+
+      <Divider sx={{ my: 3 }} />
+
+      {/* 💰 Min-Max Price Input */}
+      <Typography variant="subtitle1" fontWeight="bold" mb={1}>
+        Price Range (₹)
+      </Typography>
+
+      <div className="flex items-center gap-3 mb-3">
+        <TextField
+          label="Min"
+          type="number"
+          size="small"
+          value={priceInput.min}
+          onChange={(e) =>
+            setPriceInput({ ...priceInput, min: e.target.value })
+          }
+          inputProps={{ min: 0 }}
+          className="w-1/2"
+        />
+        <TextField
+          label="Max"
+          type="number"
+          size="small"
+          value={priceInput.max}
+          onChange={(e) =>
+            setPriceInput({ ...priceInput, max: e.target.value })
+          }
+          inputProps={{ min: 0 }}
+          className="w-1/2"
+        />
       </div>
-    );
+
+      <Button
+        fullWidth
+        variant="contained"
+        onClick={() =>
+          setPriceRange({
+            min: parseInt(priceInput.min) || 0,
+            max: parseInt(priceInput.max) || Infinity,
+          })
+        }
+        sx={{
+          backgroundColor: "#0d47a1",
+          "&:hover": { backgroundColor: "#093b88" },
+          textTransform: "none",
+          fontWeight: "bold",
+        }}
+      >
+        Apply
+      </Button>
+    </Box>
+  );
 
   return (
     <>
       <Header />
 
-      {/* ✅ Search + Sort Controls */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 my-8">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:w-1/2 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-900"
-          />
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-900"
-          >
-            <option value="">Sort by</option>
-            <option value="low-high">Price: Low to High</option>
-            <option value="high-low">Price: High to Low</option>
-            <option value="new">Newest First</option>
-          </select>
-        </div>
+      {/* 📱 Mobile Filter Toggle */}
+      <div className="sm:hidden sticky top-0 z-20 bg-white border-b flex justify-between items-center px-4 py-3 shadow-sm">
+        <Typography variant="h6">All Products</Typography>
+        <IconButton onClick={() => setDrawerOpen(true)}>
+          <FilterListIcon />
+        </IconButton>
       </div>
 
-      {/* ✅ Product Grid */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {filtered.length === 0 ? (
-          <p className="text-center text-gray-500 mt-10">No products found.</p>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filtered.map((product) => (
-              <div
-                key={product._id}
-                className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group flex flex-col"
-              >
-                {/* ✅ Product Image */}
-                <Link href={`/products/${product._id}`} className="flex-1 flex flex-col">
-                  <div className="flex justify-center items-center bg-gray-50 p-5 h-56 sm:h-64">
-                    <img
-                      src={
-                        Array.isArray(product.images)
-                          ? product.images[0]
-                          : product.images
-                      }
-                      alt={product.name}
-                      className="h-full w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
+      <div className="flex">
+        {/* Sidebar (Desktop) */}
+        <aside className="hidden sm:block w-72 border-r min-h-screen bg-white">
+          {FilterPanel}
+        </aside>
 
-                  {/* ✅ Info */}
-                  <div className="px-4 pb-4 pt-2 flex-1 flex flex-col justify-between">
-                    <div>
-                      <h5 className="text-gray-900 font-semibold text-lg sm:text-xl mb-1 line-clamp-1">
+        {/* Drawer (Mobile) */}
+        <Drawer
+          anchor="left"
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+        >
+          {FilterPanel}
+        </Drawer>
+
+        {/* 🛍️ Product Grid */}
+        <main className="flex-1 px-4 sm:px-8 py-8 bg-gray-50 min-h-screen">
+          {loading ? (
+            <div className="flex justify-center items-center h-[60vh]">
+              <Typography variant="h6" color="text.secondary">
+                Loading products...
+              </Typography>
+            </div>
+          ) : error ? (
+            <Typography color="error" align="center">
+              {error}
+            </Typography>
+          ) : filtered.length === 0 ? (
+            <Typography align="center" color="text.secondary" className="mt-20">
+              No products found.
+            </Typography>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filtered.map((product, index) => (
+                <motion.div
+                  key={product._id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="bg-white rounded-2xl border hover:shadow-lg transition-all overflow-hidden group"
+                >
+                  <Link href={`/products/${product._id}`}>
+                    <div className="bg-gray-50 flex justify-center items-center h-56 sm:h-64 p-5 overflow-hidden">
+                      <motion.img
+                        src={
+                          Array.isArray(product.images)
+                            ? product.images[0]
+                            : product.images
+                        }
+                        alt={product.name}
+                        className="object-contain h-full w-auto group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h5 className="font-semibold text-gray-800 text-lg line-clamp-1">
                         {product.name}
                       </h5>
-                      <p className="text-gray-500 text-sm mb-3 line-clamp-2">
-                        {product.description ||
-                          "High-quality product with great benefits."}
+                      <p className="text-sm text-gray-500 line-clamp-2 mb-2">
+                        {product.description || "Premium quality product."}
                       </p>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        {product.regularPrice &&
+                          product.salePrice < product.regularPrice && (
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                textDecoration: "line-through",
+                                color: "#999",
+                              }}
+                            >
+                              ₹{product.regularPrice}
+                            </Typography>
+                          )}
+                        <Typography
+                          variant="h6"
+                          sx={{ fontWeight: "bold", color: "#C00000" }}
+                        >
+                          ₹{product.salePrice}
+                        </Typography>
+                      </Box>
                     </div>
+                  </Link>
 
-                    {/* ✅ Price */}
-                    <Box display="flex" alignItems="center" gap={1} my={1}>
-                      {product.regularPrice &&
-                        product.salePrice < product.regularPrice && (
-                          <Typography
-                            variant="body1"
-                            color="text.secondary"
-                            sx={{
-                              textDecoration: "line-through",
-                              fontWeight: "500",
-                              fontSize: "0.9rem",
-                            }}
-                          >
-                            ₹{product.regularPrice}
-                          </Typography>
-                        )}
-                      <Typography
-                        variant="h6"
-                        sx={{ fontWeight: "bold", color: "#C00000" }}
-                      >
-                        ₹{product.salePrice}
-                      </Typography>
-                      {product.regularPrice &&
-                        product.salePrice < product.regularPrice && (
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              fontWeight: "bold",
-                              color: "green",
-                              ml: 1,
-                            }}
-                          >
-                            {Math.round(
-                              ((product.regularPrice - product.salePrice) /
-                                product.regularPrice) *
-                                100
-                            )}
-                            % off
-                          </Typography>
-                        )}
-                    </Box>
-                  </div>
-                </Link>
-
-                {/* ✅ Add to Cart */}
-                <button
-                  onClick={(e) => handleAddToCart(product, e)}
-                  className="w-full flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-800 text-white py-2 sm:py-3 rounded-b-2xl font-semibold transition-all duration-300"
-                >
-                  <ShoppingCartOutlinedIcon className="text-white text-lg sm:text-xl" />
-                  <span>ADD TO CART</span>
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+                  <button
+                    onClick={(e) => handleAddToCart(product, e)}
+                    className={`w-full flex items-center justify-center gap-2 py-2 font-semibold transition-all duration-300 ${
+                      added[product._id]
+                        ? "bg-green-600 hover:bg-green-500"
+                        : "bg-blue-900 hover:bg-blue-800"
+                    } text-white`}
+                  >
+                    {added[product._id] ? (
+                      <>
+                        <CheckCircleIcon /> <span>ADDED</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCartOutlinedIcon /> <span>ADD TO CART</span>
+                      </>
+                    )}
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </main>
       </div>
 
       <Footer />
@@ -218,15 +328,11 @@ const ProductsPage = () => {
       {/* ✅ Snackbar */}
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={3000}
+        autoHideDuration={2500}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert
-          onClose={handleSnackbarClose}
-          severity="success"
-          sx={{ width: "100%" }}
-        >
+        <Alert severity="success" onClose={handleSnackbarClose}>
           Product added to cart!
         </Alert>
       </Snackbar>

@@ -199,8 +199,6 @@ const Checkout = () => {
         );
 
         const { orderId, key } = razorpayOrderRes.data;
-        // console.log("Razorpay order response", razorpayOrderRes.data);
-        // console.log("Razorpay order created:", orderId, key);
 
         const options = {
           key,
@@ -229,9 +227,9 @@ const Checkout = () => {
                   icon: "success",
                 });
                 // dispatch(clearCart());
-                router.push(`/payment/order-success?order_id=${orderResponse.data.order._id}`);
-                // router.push(`/payment/order-success?order_id=${orderResponse.data.order._id}`);
-
+                router.push(
+                  `/payment/order-success?order_id=${orderResponse.data.order._id}`
+                );
               } else {
                 throw new Error("Payment verification failed");
               }
@@ -259,58 +257,17 @@ const Checkout = () => {
         return; // Don't show success alert here, wait for payment handler
       }
 
-
-      // // Step 3: Call Porter API to create order
-      // const porterOrderData = {
-      //   request_id: orderResponse.data._id,
-      //   email_id: customerResponse.data.customer.email,
-      //   drop_details: {
-      //     address: {
-      //       apartment_address: apartment_address,
-      //       street_address1: addressComponents.street_address1,
-      //       city: addressComponents.city,
-      //       state: addressComponents.state,
-      //       pincode: addressComponents.pincode,
-      //       country: addressComponents.country,
-      //       lat: addressComponents.latitude,
-      //       lng: addressComponents.longitude,
-      //       contact_details: {
-      //         name: customerResponse.data.customer.fullName,
-      //         phone_number: `+91${customerResponse.data.customer.phone}`,
-      //       },
-      //     },
-      //   },
-      // };
-
-      // let porterResponse;
-      // try {
-      //   porterResponse = await axios.post(
-      //     `
-      //     ${process.env.NEXT_PUBLIC_API_BASE_URL}/porter/create`,
-      //     porterOrderData
-      //   );
-      // } catch (error) {
-      //   console.error("Error creating Porter order:", error);
-      //   await Swal.fire({
-      //     title: "Error",
-      //     text: "Failed to schedule delivery. Please try again.",
-      //     icon: "error",
-      //   });
-      //   return;
-      // }
-
-      // console.log("porterResponse", porterResponse);
-
-      // SweetAlert confirmation on success
       await Swal.fire({
         title: "Order Placed!",
         text: "Your order has been placed successfully!",
         icon: "success",
       });
 
-      // Clear cart and redirect to thank you page
+      // Clear cart and redirect to success page (same as online)
       dispatch(clearCart());
-      router.push(`/orderInvoice/${orderResponse.data._id}`);
+      router.push(
+        `/payment/order-success?order_id=${orderResponse.data.order._id}`
+      );
     } catch (error) {
       console.error("Unexpected error:", error);
       await Swal.fire({
@@ -329,7 +286,7 @@ const Checkout = () => {
 
   return (
     <>
-    <Script
+      <Script
         src="https://checkout.razorpay.com/v1/checkout.js"
         strategy="afterInteractive"
       />
