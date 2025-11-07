@@ -4,7 +4,7 @@ const path = require("path");
 // Set storage engine for multer
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/uploads'); // Path to save uploaded images
+    cb(null, "public/uploads"); // Path to save uploaded images
   },
   filename: function (req, file, cb) {
     // Use the original file name with a timestamp to avoid name collisions
@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
 // Initialize multer upload middleware
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 1000000 }, // Limit the file size to 1MB
+  limits: { fileSize: 1 * 1024 * 1024 }, // ✅ Limit file size to 1MB
   fileFilter: function (req, file, cb) {
     const filetypes = /jpeg|jpg|png|gif|webp|avif/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
@@ -29,9 +29,24 @@ const upload = multer({
     if (mimetype && extname) {
       return cb(null, true);
     } else {
-      cb("Error: Images Only!");
+      cb(new Error("Only image files are allowed!"));
     }
   },
 });
 
-module.exports = upload;
+// ✅ Error-handling middleware for Multer
+// You can use this globally or inline in your route
+const handleMulterError = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res
+        .status(400)
+        .json({ message: "Product image size must be less than 1 MB." });
+    }
+  } else if (err) {
+    return res.status(400).json({ message: err.message || "File upload error." });
+  }
+  next();
+};
+
+module.exports = { upload, handleMulterError };

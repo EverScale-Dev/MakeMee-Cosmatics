@@ -136,7 +136,7 @@ export const ProductList = () => {
                   {/* ✅ Product Click Area */}
                   <Link href={`/products/${product._id}`} className="flex-1 flex flex-col">
                     {/* Product Image */}
-                    <div className="flex justify-center items-center bg-gray-50 p-5 h-56 sm:h-64">
+                    <div className="flex justify-center items-center bg-gray-50 p-2 h-56 sm:h-64">
                       <img
                         src={
                           Array.isArray(product.images)

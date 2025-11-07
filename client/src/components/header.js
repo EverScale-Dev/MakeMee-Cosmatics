@@ -2,38 +2,42 @@
 import { useSelector } from "react-redux";
 import Link from "next/link";
 import { useEffect, useState, useCallback, useRef } from "react";
-import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import {
-  AppBar,
-  Toolbar,
-  InputBase,
   IconButton,
-  CircularProgress,
+  InputBase,
   Box,
-  useMediaQuery,
   Drawer,
   List,
   ListItem,
   ListItemText,
+  CircularProgress,
+  useMediaQuery,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
+import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import axios from "axios";
-import { UserCircle } from "lucide-react";
 
 const Header = () => {
-  const isMobile = useMediaQuery("(max-width:600px)");
-  const [isMounted, setIsMounted] = useState(false);
+  const isMobile = useMediaQuery("(max-width:768px)");
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
   const totalQuantity = useSelector((state) => state.cart.totalQuantity);
 
-  useEffect(() => setIsMounted(true), []);
+  // scroll shadow
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
+  // search logic
   const handleSearch = useCallback(async () => {
     if (!searchTerm.trim()) {
       setSearchResults([]);
@@ -45,8 +49,8 @@ const Header = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/products?search=${searchTerm}`
       );
       setSearchResults(data || []);
-    } catch (error) {
-      console.error("Search error:", error);
+    } catch (err) {
+      console.error("Search error:", err);
     } finally {
       setLoading(false);
     }
@@ -57,7 +61,7 @@ const Header = () => {
     return () => clearTimeout(delay);
   }, [searchTerm, handleSearch]);
 
-  // Close dropdown clicking outside
+  // close dropdown clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -69,166 +73,177 @@ const Header = () => {
   }, []);
 
   return (
-    <header className="container">
-      <AppBar position="static" elevation={0} sx={{ background: "#fff", padding: "8px 0" }}>
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          
-          {/* Logo */}
-          <Link href="/">
-            <Box component="img" src="/logo.webp" alt="Logo"
-              sx={{ width: isMobile ? 140 : 160, objectFit: "contain" }}
-            />
-          </Link>
+    <header
+      className={`w-full z-50 bg-white transition-all duration-300 ${
+        isScrolled ? "shadow-md" : ""
+      }`}
+    >
+      <div className="max-w-[1300px] mx-auto flex items-center justify-between px-6 py-2">
+        {/* ==== Logo ==== */}
+        <Link href="/">
+          <img
+            src="/logo.webp"
+            alt="Logo"
+            className="w-[170px] h-auto object-contain"
+          />
+        </Link>
 
-          {/* Desktop Search */}
-          {!isMobile && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 3, flexGrow: 1, ml: 4 }}>
-              
-              <Box sx={{ position: "relative", width: "40%" }} ref={dropdownRef}>
-                <InputBase
-                  placeholder="Search Products…"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  sx={{
-                    backgroundColor: "#e0e0e0",
-                    borderRadius: 50,
-                    padding: "8px 16px",
-                    width: "100%",
-                    pr: 5,
-                  }}
-                />
-                <IconButton
+        {/* ==== Center Section ==== */}
+        {!isMobile && (
+          <div className="flex items-center gap-8 flex-1 justify-center">
+            {/* Search bar */}
+            <div
+              className={`relative transition-all duration-500 ease-in-out ${
+                isFocused ? "w-[420px]" : "w-[280px]"
+              }`}
+              ref={dropdownRef}
+            >
+              <InputBase
+                placeholder="Search products..."
+                value={searchTerm}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="bg-gray-100 rounded-full pl-5 pr-10 py-2 w-full transition-all duration-500 focus:bg-white focus:shadow-md"
+              />
+              <IconButton
+                sx={{
+                  position: "absolute",
+                  right: 5,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#000",
+                }}
+                onClick={handleSearch}
+              >
+                {loading ? <CircularProgress size={22} /> : <SearchIcon />}
+              </IconButton>
+
+              {/* Search dropdown */}
+              {searchResults.length > 0 && (
+                <Box
                   sx={{
                     position: "absolute",
-                    right: 4,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    color: "#000",
+                    top: "100%",
+                    left: 0,
+                    mt: 1,
+                    width: "100%",
+                    background: "white",
+                    borderRadius: 2,
+                    boxShadow: 3,
+                    zIndex: 2000,
+                    maxHeight: 250,
+                    overflowY: "auto",
                   }}
-                  onClick={handleSearch}
                 >
-                  {loading ? <CircularProgress size={24} /> : <SearchIcon />}
-                </IconButton>
-
-                {/* Search Dropdown */}
-                {searchResults.length > 0 && (
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      top: "100%",
-                      mt: 1,
-                      width: "100%",
-                      background: "white",
-                      borderRadius: 2,
-                      boxShadow: 3,
-                      zIndex: 2000,
-                      maxHeight: 240,
-                      overflowY: "auto",
-                    }}
-                  >
-                    {searchResults.map((product) => (
-                      <Link
-                        key={product._id}
-                        href={`/products/${product._id}`}
-                        onClick={() => setSearchResults([])}
+                  {searchResults.map((product) => (
+                    <Link
+                      key={product._id}
+                      href={`/products/${product._id}`}
+                      onClick={() => setSearchResults([])}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "8px 12px",
+                        textDecoration: "none",
+                        color: "#333",
+                      }}
+                    >
+                      <img
+                        src={product.images?.[0]}
+                        alt={product.name}
                         style={{
-                          display: "flex",
-                          padding: "8px",
-                          color: "#4a4a4a",
-                          textDecoration: "none",
-                          alignItems: "center",
+                          width: 28,
+                          height: 28,
+                          borderRadius: 4,
+                          objectFit: "cover",
+                          marginRight: 8,
                         }}
-                      >
-                        <Box
-                          component="img"
-                          src={product.images?.[0]}
-                          alt={product.name}
-                          sx={{
-                            width: 28,
-                            height: 28,
-                            objectFit: "cover",
-                            borderRadius: 1,
-                            mr: 1,
-                          }}
-                        />
-                        {product.name}
-                      </Link>
-                    ))}
-                  </Box>
-                )}
-              </Box>
+                      />
+                      {product.name}
+                    </Link>
+                  ))}
+                </Box>
+              )}
+            </div>
 
-              {/* About + Contact */}
-              <Box sx={{ display: "flex", gap: 3, ml: 10 }}>
-                <Link href="/about" style={{ fontWeight: 600, color: "#000", fontSize: 16 }}>About</Link>
-                <Link href="/productpage" style={{ fontWeight: 600, color: "#000", fontSize: 16 }}>Product</Link>
-                <Link href="/contact" style={{ fontWeight: 600, color: "#000", fontSize: 16 }}>Contact</Link>
-              </Box>
-            </Box>
-          )}
-
-          {/* Icons */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Link href="/cart">
-              <IconButton sx={{ color: "black", position: "relative" }}>
-                <ShoppingCartOutlinedIcon />
-                {isMounted && totalQuantity > 0 && (
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      top: 0,
-                      right: 0,
-                      width: 16,
-                      height: 16,
-                      background: "#d32f2f",
-                      color: "#fff",
-                      fontSize: 10,
-                      fontWeight: "bold",
-                      borderRadius: "50%",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
+            {/* Menu Links */}
+            <nav className="flex items-center gap-8">
+              {["About", "Products", "Contact"].map((item) => {
+                const path =
+                  item === "Products" ? "/productpage" : `/${item.toLowerCase()}`;
+                return (
+                  <Link
+                    key={item}
+                    href={path}
+                    className="font-medium text-black text-[16px] relative after:absolute after:bottom-[-3px] after:left-0 after:h-[2px] after:w-0 after:bg-black after:transition-all hover:after:w-full"
                   >
-                    {totalQuantity}
-                  </Box>
-                )}
-              </IconButton>
-            </Link>
+                    {item}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        )}
 
-            {!isMobile && (
-              <Link href="/profile">
-                <IconButton sx={{ color: "black" }}>
-                  <UserCircle />
-                </IconButton>
-              </Link>
-            )}
+        {/* ==== Right Icons ==== */}
+        <div className="flex items-center gap-3">
+          <Link href="/cart">
+            <IconButton sx={{ color: "#000", position: "relative" }}>
+              <ShoppingCartOutlinedIcon />
+              {totalQuantity > 0 && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    width: 16,
+                    height: 16,
+                    background: "#d32f2f",
+                    color: "#fff",
+                    fontSize: 10,
+                    fontWeight: "bold",
+                    borderRadius: "50%",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  {totalQuantity}
+                </Box>
+              )}
+            </IconButton>
+          </Link>
 
-            {isMobile && (
-              <IconButton sx={{ color: "black" }} onClick={() => setMenuOpen(true)}>
-                <MenuIcon />
-              </IconButton>
-            )}
-          </Box>
-        </Toolbar>
-      </AppBar>
+          {isMobile && (
+            <IconButton sx={{ color: "#000" }} onClick={() => setMenuOpen(true)}>
+              <MenuIcon />
+            </IconButton>
+          )}
+        </div>
+      </div>
 
-      {/* Mobile Drawer */}
+      {/* ==== Mobile Drawer ==== */}
       <Drawer anchor="right" open={menuOpen} onClose={() => setMenuOpen(false)}>
-        <Box sx={{ width: 250, p: 2 }}>
+        <Box sx={{ width: 260, p: 2 }}>
           <IconButton onClick={() => setMenuOpen(false)}>
             <CloseIcon />
           </IconButton>
           <List>
-            <ListItem component={Link} href="/about" onClick={() => setMenuOpen(false)}>
-              <ListItemText primary="About" />
-            </ListItem>
-            <ListItem component={Link} href="/productpage" onClick={() => setMenuOpen(false)}>
-              <ListItemText primary="Product" />
-            </ListItem>
-            <ListItem component={Link} href="/contact" onClick={() => setMenuOpen(false)}>
-              <ListItemText primary="Contact" />
-            </ListItem>
+            {["About", "Products", "Contact"].map((item) => {
+              const path =
+                item === "Products" ? "/productpage" : `/${item.toLowerCase()}`;
+              return (
+                <ListItem
+                  key={item}
+                  component={Link}
+                  href={path}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <ListItemText primary={item} />
+                </ListItem>
+              );
+            })}
           </List>
         </Box>
       </Drawer>

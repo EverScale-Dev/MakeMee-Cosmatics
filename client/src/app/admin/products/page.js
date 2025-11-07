@@ -1,515 +1,3 @@
-// "use client";
-// import React, { useEffect, useState } from "react";
-// import {
-//   Box,
-//   Button,
-//   Dialog,
-//   DialogActions,
-//   DialogContent,
-//   DialogTitle,
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableContainer,
-//   TableHead,
-//   TableRow,
-//   Paper,
-//   IconButton,
-//   Typography,
-//   Snackbar,
-//   Alert,
-//   InputLabel,
-//   MenuItem,
-//   FormControl,
-//   Select,
-//   TextField,
-//   CircularProgress,
-//   Checkbox,
-//   FormControlLabel,
-// } from "@mui/material";
-// import EditIcon from "@mui/icons-material/Edit";
-// import DeleteIcon from "@mui/icons-material/Delete";
-// import axios from "axios";
-// import useAuth from "../withauth";
-
-// function SingleProductList() {
-//   useAuth();
-//   const [products, setProducts] = useState([]);
-//   const [selectedProduct, setSelectedProduct] = useState(null);
-//   const [open, setOpen] = useState(false);
-//   const [loading, setLoading] = useState(false);
-//   const [images, setImages] = useState([]);
-//   const [token, setToken] = useState(null);
-
-//   // NEW/MODIFIED: State for Snackbar (Toast) feedback
-//   const [snackbarOpen, setSnackbarOpen] = useState(false);
-//   const [snackbarMessage, setSnackbarMessage] = useState("");
-//   const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error'
-
-//   useEffect(() => {
-//     // Fetch token from localStorage and set it in the state
-//     const storedToken = localStorage.getItem("token");
-//     setToken(storedToken);
-
-//     // Fetch products if token is available
-//     if (storedToken) {
-//       fetchProducts();
-//     }
-//   }, [token]); // NEW/MODIFIED: Added token to dependency array to ensure fetch runs after token is set
-
-//   // Fetch products from API
-//   const fetchProducts = async () => {
-//     setLoading(true);
-//     try {
-//       const res = await axios.get(
-//         `${process.env.NEXT_PUBLIC_API_BASE_URL}/products`,
-//         {
-//           headers: { Authorization: `Bearer ${token}` },
-//         }
-//       );
-//       setProducts(res.data);
-//     } catch (err) {
-//       console.error("Error fetching products:", err);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // Open modal with selected product details
-//   const handleOpen = (product) => {
-//     setSelectedProduct({
-//       ...product,
-//     });
-//     setImages([]);
-//     setOpen(true);
-//   };
-
-//   // Close the modal
-//   const handleClose = () => {
-//     setOpen(false);
-//     setSelectedProduct(null);
-//     setImages([]);
-//   };
-
-//   // NEW/MODIFIED: Function to close the Snackbar
-//   const handleSnackbarClose = (event, reason) => {
-//     if (reason === "clickaway") {
-//       return;
-//     }
-//     setSnackbarOpen(false);
-//   };
-
-//   // Update product details in modal
-//   const handleProductUpdate = async () => {
-//     const formData = new FormData();
-//     formData.append("name", selectedProduct.name);
-//     formData.append("description", selectedProduct.description);
-//     formData.append("regularPrice", selectedProduct.regularPrice);
-//     formData.append("salePrice", selectedProduct.salePrice);
-//     formData.append("badge", selectedProduct.badge);
-//     formData.append("weight", selectedProduct.weight);
-//     formData.append("rating", selectedProduct.rating);
-//     formData.append("reviews", selectedProduct.reviews);
-
-//     images.forEach((image) => {
-//       formData.append("images", image);
-//     });
-
-//     try {
-//       await axios.put(
-//         `${process.env.NEXT_PUBLIC_API_BASE_URL}/products/${selectedProduct._id}`,
-//         formData,
-//         {
-//           headers: {
-//             "Content-Type": "multipart/form-data",
-//             Authorization: `Bearer ${token}`,
-//           },
-//         }
-//       );
-//       fetchProducts();
-//       handleClose();
-//       // NEW/MODIFIED: Show success message
-//       setSnackbarMessage("Product updated successfully!");
-//       setSnackbarSeverity("success");
-//       setSnackbarOpen(true);
-//     } catch (err) {
-//       console.error("Error updating product:", err);
-//       // NEW/MODIFIED: Show error message
-//       setSnackbarMessage(
-//         `Error updating product: ${err.response?.data?.message || err.message}`
-//       );
-//       setSnackbarSeverity("error");
-//       setSnackbarOpen(true);
-//     }
-//   };
-
-//   // Handle changes in the product modal inputs
-//   const handleInputChange = (e) => {
-//     const { name, value } = e.target;
-
-//     setSelectedProduct((prevProduct) => ({
-//       ...prevProduct,
-//       [name]: value,
-//     }));
-//   };
-
-//   // Handle image uploads
-//   const handleImageChange = (e) => {
-//     setImages([...e.target.files]);
-//   };
-
-//   // Delete product
-//   const handleProductDelete = async (productId) => {
-//     const confirmDelete = window.confirm(
-//       "Are you sure you want to delete this product?"
-//     );
-//     if (confirmDelete) {
-//       try {
-//         await axios.delete(
-//           `${process.env.NEXT_PUBLIC_API_BASE_URL}/products/${productId}`,
-//           {
-//             headers: { Authorization: `Bearer ${token}` },
-//           }
-//         );
-//         fetchProducts();
-//         // NEW/MODIFIED: Show success message for deletion
-//         setSnackbarMessage("Product deleted successfully!");
-//         setSnackbarSeverity("success");
-//         setSnackbarOpen(true);
-//       } catch (err) {
-//         console.error("Error deleting product:", err);
-//         // NEW/MODIFIED: Show error message for deletion
-//         setSnackbarMessage(
-//           `Error deleting product: ${err.response?.data?.message || err.message}`
-//         );
-//         setSnackbarSeverity("error");
-//         setSnackbarOpen(true);
-//       }
-//     }
-//   };
-
-//   // Handle adding a new product
-//   const handleAddProduct = async () => {
-//     const formData = new FormData();
-//     formData.append("name", selectedProduct.name);
-//     formData.append("description", selectedProduct.description);
-//     formData.append("regularPrice", selectedProduct.regularPrice);
-//     formData.append("salePrice", selectedProduct.salePrice);
-//     formData.append("badge", selectedProduct.badge);
-//     formData.append("weight", selectedProduct.weight);
-//     formData.append("rating", selectedProduct.rating);
-//     formData.append("reviews", selectedProduct.reviews);
-
-//     images.forEach((image) => {
-//       formData.append("images", image);
-//     });
-
-//     try {
-//       await axios.post(
-//         `${process.env.NEXT_PUBLIC_API_BASE_URL}/products`,
-//         formData,
-//         {
-//           headers: {
-//             "Content-Type": "multipart/form-data",
-//             Authorization: `Bearer ${token}`,
-//           },
-//         }
-//       );
-//       fetchProducts();
-//       handleClose();
-//       // NEW/MODIFIED: Show success message
-//       setSnackbarMessage("Product added successfully!");
-//       setSnackbarSeverity("success");
-//       setSnackbarOpen(true);
-//     } catch (err) {
-//       console.error("Error adding product:", err);
-//       // NEW/MODIFIED: Show error message
-//       setSnackbarMessage(
-//         `Error adding product: ${err.response?.data?.message || err.message}`
-//       );
-//       setSnackbarSeverity("error");
-//       setSnackbarOpen(true);
-//     }
-//   };
-
-//   return (
-//     <Box p={2}>
-//       <Box
-//         display="flex"
-//         justifyContent="space-between"
-//         alignItems="center"
-//         mb={3}
-//       >
-//         <Typography variant="h4">Products List</Typography>
-//         <Button
-//           variant="contained"
-//           color="primary"
-//           onClick={() => {
-//             setSelectedProduct({});
-//             setOpen(true);
-//           }}
-//           sx={{ mr: 2 }}
-//         >
-//           Add Product
-//         </Button>
-//       </Box>
-
-//       <TableContainer component={Paper} elevation={3}>
-//         <Table>
-//           <TableHead>
-//             <TableRow>
-//               <TableCell>
-//                 <strong>Product Name</strong>
-//               </TableCell>
-//               <TableCell>
-//                 <strong>Image</strong>
-//               </TableCell>
-//               <TableCell>
-//                 <strong>Regular Price</strong>
-//               </TableCell>
-//               <TableCell>
-//                 <strong>Sale Price</strong>
-//               </TableCell>
-//               <TableCell>
-//                 <strong>Actions</strong>
-//               </TableCell>
-//             </TableRow>
-//           </TableHead>
-//           <TableBody>
-//             {loading ? (
-//               <TableRow>
-//                 <TableCell colSpan={6} align="center">
-//                   <CircularProgress />
-//                 </TableCell>
-//               </TableRow>
-//             ) : (
-//               products.map((product) => (
-//                 <TableRow key={product._id}>
-//                   <TableCell>{product.name}</TableCell>
-//                   <TableCell>
-//                     {product.images && product.images.length > 0 ? (
-//                       <img
-//                         src={`${product.images[0]}`}
-//                         alt={product.name}
-//                         width={50}
-//                       />
-//                     ) : (
-//                       "No Image"
-//                     )}
-//                   </TableCell>
-//                   <TableCell>₹ {product.regularPrice}</TableCell>
-//                   <TableCell>₹ {product.salePrice || "-"}</TableCell>
-//                   <TableCell>
-//                     <IconButton
-//                       color="primary"
-//                       onClick={() => handleOpen(product)}
-//                     >
-//                       <EditIcon />
-//                     </IconButton>
-//                     <IconButton
-//                       color="error"
-//                       onClick={() => handleProductDelete(product._id)}
-//                     >
-//                       <DeleteIcon />
-//                     </IconButton>
-//                   </TableCell>
-//                 </TableRow>
-//               ))
-//             )}
-//           </TableBody>
-//         </Table>
-//       </TableContainer>
-
-//       {/* Product Modal */}
-//       {selectedProduct && (
-//         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
-//           <DialogTitle className="font-bold text-lg">
-//             {selectedProduct._id ? "Edit Product" : "Add New Product"}
-//           </DialogTitle>
-
-//           <DialogContent dividers>
-//             <Box
-//               component="form"
-//               sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}
-//             >
-//               {/* Product Name */}
-//               <TextField
-//                 label="Product Name"
-//                 fullWidth
-//                 name="name"
-//                 value={selectedProduct.name || ""}
-//                 onChange={handleInputChange}
-//               />
-
-//               {/* Badge, Weight, and Rating */}
-//               <Box display="flex" gap={2}>
-//                 <FormControl fullWidth>
-//                   <InputLabel id="badge-label">Badge</InputLabel>
-//                   <Select
-//                     labelId="badge-label"
-//                     id="badge"
-//                     name="badge"
-//                     value={selectedProduct.badge || ""}
-//                     label="Badge"
-//                     onChange={handleInputChange}
-//                   >
-//                     <MenuItem value="">None</MenuItem>
-//                     <MenuItem value="NEW LAUNCH">NEW LAUNCH</MenuItem>
-//                     <MenuItem value="BEST SELLER">BEST SELLER</MenuItem>
-//                     <MenuItem value="DISCOUNT">DISCOUNT</MenuItem>
-//                     <MenuItem value="LIMITED">LIMITED</MenuItem>
-//                     <MenuItem value="HOT">HOT</MenuItem>
-//                   </Select>
-//                 </FormControl>
-//                 <TextField
-//                   label="Weight (e.g. 500ml, 1L)"
-//                   fullWidth
-//                   name="weight"
-//                   value={selectedProduct.weight || ""}
-//                   onChange={handleInputChange}
-//                 />
-//               </Box>
-
-//               {/* Badge, Weight, and Rating */}
-//               <Box display="flex" gap={2}>
-//                 <TextField
-//                   label="Rating"
-//                   type="number"
-//                   inputProps={{ step: "0.1", min: 0, max: 5 }}
-//                   fullWidth
-//                   name="rating"
-//                   value={selectedProduct.rating || ""}
-//                   onChange={handleInputChange}
-//                 />
-//                 <TextField
-//                   label="Reviews"
-//                   type="number"
-//                   inputProps={{ step: "1", min: 0 }}
-//                   fullWidth
-//                   name="reviews"
-//                   value={selectedProduct.reviews || ""}
-//                   onChange={handleInputChange}
-//                 />
-//               </Box>
-
-//               {/* Description */}
-//               <TextField
-//                 label="Description"
-//                 fullWidth
-//                 multiline
-//                 rows={3}
-//                 name="description"
-//                 value={selectedProduct.description || ""}
-//                 onChange={handleInputChange}
-//               />
-
-//               {/* Prices */}
-//               <Box display="flex" gap={2}>
-//                 <TextField
-//                   label="Regular Price"
-//                   fullWidth
-//                   name="regularPrice"
-//                   type="number"
-//                   value={selectedProduct.regularPrice || ""}
-//                   onChange={handleInputChange}
-//                 />
-//                 <TextField
-//                   label="Sale Price"
-//                   fullWidth
-//                   name="salePrice"
-//                   type="number"
-//                   value={selectedProduct.salePrice || ""}
-//                   onChange={handleInputChange}
-//                 />
-//               </Box>
-
-//               {/* Upload Multiple Images */}
-//               <div className="mt-3">
-//                 <label className="block font-semibold mb-1">
-//                   Product Images
-//                 </label>
-//                 <input
-//                   type="file"
-//                   accept="image/*"
-//                   multiple
-//                   onChange={handleImageChange}
-//                 />
-
-//                 {/* Image Previews */}
-//                 {selectedProduct.images &&
-//                   selectedProduct.images.length > 0 && (
-//                     <div className="flex flex-wrap gap-3 mt-3">
-//                       {selectedProduct.images.map((img, idx) => (
-//                         <div
-//                           key={idx}
-//                           className="relative w-24 h-24 border rounded-md overflow-hidden group"
-//                         >
-//                           <img
-//                             src={
-//                               typeof img === "string"
-//                                 ? img
-//                                 : URL.createObjectURL(img)
-//                             }
-//                             alt={`Preview ${idx}`}
-//                             className="object-cover w-full h-full"
-//                           />
-//                           <button
-//                             type="button"
-//                             onClick={() => handleRemoveImage(idx)}
-//                             className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 text-xs opacity-0 group-hover:opacity-100 transition"
-//                           >
-//                             ✕
-//                           </button>
-//                         </div>
-//                       ))}
-//                     </div>
-//                   )}
-//               </div>
-//             </Box>
-//           </DialogContent>
-
-//           <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
-//             <Button onClick={handleClose} variant="outlined" color="secondary">
-//               Cancel
-//             </Button>
-//             <Button
-//               onClick={
-//                 selectedProduct._id ? handleProductUpdate : handleAddProduct
-//               }
-//               variant="contained"
-//               sx={{
-//                 background: "linear-gradient(45deg, #1976d2, #0d47a1)",
-//                 color: "white",
-//                 px: 3,
-//               }}
-//             >
-//               {selectedProduct._id ? "Update Product" : "Add Product"}
-//             </Button>
-//           </DialogActions>
-//         </Dialog>
-//       )}
-
-//       {/* NEW/MODIFIED: Snackbar component for displaying success/error messages */}
-//       <Snackbar
-//         open={snackbarOpen}
-//         autoHideDuration={6000} // Auto-hide after 6 seconds
-//         onClose={handleSnackbarClose}
-//         anchorOrigin={{ vertical: "bottom", horizontal: "left" }} // Position
-//       >
-//         <Alert
-//           onClose={handleSnackbarClose}
-//           severity={snackbarSeverity}
-//           sx={{ width: "100%" }}
-//         >
-//           {snackbarMessage}
-//         </Alert>
-//       </Snackbar>
-//     </Box>
-//   );
-// }
-
-// export default SingleProductList;
-
 "use client";
 import React, { useEffect, useState } from "react";
 import {
@@ -559,6 +47,8 @@ function SingleProductList() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error'
+  const [draggingIndex, setDraggingIndex] = React.useState(null);
+  const [dropIndex, setDropIndex] = useState(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -817,6 +307,25 @@ function SingleProductList() {
         setSnackbarOpen(true);
       }
     }
+  };
+
+  const handleDragStart = (e, index) => {
+    setDraggingIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    if (draggingIndex === null || draggingIndex === dropIndex) return;
+
+    setSelectedProduct((prev) => {
+      const updated = [...prev.images];
+      const [movedImage] = updated.splice(draggingIndex, 1);
+      updated.splice(dropIndex, 0, movedImage);
+      return { ...prev, images: updated };
+    });
+
+    setDraggingIndex(null);
   };
 
   return (
@@ -1336,7 +845,7 @@ function SingleProductList() {
                 </Button>
               </Box>
 
-              {/* Images */}
+              {/* Images Section */}
               <Box>
                 <Typography
                   variant="h6"
@@ -1359,24 +868,70 @@ function SingleProductList() {
                   style={{ marginBottom: "12px" }}
                 />
 
-                <Box display="flex" flexWrap="wrap" gap={2}>
-                  {selectedProduct.images?.map((img, idx) => (
+                {/* Image Thumbnails with native drag & drop + ghost drop preview */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 2,
+                    position: "relative",
+                    minHeight: 100,
+                  }}
+                >
+                  {selectedProduct.images.map((img, index) => (
                     <Box
-                      key={idx}
-                      position="relative"
+                      key={index}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData("dragIndex", index);
+                        e.currentTarget.classList.add("dragging");
+                      }}
+                      onDragEnd={(e) => {
+                        e.currentTarget.classList.remove("dragging");
+                        setDropIndex(null);
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDropIndex(index);
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const dragIndex = Number(
+                          e.dataTransfer.getData("dragIndex")
+                        );
+                        const dropIndex = index;
+                        if (dragIndex === dropIndex) return;
+
+                        const reordered = [...selectedProduct.images];
+                        const [moved] = reordered.splice(dragIndex, 1);
+                        reordered.splice(dropIndex, 0, moved);
+                        setSelectedProduct((prev) => ({
+                          ...prev,
+                          images: reordered,
+                        }));
+                        setDropIndex(null);
+                      }}
                       sx={{
+                        position: "relative",
                         width: 90,
                         height: 90,
                         borderRadius: 2,
                         overflow: "hidden",
-                        boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-                        transition: "transform 0.2s",
-                        "&:hover": { transform: "scale(1.05)" },
+                        border:
+                          dropIndex === index ? "2px dashed #2563eb" : "none",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        background: "#fff",
+                        transition: "all 0.2s ease",
+                        opacity: 1,
+                        "&.dragging": {
+                          opacity: 0.3,
+                          transform: "scale(0.95)",
+                        },
                       }}
                     >
                       <img
                         src={img}
-                        alt={`img-${idx}`}
+                        alt={`img-${index}`}
                         style={{
                           width: "100%",
                           height: "100%",
@@ -1427,7 +982,7 @@ function SingleProductList() {
               }
               variant="contained"
               sx={{
-                color:"primary",
+                color: "primary",
                 fontWeight: 600,
                 px: 3,
                 borderRadius: 20,

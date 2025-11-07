@@ -4,7 +4,7 @@ import "slick-carousel/slick/slick-theme.css";
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/slices/cartSlice";
 import api from "@/utils/axiosClient";
@@ -74,6 +74,7 @@ const itemVariants = {
 // --- Main Component ---
 const ProductDetail = () => {
   const { id } = useParams();
+  const router = useRouter();
 
   const [product, setProduct] = useState(defaultProductState);
   const [error, setError] = useState(null);
@@ -106,7 +107,18 @@ const ProductDetail = () => {
   };
 
   const handleBuyNow = () => {
-    console.log(`Initiating Buy Now for ${product.name}.`);
+    if (!product?._id) return;
+
+    const cartItem = {
+      id: product._id,
+      name: product.name,
+      price: product.salePrice,
+      quantity: 1,
+      image: product.images?.[0] || defaultProductState.images[0],
+    };
+
+    dispatch(addToCart(cartItem));
+    router.push("/checkout"); // redirect
   };
 
   // Image Gallery Navigation
@@ -293,8 +305,7 @@ const ProductDetail = () => {
                     <button
                       onClick={goToNextImage}
                       // z-50, w-8 h-8 size, hover fade logic for desktop
-                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white transition duration-300 z-50 w-8 h-8 rounded-full shadow-lg flex items-center justify-center
-                                        lg:opacity-0 lg:group-hover:opacity-100"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white transition duration-300 z-50 w-8 h-8 rounded-full shadow-lg flex items-center justify-center lg:opacity-0 lg:group-hover:opacity-100"
                       aria-label="Next image"
                     >
                       {/* SVG Chevron Right Icon */}
