@@ -218,6 +218,7 @@
 
 "use client";
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -323,13 +324,15 @@ export const Banner = () => {
             <p className="mt-5 text-white/90 text-base sm:text-lg md:text-xl font-light leading-relaxed">
               {slides[index].subtitle}
             </p>
-            <motion.button
-              whileHover={{ scale: 1.07 }}
-              whileTap={{ scale: 0.96 }}
-              className="mt-8 px-8 py-3 bg-white/15 backdrop-blur-md border border-white/30 rounded-full hover:bg-white/25 text-white text-sm md:text-base tracking-wide transition-all duration-300"
-            >
-              Explore Now →
-            </motion.button>
+            <Link href="/products">
+              <motion.button
+                whileHover={{ scale: 1.07 }}
+                whileTap={{ scale: 0.96 }}
+                className="mt-8 px-8 py-3 bg-white/15 backdrop-blur-md border border-white/30 rounded-full hover:bg-white/25 text-white text-sm md:text-base tracking-wide transition-all duration-300"
+              >
+                Explore Now →
+              </motion.button>
+            </Link>
           </motion.div>
         </AnimatePresence>
       </div>
