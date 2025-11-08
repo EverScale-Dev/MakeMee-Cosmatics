@@ -171,12 +171,14 @@ const Header = () => {
             <nav className="flex items-center gap-8">
               {["About", "Products", "Contact"].map((item) => {
                 const path =
-                  item === "Products" ? "/productpage" : `/${item.toLowerCase()}`;
+                  item === "Products"
+                    ? "/productpage"
+                    : `/${item.toLowerCase()}`;
                 return (
                   <Link
                     key={item}
                     href={path}
-                    className="font-medium text-black text-[16px] relative after:absolute after:bottom-[-3px] after:left-0 after:h-[2px] after:w-0 after:bg-black after:transition-all hover:after:w-full"
+                    className="font-medium text-black text-[16px] relative after:absolute after:bottom-[-3px] after:left-0 after:h-[2px] after:w-0 after:bg-[#F0A400] after:transition-all hover:after:w-full hover:text-[#F0A400]"
                   >
                     {item}
                   </Link>
@@ -216,7 +218,10 @@ const Header = () => {
           </Link>
 
           {isMobile && (
-            <IconButton sx={{ color: "#000" }} onClick={() => setMenuOpen(true)}>
+            <IconButton
+              sx={{ color: "#000" }}
+              onClick={() => setMenuOpen(true)}
+            >
               <MenuIcon />
             </IconButton>
           )}

@@ -192,8 +192,8 @@ const ProductsPage = () => {
           })
         }
         sx={{
-          backgroundColor: "#0d47a1",
-          "&:hover": { backgroundColor: "#093b88" },
+          backgroundColor: "#731162",
+          "&:hover": { backgroundColor: "#FC6CB4" },
           textTransform: "none",
           fontWeight: "bold",
         }}
@@ -269,7 +269,7 @@ const ProductsPage = () => {
                       />
                     </div>
                     <div className="p-4">
-                      <h5 className="font-semibold text-gray-800 text-lg line-clamp-1">
+                      <h5 className="font-semibold text-[#731162] text-lg line-clamp-1">
                         {product.name}
                       </h5>
                       <p className="text-sm text-gray-500 line-clamp-2 mb-2">
@@ -303,7 +303,7 @@ const ProductsPage = () => {
                     className={`w-full flex items-center justify-center gap-2 py-2 font-semibold transition-all duration-300 ${
                       added[product._id]
                         ? "bg-green-600 hover:bg-green-500"
-                        : "bg-blue-900 hover:bg-blue-800"
+                        : "bg-[#731162] hover:bg-[#FC6CB4]"
                     } text-white`}
                   >
                     {added[product._id] ? (

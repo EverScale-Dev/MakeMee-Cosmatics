@@ -10,11 +10,11 @@ import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
 
-// ✅ Custom Arrows (rounded floating icons)
+// ✅ Custom Arrows (updated brand colors)
 const NextArrow = ({ onClick }) => (
   <IconButton
     onClick={onClick}
-    className="absolute right-0 sm:-right-2 top-1/2 -translate-y-1/2 bg-white text-blue-900 shadow-lg hover:bg-blue-900 hover:text-white transition-all duration-300 z-10"
+    className="absolute right-0 sm:-right-2 top-1/2 -translate-y-1/2 bg-white text-[#731162] shadow-lg hover:bg-[#731162] hover:text-white transition-all duration-300 z-10"
     size="large"
   >
     <ArrowForwardIosRoundedIcon />
@@ -24,7 +24,7 @@ const NextArrow = ({ onClick }) => (
 const PrevArrow = ({ onClick }) => (
   <IconButton
     onClick={onClick}
-    className="absolute left-0 sm:-left-2 top-1/2 -translate-y-1/2 bg-white text-blue-900 shadow-lg hover:bg-blue-900 hover:text-white transition-all duration-300 z-10"
+    className="absolute left-0 sm:-left-2 top-1/2 -translate-y-1/2 bg-white text-[#731162] shadow-lg hover:bg-[#731162] hover:text-white transition-all duration-300 z-10"
     size="large"
   >
     <ArrowBackIosNewRoundedIcon />
@@ -67,42 +67,56 @@ export const ProductList = () => {
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
-  // ✅ Responsive Slider Settings
-  const settings = {
-    dots: false,
-    infinite: false,
-    speed: 500,
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    nextArrow: <NextArrow />,
-    prevArrow: <PrevArrow />,
-    responsive: [
-      { breakpoint: 1280, settings: { slidesToShow: 3 } },
-      { breakpoint: 1024, settings: { slidesToShow: 2.5 } },
-      { breakpoint: 768, settings: { slidesToShow: 2 } },
-      { breakpoint: 640, settings: { slidesToShow: 1.3 } },
-      { breakpoint: 480, settings: { slidesToShow: 1 } },
-    ],
-  };
+const settings = {
+  dots: products.length > 4, // ✅ show dots only if more than 4 products
+  arrows: false,
+  infinite: false,
+  speed: 500,
+  slidesToShow: 4,
+  slidesToScroll: 1,
+  appendDots: (dots) => (
+    <div style={{ marginTop: "25px" }}>
+      <ul style={{ margin: "0px" }}>{dots}</ul>
+    </div>
+  ),
+  customPaging: () => (
+    <div
+      style={{
+        width: "10px",
+        height: "10px",
+        borderRadius: "50%",
+        backgroundColor: "#731162",
+      }}
+    ></div>
+  ),
+  responsive: [
+    { breakpoint: 1280, settings: { slidesToShow: 3 } },
+    { breakpoint: 1024, settings: { slidesToShow: 2.5 } },
+    { breakpoint: 768, settings: { slidesToShow: 2 } },
+    { breakpoint: 640, settings: { slidesToShow: 1.3 } },
+    { breakpoint: 480, settings: { slidesToShow: 1 } },
+  ],
+};
+
 
   if (loading)
     return (
       <div className="flex justify-center items-center h-screen">
-        <h2 className="text-2xl font-semibold">Loading...</h2>
+        <h2 className="text-2xl font-semibold text-[#731162]">Loading...</h2>
       </div>
     );
 
   if (error)
     return (
       <div className="flex justify-center items-center h-screen">
-        <h2 className="text-2xl text-red-500 font-semibold">{error}</h2>
+        <h2 className="text-2xl text-[#FC6CB4] font-semibold">{error}</h2>
       </div>
     );
 
   return (
     <>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 relative">
-        <h2 className="text-2xl sm:text-3xl font-bold text-blue-900 mb-6 text-center">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 relative">
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#F0A400] mb-6 text-center">
           Featured Products
         </h2>
         <div className="relative">
@@ -118,25 +132,20 @@ export const ProductList = () => {
                         <span
                           className={`px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full shadow-md ${
                             product.badge === "NEW LAUNCH"
-                              ? "bg-green-600 text-white"
-                              : "bg-red-600 text-white"
+                              ? "bg-[#F0A400] text-white"
+                              : "bg-[#731162] text-white"
                           }`}
                         >
                           {product.badge}
                         </span>
                       )}
-                      {/* {product.weight && (
-                        <span className="px-2 py-0.5 bg-blue-50 text-blue-800 text-[10px] sm:text-xs font-medium rounded shadow-sm border border-blue-200">
-                          {product.weight}
-                        </span>
-                      )} */}
                     </div>
                   )}
 
                   {/* ✅ Product Click Area */}
                   <Link href={`/products/${product._id}`} className="flex-1 flex flex-col">
                     {/* Product Image */}
-                    <div className="flex justify-center items-center bg-gray-50 p-2 h-56 sm:h-64">
+                    <div className="flex justify-center items-center bg-[#FFF0F8] p-2 h-56 sm:h-64">
                       <img
                         src={
                           Array.isArray(product.images)
@@ -151,14 +160,14 @@ export const ProductList = () => {
                     {/* Product Info */}
                     <div className="px-4 pb-4 pt-2 flex-1 flex flex-col justify-between">
                       <div>
-                        <h5 className="text-gray-900 font-semibold text-lg sm:text-xl mb-1 line-clamp-1">
+                        <h5 className="text-[#731162] font-semibold text-lg sm:text-xl mb-1 line-clamp-1">
                           {product.name}
                         </h5>
                         <p className="text-gray-500 text-sm mb-3 line-clamp-2">
                           {product.description || "High-quality product with great benefits."}
                         </p>
 
-                        <div className="flex items-center text-yellow-400 text-sm mb-2">
+                        <div className="flex items-center text-[#F0A400] text-sm mb-2">
                           <span>★</span>
                           <span className="ml-1">{product.rating || 4.5}</span>
                           <span className="ml-2 text-gray-500 text-xs">
@@ -185,7 +194,7 @@ export const ProductList = () => {
                           )}
                         <Typography
                           variant="h6"
-                          sx={{ fontWeight: "bold", color: "#C00000" }}
+                          sx={{ fontWeight: "bold", color: "#731162" }}
                         >
                           ₹{product.salePrice}
                         </Typography>
@@ -195,7 +204,7 @@ export const ProductList = () => {
                               variant="caption"
                               sx={{
                                 fontWeight: "bold",
-                                color: "green",
+                                color: "#F0A400",
                                 ml: 1,
                               }}
                             >
@@ -214,7 +223,7 @@ export const ProductList = () => {
                   {/* ✅ Add to Cart Button */}
                   <button
                     onClick={(e) => handleAddToCart(product, e)}
-                    className="w-full flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-800 text-white py-2 sm:py-3 rounded-b-2xl font-semibold transition-all duration-300"
+                    className="w-full flex items-center justify-center gap-2 bg-[#731162] hover:bg-[#FC6CB4] text-white py-2 sm:py-3 rounded-b-2xl font-semibold transition-all duration-300"
                   >
                     <ShoppingCartOutlinedIcon className="text-white text-lg sm:text-xl" />
                     <span>ADD TO CART</span>
@@ -236,7 +245,12 @@ export const ProductList = () => {
         <Alert
           onClose={handleSnackbarClose}
           severity="success"
-          sx={{ width: "100%" }}
+          sx={{
+            width: "100%",
+            backgroundColor: "#FC6CB4",
+            color: "#FFFFFF",
+            fontWeight: "bold",
+          }}
         >
           Product added to cart!
         </Alert>

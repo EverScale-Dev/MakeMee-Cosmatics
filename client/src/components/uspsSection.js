@@ -82,7 +82,7 @@ export default function FuturisticFeatureCards() {
           <h3 className="text-sm uppercase tracking-wider text-[#1E3A8A]">
             <b>Why Choose This Product?</b>
           </h3>
-          <h2 className="mt-3 text-xl sm:text-2xl lg:text-3xl font-extrabold bg-clip-text text-black">
+          <h2 className="mt-3 text-xl sm:text-2xl lg:text-3xl font-extrabold bg-clip-text text-[#F0A400]">
             Experience the benefits of our carefully formulated skincare
             solution
           </h2>

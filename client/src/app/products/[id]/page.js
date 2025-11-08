@@ -36,9 +36,9 @@ import UspsSection from "@/components/uspsSection";
 import CartSidebar from "@/components/CartSidebar";
 
 // --- COLOR PALETTE (Required for Theming) ---
-const PRIMARY_COLOR = "#284B76"; // Your requested color (Deep Blue)
-const PRIMARY_HOVER = "#1E3B5C"; // Slightly darker for hover states
-const PRIMARY_LIGHT = "#3E669B"; // Lighter shade for borders/rings
+const PRIMARY_COLOR = "#731162"; // Your requested color (Deep Blue)
+const PRIMARY_HOVER = "#FC6CB4"; // Slightly darker for hover states
+const PRIMARY_LIGHT = "#F0A400"; // Lighter shade for borders/rings
 // ---------------------------------------------
 
 // --- Default Data (Minimal state for Loading/Error Handling) ---
@@ -345,7 +345,7 @@ const ProductDetail = () => {
               variants={itemVariants}
             >
               <div className="space-y-3">
-                <p className="text-sm font-medium text-gray-500 uppercase tracking-widest">
+                <p className="text-sm font-medium text-white uppercase bg-[#F0A400] tracking-widest inline-block px-3 py-1 rounded-full">
                   {product.brand || "Brand Name"}
                 </p>
                 <h1 className="text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight">
@@ -467,7 +467,7 @@ const ProductDetail = () => {
 
           {product.features?.length > 0 && (
             <motion.div className="py-8" variants={itemVariants}>
-              <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
+              <h2 className="text-3xl font-bold text-[#F0A400] mb-6 text-center">
                 Key Product Highlights
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -566,7 +566,7 @@ const ProductDetail = () => {
 
           {/* SECTION 4: RELATED PRODUCTS */}
           <motion.div className="py-8" variants={itemVariants}>
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+            <h2 className="text-3xl font-bold text-[#F0A400] mb-8 text-center">
               You May Also Like
             </h2>
             {relatedProducts.length > 0 ? (
@@ -635,12 +635,19 @@ const ProductDetail = () => {
 
                       <button
                         onClick={() => handleAddToCart(product)}
-                        // FIX: Correctly applying the background color and ensuring text is white (This was the main fix)
                         className={`w-full text-white py-3 rounded-b-xl font-semibold transition`}
                         style={{
                           backgroundColor: PRIMARY_COLOR,
                           color: "#FFFFFF",
                         }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.backgroundColor =
+                            PRIMARY_HOVER)
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.backgroundColor =
+                            PRIMARY_COLOR)
+                        }
                       >
                         ADD TO CART
                       </button>

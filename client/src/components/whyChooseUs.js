@@ -53,15 +53,9 @@ export default function whyChooseUs({ className = "" }) {
   return (
     <section className={`relative overflow-hidden pb-20 px-6 md:px-16 ${className}`}>
       <div className="max-w-7xl mx-auto text-center">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-4xl md:text-5xl font-extrabold text-gray-900"
-        >
-          Why Choose <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-600">MakeMee</span>
-        </motion.h2>
-
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#F0A400] mb-2 text-center">
+          Why Choose MakeMee
+        </h2>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
