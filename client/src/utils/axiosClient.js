@@ -2,7 +2,7 @@ import axios from "axios";
 import { increment, decrement } from "./loadingService";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: process.env.local.NEXT_PUBLIC_API_BASE_URL,
   withCredentials: true,
 });
 
