@@ -152,7 +152,7 @@ const ProductDetail = () => {
         setProduct(currentProduct);
 
         // Now fetch related using the freshly fetched product’s category
-        const allProductsResponse = await api.get("/productpage");
+        const allProductsResponse = await api.get("/products");
         const related = allProductsResponse.data
           .filter((p) => p.category === currentProduct.category && p._id !== id)
           .slice(0, 4);
