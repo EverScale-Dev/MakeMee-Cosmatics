@@ -36,6 +36,8 @@ const Checkout = () => {
     (total, item) => total + item.price * item.quantity,
     0
   );
+  const deliveryCharge = totalAmount < 500 ? 40 : 0;
+  const finalAmount = totalAmount + deliveryCharge;
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -157,10 +159,13 @@ const Checkout = () => {
           productModel: "Product",
         })),
         totalQuantity,
-        totalAmount: totalAmount,
+        subtotal: totalAmount,
+        deliveryCharge,
+        totalAmount: finalAmount,
         paymentMethod,
         note: note,
       };
+
 
       let orderResponse;
       try {
@@ -202,7 +207,7 @@ const Checkout = () => {
 
         const options = {
           key,
-          amount: totalAmount * 100,
+          amount: finalAmount * 100,
           currency: "INR",
           name: "MakeMee Cosmatics",
           description: "Order Payment",
@@ -496,18 +501,37 @@ const Checkout = () => {
                 </Box>
 
                 {/* Total Price */}
+                {/* Order Summary Totals */}
                 <div className="border-t mt-4 pt-4">
                   <div className="flex flex-col sm:flex-row justify-between mb-2">
-                    <p>Total Items: {totalQuantity}</p>
-                    <p>Subtotal: ₹{totalAmount.toFixed(2)}</p>
+                    <p>Total Items:</p>
+                    <p>{totalQuantity}</p>
                   </div>
+
+                  <div className="flex flex-col sm:flex-row justify-between mb-2">
+                    <p>Subtotal:</p>
+                    <p>₹{totalAmount.toFixed(2)}</p>
+                  </div>
+
                   <div className="flex flex-col sm:flex-row justify-between mb-2">
                     <p>Delivery Charges:</p>
-                    <p>₹ 0.00</p>
+                    <p>₹{deliveryCharge.toFixed(2)}</p>
                   </div>
-                  <div className="flex flex-col sm:flex-row justify-between font-bold">
+
+                  {/* 💡 Offer Message */}
+                  {totalAmount >= 500 ? (
+                    <p className="text-sm text-green-600 mt-2 font-medium text-center">
+                      🎉 Free delivery on orders above ₹500!
+                    </p>
+                  ) : (
+                    <p className="text-sm text-orange-600 mt-2 text-center">
+                      Add items worth ₹{(500 - totalAmount).toFixed(2)} more for free delivery 🚚
+                    </p>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row justify-between font-bold mt-3">
                     <p>Total Amount:</p>
-                    <p>₹{totalAmount.toFixed(2)}</p>
+                    <p>₹{finalAmount.toFixed(2)}</p>
                   </div>
                 </div>
               </>

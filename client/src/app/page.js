@@ -10,6 +10,7 @@ import Footer from "@/components/footer";
 import UspsSection from "@/components/uspsSection";
 import WhyChooseUs from "@/components/whyChooseUs";
 import ProductPromoSection from "@/components/ProductPromoSection";
+import B2BInfluencerSection from "@/components/B2BInfluencerSection";
 
 const Home = () => {
   return (
@@ -20,6 +21,7 @@ const Home = () => {
       <ProductList />
       <UspsSection />
       <WhyChooseUs />
+      <B2BInfluencerSection />
       <Footer />
     </div>
   );

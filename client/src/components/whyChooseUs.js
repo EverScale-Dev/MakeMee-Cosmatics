@@ -51,7 +51,7 @@ export default function whyChooseUs({ className = "" }) {
   ];
 
   return (
-    <section className={`relative overflow-hidden pb-20 px-6 md:px-16 ${className}`}>
+    <section className={`relative overflow-hidden px-6 md:px-16 ${className}`}>
       <div className="max-w-7xl mx-auto text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-[#F0A400] mb-2 text-center">
           Why Choose MakeMee
