@@ -18,6 +18,8 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+// ✅ FIXED CORS
 app.use(
   cors({
     origin: [
@@ -27,27 +29,33 @@ app.use(
       "https://make-mee-cosmatics.vercel.app"
     ],
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// Required for some browsers to avoid CORS issues
+app.options("*", cors());
+
 app.use(express.json());
 
-// Apply logger middleware only in development
+// Logger only in dev
 if (process.env.NODE_ENV === 'development') {
   app.use(loggerMiddleware);
 }
-// Serve uploaded images as static files
+
+// Static files
 app.use("/uploads", express.static("public/uploads"));
 
-
 // Routes
-app.use('/auth', authRoutes);             // Auth routes
-app.use('/products', productRoutes);      // Product routes
-app.use('/orders', orderRoutes);          // Order routes
-app.use('/customers', customerRoutes);    // Customers
-app.use('/metrics', metricsRoutes);       // Metrics routes
-app.use('/porter', porterRoutes);         // Porter routes
-app.use('/payment', paymentRoutes);       // Payment routes
-app.use('/shiprocket', shiprocketRoutes); // Shiprocket routes
+app.use('/auth', authRoutes);
+app.use('/products', productRoutes);
+app.use('/orders', orderRoutes);
+app.use('/customers', customerRoutes);
+app.use('/metrics', metricsRoutes);
+app.use('/porter', porterRoutes);
+app.use('/payment', paymentRoutes);
+app.use('/shiprocket', shiprocketRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello, MakeMeeCosmetics Server!');
