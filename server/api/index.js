@@ -13,6 +13,7 @@ const porterRoutes = require('./routes/porter');
 const loggerMiddleware = require('../middlewares/logger');
 const paymentRoutes = require("./routes/payment");
 const shiprocketRoutes = require('./routes/shiprocketRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 
 dotenv.config();
 connectDB();
@@ -56,6 +57,8 @@ app.use('/metrics', metricsRoutes);
 app.use('/porter', porterRoutes);
 app.use('/payment', paymentRoutes);
 app.use('/shiprocket', shiprocketRoutes);
+app.use('/contact', contactRoutes);
+
 
 app.get('/', (req, res) => {
   res.send('Hello, MakeMeeCosmetics Server!');

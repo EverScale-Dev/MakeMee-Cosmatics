@@ -5,8 +5,8 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false,
   auth: {
-    user: 'fujailbrandmake@gmail.com',
-    pass: 'balj jmja zatu fyjr'
+    user: 'makemeecosmetics@gmail.com',
+    pass: 'jlcj efit pgvr xxvf'
   },
   tls: {
     rejectUnauthorized: false
@@ -14,8 +14,8 @@ const transporter = nodemailer.createTransport({
 });
 
 const mailOptions = {
-  from: 'MakeMee_Cosmetics <fujailbrandmake@gmail.com>',
-  to: 'fujailbrandmake@gmail.com',
+  from: 'MakeMee_Cosmetics <makemeecosmetics@gmail.com>',
+  to: 'makemeecosmetics@gmail.com',
   subject: 'Testing Nodemailer',
   text: 'This is a test email from Nodemailer!'
 };

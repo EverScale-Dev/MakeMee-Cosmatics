@@ -128,7 +128,7 @@ const Footer = () => {
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Email /> 
               <Typography variant="body2" sx={{ color: "#9CA3AF" }}>
-                info@makemeecosmetics.com
+                makemeecosmetics@gmail.com
               </Typography>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -157,10 +157,18 @@ const Footer = () => {
             }}
           >
             <Typography variant="body2" sx={{ color: "#9CA3AF" }}>
-              &copy; {new Date().getFullYear()} MAKEMEE. All rights reserved.
+              © {new Date().getFullYear()} MakeMee. All rights reserved.
             </Typography>
+
             <Typography variant="body2" sx={{ color: "#9CA3AF" }}>
-              Made with ❤️ in India
+              Made with ❤️ in India |
+              <a
+                href="https://brandmake.in"
+                target="_blank"
+                style={{ color: "#9CA3AF", textDecoration: "none", marginLeft: 4 }}
+              >
+                Brand Make
+              </a>
             </Typography>
           </Box>
         </Box>

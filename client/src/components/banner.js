@@ -216,168 +216,244 @@
 // };
 
 
+// "use client";
+// import React, { useState, useEffect } from "react";
+// import Link from "next/link"; // ✅ Import Link for navigation
+// import { motion, AnimatePresence } from "framer-motion";
+// import { ChevronLeft, ChevronRight } from "lucide-react";
+
+// const slides = [
+//   {
+//     id: 1,
+//     title: "Redefine Radiance",
+//     subtitle:
+//       "Luxury skincare, reimagined for the modern world. Pure. Potent. Purposeful.",
+//     bg: "linear-gradient(135deg, #ff9ab8, #8c38ff 80%)",
+//   },
+//   {
+//     id: 2,
+//     title: "Confidence in Every Shade",
+//     subtitle:
+//       "Inclusive beauty designed to empower every tone, every story, every you.",
+//     bg: "linear-gradient(135deg, #7b4397, #dc2430 80%)",
+//   },
+//   {
+//     id: 3,
+//     title: "Luxury, Simplified",
+//     subtitle:
+//       "Clean ingredients meet timeless design. Because elegance is effortless.",
+//     bg: "linear-gradient(135deg, #ff9966, #ff5e62 80%)",
+//   },
+// ];
+
+// export const Banner = () => {
+//   const [index, setIndex] = useState(0);
+
+//   // Auto change every 6 seconds
+//   useEffect(() => {
+//     const timer = setInterval(() => {
+//       setIndex((prev) => (prev + 1) % slides.length);
+//     }, 6000);
+//     return () => clearInterval(timer);
+//   }, []);
+
+//   const prevSlide = () =>
+//     setIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+//   const nextSlide = () => setIndex((prev) => (prev + 1) % slides.length);
+
+//   return (
+//     <div className="relative w-full h-[90vh] md:h-[85vh] overflow-hidden bg-black">
+//       {/* --- Smooth Background Crossfade --- */}
+//       {slides.map((slide, i) => (
+//         <motion.div
+//           key={slide.id}
+//           initial={{ opacity: i === index ? 1 : 0 }}
+//           animate={{ opacity: i === index ? 1 : 0 }}
+//           transition={{ duration: 1.6, ease: "easeInOut" }}
+//           className="absolute inset-0"
+//           style={{
+//             background: slide.bg,
+//             backgroundSize: "200% 200%",
+//             transform: i === index ? "scale(1.05)" : "scale(1)",
+//             transition: "transform 6s ease",
+//           }}
+//         />
+//       ))}
+
+//       {/* --- Light Motion Overlay --- */}
+//       <motion.div
+//         animate={{
+//           backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+//         }}
+//         transition={{
+//           duration: 10,
+//           repeat: Infinity,
+//           ease: "linear",
+//         }}
+//         className="absolute inset-0 opacity-30"
+//         style={{
+//           background:
+//             "linear-gradient(120deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.3) 100%)",
+//           backgroundSize: "200% 200%",
+//           mixBlendMode: "overlay",
+//         }}
+//       />
+
+//       {/* --- Dark Overlay for Text Contrast --- */}
+//       <div className="absolute inset-0 bg-black/35" />
+
+//       {/* --- Text Content --- */}
+//       <div className="relative z-10 flex flex-col justify-center items-center text-center h-full px-6">
+//         <AnimatePresence mode="wait">
+//           <motion.div
+//             key={slides[index].title}
+//             initial={{ opacity: 0, y: 40, scale: 0.97 }}
+//             animate={{
+//               opacity: 1,
+//               y: 0,
+//               scale: 1,
+//               transition: { duration: 1, ease: "easeOut" },
+//             }}
+//             exit={{
+//               opacity: 0,
+//               y: -30,
+//               scale: 0.98,
+//               transition: { duration: 0.8 },
+//             }}
+//             className="max-w-3xl"
+//           >
+//             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white leading-tight drop-shadow-[0_3px_15px_rgba(0,0,0,0.4)]">
+//               {slides[index].title}
+//             </h1>
+//             <p className="mt-5 text-white/90 text-base sm:text-lg md:text-xl font-light leading-relaxed">
+//               {slides[index].subtitle}
+//             </p>
+
+//             {/* ✅ Button Redirects to Product Page */}
+//             <Link href="/products">
+//               <motion.button
+//                 whileHover={{ scale: 1.07 }}
+//                 whileTap={{ scale: 0.96 }}
+//                 className="mt-8 px-8 py-3 bg-white/15 backdrop-blur-md border border-white/30 rounded-full hover:bg-white/25 text-white text-sm md:text-base tracking-wide transition-all duration-300"
+//               >
+//                 Explore Now →
+//               </motion.button>
+//             </Link>
+//           </motion.div>
+//         </AnimatePresence>
+//       </div>
+
+//       {/* --- Arrows (fade in on hover) --- */}
+//       <div className="absolute inset-0 flex justify-between items-center px-4 sm:px-10 z-20 opacity-0 hover:opacity-100 transition-opacity duration-500">
+//         <motion.button
+//           whileHover={{ scale: 1.15 }}
+//           whileTap={{ scale: 0.9 }}
+//           onClick={prevSlide}
+//           className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20"
+//         >
+//           <ChevronLeft className="w-6 h-6 text-white" />
+//         </motion.button>
+//         <motion.button
+//           whileHover={{ scale: 1.15 }}
+//           whileTap={{ scale: 0.9 }}
+//           onClick={nextSlide}
+//           className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20"
+//         >
+//           <ChevronRight className="w-6 h-6 text-white" />
+//         </motion.button>
+//       </div>
+
+//       {/* --- Progress Dots --- */}
+//       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+//         {slides.map((_, i) => (
+//           <motion.div
+//             key={i}
+//             animate={{
+//               scale: index === i ? 1.3 : 1,
+//               opacity: index === i ? 1 : 0.5,
+//             }}
+//             className={`h-2.5 rounded-full ${
+//               index === i ? "bg-white w-6" : "bg-white/50 w-2.5"
+//             } transition-all duration-300`}
+//           />
+//         ))}
+//       </div>
+//     </div>
+//   );
+// };
+
+
 "use client";
-import React, { useState, useEffect } from "react";
-import Link from "next/link"; // ✅ Import Link for navigation
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
 
-const slides = [
-  {
-    id: 1,
-    title: "Redefine Radiance",
-    subtitle:
-      "Luxury skincare, reimagined for the modern world. Pure. Potent. Purposeful.",
-    bg: "linear-gradient(135deg, #ff9ab8, #8c38ff 80%)",
-  },
-  {
-    id: 2,
-    title: "Confidence in Every Shade",
-    subtitle:
-      "Inclusive beauty designed to empower every tone, every story, every you.",
-    bg: "linear-gradient(135deg, #7b4397, #dc2430 80%)",
-  },
-  {
-    id: 3,
-    title: "Luxury, Simplified",
-    subtitle:
-      "Clean ingredients meet timeless design. Because elegance is effortless.",
-    bg: "linear-gradient(135deg, #ff9966, #ff5e62 80%)",
-  },
-];
+export default function Banner() {
+  const slides = [
+    {
+      desktop: "/banners/desktop/desktop_banner_10percentage_01.jpg",
+      mobile: "/banners/mobile/mobile_banner_10percentage_01.jpg",
+      alt: "Cosmetic Banner 1",
+    },
+    {
+      desktop: "/banners/desktop/desktop_banner_10percentage_02.jpg",
+      mobile: "/banners/mobile/mobile_banner_10percentage_02.jpg",
+      alt: "Cosmetic Banner 2",
+    },
+    {
+      desktop: "/banners/desktop/desktop_banner_10percentage_03.jpg",
+      mobile: "/banners/mobile/mobile_banner_10percentage_01.jpg",
+      alt: "Cosmetic Banner 3",
+    },
+  ];
 
-export const Banner = () => {
-  const [index, setIndex] = useState(0);
+  const [current, setCurrent] = useState(0);
 
-  // Auto change every 6 seconds
   useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % slides.length);
-    }, 6000);
-    return () => clearInterval(timer);
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % slides.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  const prevSlide = () =>
-    setIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
-  const nextSlide = () => setIndex((prev) => (prev + 1) % slides.length);
-
   return (
-    <div className="relative w-full h-[90vh] md:h-[85vh] overflow-hidden bg-black">
-      {/* --- Smooth Background Crossfade --- */}
-      {slides.map((slide, i) => (
-        <motion.div
-          key={slide.id}
-          initial={{ opacity: i === index ? 1 : 0 }}
-          animate={{ opacity: i === index ? 1 : 0 }}
-          transition={{ duration: 1.6, ease: "easeInOut" }}
-          className="absolute inset-0"
-          style={{
-            background: slide.bg,
-            backgroundSize: "200% 200%",
-            transform: i === index ? "scale(1.05)" : "scale(1)",
-            transition: "transform 6s ease",
-          }}
-        />
-      ))}
+    <div className="relative w-full overflow-hidden pt-2">  {/* very little space */}
+      <div
+        className="flex transition-transform duration-700"
+        style={{ transform: `translateX(-${current * 100}%)` }}
+      >
+        {slides.map((slide, index) => (
+          <div key={index} className="w-full flex-shrink-0 px-2">  {/* rounded spacing */}
+            
+            {/* Desktop */}
+            <img
+              src={slide.desktop}
+              alt={slide.alt}
+              className="hidden md:block w-full aspect-[1920/700] object-cover rounded-2xl"
+            />
 
-      {/* --- Light Motion Overlay --- */}
-      <motion.div
-        animate={{
-          backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-        className="absolute inset-0 opacity-30"
-        style={{
-          background:
-            "linear-gradient(120deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.3) 100%)",
-          backgroundSize: "200% 200%",
-          mixBlendMode: "overlay",
-        }}
-      />
-
-      {/* --- Dark Overlay for Text Contrast --- */}
-      <div className="absolute inset-0 bg-black/35" />
-
-      {/* --- Text Content --- */}
-      <div className="relative z-10 flex flex-col justify-center items-center text-center h-full px-6">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={slides[index].title}
-            initial={{ opacity: 0, y: 40, scale: 0.97 }}
-            animate={{
-              opacity: 1,
-              y: 0,
-              scale: 1,
-              transition: { duration: 1, ease: "easeOut" },
-            }}
-            exit={{
-              opacity: 0,
-              y: -30,
-              scale: 0.98,
-              transition: { duration: 0.8 },
-            }}
-            className="max-w-3xl"
-          >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white leading-tight drop-shadow-[0_3px_15px_rgba(0,0,0,0.4)]">
-              {slides[index].title}
-            </h1>
-            <p className="mt-5 text-white/90 text-base sm:text-lg md:text-xl font-light leading-relaxed">
-              {slides[index].subtitle}
-            </p>
-
-            {/* ✅ Button Redirects to Product Page */}
-            <Link href="/products">
-              <motion.button
-                whileHover={{ scale: 1.07 }}
-                whileTap={{ scale: 0.96 }}
-                className="mt-8 px-8 py-3 bg-white/15 backdrop-blur-md border border-white/30 rounded-full hover:bg-white/25 text-white text-sm md:text-base tracking-wide transition-all duration-300"
-              >
-                Explore Now →
-              </motion.button>
-            </Link>
-          </motion.div>
-        </AnimatePresence>
+            {/* Mobile */}
+            <img
+              src={slide.mobile}
+              alt={slide.alt}
+              className="block md:hidden w-full h-auto object-cover rounded-xl"
+            />
+          </div>
+        ))}
       </div>
 
-      {/* --- Arrows (fade in on hover) --- */}
-      <div className="absolute inset-0 flex justify-between items-center px-4 sm:px-10 z-20 opacity-0 hover:opacity-100 transition-opacity duration-500">
-        <motion.button
-          whileHover={{ scale: 1.15 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={prevSlide}
-          className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20"
-        >
-          <ChevronLeft className="w-6 h-6 text-white" />
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.15 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={nextSlide}
-          className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20"
-        >
-          <ChevronRight className="w-6 h-6 text-white" />
-        </motion.button>
-      </div>
-
-      {/* --- Progress Dots --- */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-20">
-        {slides.map((_, i) => (
-          <motion.div
-            key={i}
-            animate={{
-              scale: index === i ? 1.3 : 1,
-              opacity: index === i ? 1 : 0.5,
-            }}
-            className={`h-2.5 rounded-full ${
-              index === i ? "bg-white w-6" : "bg-white/50 w-2.5"
-            } transition-all duration-300`}
+      {/* Indicators */}
+      <div className="absolute bottom-4 w-full flex justify-center gap-3 z-10">
+        {slides.map((_, index) => (
+          <div
+            key={index}
+            onClick={() => setCurrent(index)}
+            className={`transition-all h-[3px] cursor-pointer rounded-full ${
+              current === index ? "w-8 bg-[#F0A400]" : "w-4 bg-white/50"
+            }`}
           />
         ))}
       </div>
     </div>
   );
-};
+}
+

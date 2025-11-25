@@ -27,10 +27,10 @@ const PrevArrow = ({ onClick }) => (
 
 const ProductPromoSection = () => {
   const promoImages = [
-    { id: "68ea55fc4b75f7495d81386c", image: "/Promo/p1.jpg" },
-    { id: "68ea54e94b75f7495d81373d", image: "/Promo/p2.jpg" },
-    { id: "68ea54064b75f7495d8136f6", image: "/Promo/p3.jpg" },
-    { id: "68ea38e367a24f0c66fde087", image: "/Promo/p4.jpg" },
+    { id: "69257632de6db78e985c954b", image: "/Promo/p1.jpg" },
+    { id: "6925782fde6db78e985c963c", image: "/Promo/p2.jpg" },
+    { id: "692576e3de6db78e985c958a", image: "/Promo/p3.jpg" },
+    { id: "692577a1de6db78e985c95d5", image: "/Promo/p4.jpg" },
   ];
 
   const settings = {
