@@ -2,13 +2,13 @@ const receiveMail = require('../../utils/receiveMail');
 
 exports.contactForm = async (req, res) => {
   try {
-    const { name, email, message } = req.body;
+    const { name, email, subject, message } = req.body;
 
-    if (!name || !email || !message) {
+    if (!name || !email || !subject || !message) {
       return res.status(400).json({ success: false, message: "All fields required" });
     }
 
-    await receiveMail({ name, email, message });
+    await receiveMail({ name, email, subject, message });
 
     res.status(200).json({
       success: true,
@@ -20,3 +20,4 @@ exports.contactForm = async (req, res) => {
     res.status(500).json({ success: false, message: "Email failed" });
   }
 };
+

@@ -57,7 +57,7 @@ app.use('/metrics', metricsRoutes);
 app.use('/porter', porterRoutes);
 app.use('/payment', paymentRoutes);
 app.use('/shiprocket', shiprocketRoutes);
-app.use('/contact', contactRoutes);
+app.use('/', contactRoutes);
 
 
 app.get('/', (req, res) => {
