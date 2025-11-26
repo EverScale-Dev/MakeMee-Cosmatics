@@ -8,22 +8,22 @@ const receiveMail = async ({ name, email, subject, message }) => {
 
     // Create transporter
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
       port: Number(process.env.SMTP_PORT) || 465,
-      secure: process.env.SMTP_SECURE === "true" || true, // true for 465
+      secure: true,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS, // App password if Gmail
+        user: process.env.SMTP_USER, 
+        pass: process.env.SMTP_PASS, 
       },
       tls: {
-        rejectUnauthorized: false, // avoids self-signed certificate issues
+        rejectUnauthorized: false,
       },
     });
 
     // Mail options
     const mailOptions = {
       from: `"MakeMee Cosmetics" <${process.env.SMTP_USER}>`,
-      to: process.env.SMTP_TO || process.env.SMTP_USER, // allow different recipient
+      to: process.env.SMTP_USER,
       replyTo: email,
       subject: `📩 New Contact Form: ${subject}`,
       html: `
@@ -36,14 +36,13 @@ const receiveMail = async ({ name, email, subject, message }) => {
       `,
     };
 
-    // Send email
+    // Send email and await
     const info = await transporter.sendMail(mailOptions);
-
-    console.log("Email sent successfully:", info.messageId);
+    console.log("✅ Email sent successfully:", info.messageId);
 
     return info;
   } catch (error) {
-    console.error("Error sending contact form email:", error);
+    console.error("❌ Error sending contact form email:", error);
     throw error;
   }
 };
