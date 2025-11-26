@@ -150,7 +150,7 @@ const About = () => {
         {/* Where Beauty Meets Wellness */}
         <section className="w-full px-6 md:px-10 py-10">
           <motion.div
-            className="max-w-6xl mx-auto p-8 md:p-16 rounded-3xl bg-yellow-50/50 shadow-lg flex flex-col items-center"
+            className="max-w-6xl mx-auto p-8 md:p-16 rounded-3xl bg-yellow-50/50 shadow-lg"
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
@@ -165,10 +165,12 @@ const About = () => {
               </h2>
             </div>
 
+            {/* LEFT RIGHT FIX */}
             <div className="w-full grid md:grid-cols-2 gap-12 items-center">
-              {/* Text */}
+              
+              {/* LEFT TEXT */}
               <motion.div
-                className="text-gray-700 space-y-4 leading-relaxed order-2 md:order-1"
+                className="text-gray-700 space-y-4 leading-relaxed"
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
@@ -179,43 +181,21 @@ const About = () => {
                 <p>MakeMee is not just a cosmetic brand it is a movement of self-love, where beauty meets wellness, and where your glow becomes our biggest reward. ✨</p>
               </motion.div>
 
-              {/* Animated SVG */}
+              {/* RIGHT IMAGE */}
               <motion.div
-                className="relative w-full aspect-square mx-auto order-1 md:order-2"
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
+                className="relative w-full flex justify-center"
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
                 viewport={{ once: true, amount: 0.3 }}
               >
-                {/* SVG CODE BLOCK */}
-                <div className="relative w-full h-64 sm:h-80 lg:h-96 flex items-center justify-center">
-                  <svg viewBox="0 0 500 400" className="w-full h-full max-w-sm sm:max-w-md lg:max-w-lg" xmlns="http://www.w3.org/2000/svg">
-                    {/* Orbs */}
-                    <circle cx="100" cy="100" r="40" fill="url(#orb1)" opacity="0.3" />
-                    <circle cx="400" cy="80" r="35" fill="url(#orb2)" opacity="0.25" />
-                    <circle cx="80" cy="320" r="30" fill="url(#orb3)" opacity="0.2" />
-                    <circle cx="420" cy="320" r="45" fill="url(#orb4)" opacity="0.3" />
-                    <defs>
-                      <linearGradient id="orb1" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#3B82F6"></stop>
-                        <stop offset="100%" stopColor="#60A5FA"></stop>
-                      </linearGradient>
-                      <linearGradient id="orb2" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#F97316"></stop>
-                        <stop offset="100%" stopColor="#FB923C"></stop>
-                      </linearGradient>
-                      <linearGradient id="orb3" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#8B5CF6"></stop>
-                        <stop offset="100%" stopColor="#A78BFA"></stop>
-                      </linearGradient>
-                      <linearGradient id="orb4" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#6366F1"></stop>
-                        <stop offset="100%" stopColor="#A78BFA"></stop>
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </div>
+                <img
+                  src="/Product-Img/Makemee_allproducts_image.webp"
+                  alt="MakeMee Products"
+                  className="w-64 md:w-72 drop-shadow-xl rounded-xl"
+                />
               </motion.div>
+
             </div>
           </motion.div>
         </section>
