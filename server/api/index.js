@@ -46,14 +46,14 @@ if (process.env.NODE_ENV === 'development') {
 app.use("/uploads", express.static("public/uploads"));
 
 // Routes (updated)
-app.use('/auth', authRoutes);
-app.use('/products', productRoutes);
-app.use('/orders', orderRoutes);
-app.use('/customers', customerRoutes);
-app.use('/metrics', metricsRoutes);
-app.use('/payment', paymentRoutes);
-app.use('/shiprocket', shiprocketRoutes);
-app.use('/contact', contactRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/metrics', metricsRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/shiprocket', shiprocketRoutes);
+app.use('/api/contact', contactRoutes);
 
 
 app.get('/', (req, res) => {
