@@ -23,10 +23,8 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:3000",
-      "http://72.61.227.110:3000",
-      "http://72.61.227.110",
-      "https://make-mee-cosmatics.vercel.app"
+      "https://makemee.in",
+      "https://www.makemee.in"   // optional but recommended
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
