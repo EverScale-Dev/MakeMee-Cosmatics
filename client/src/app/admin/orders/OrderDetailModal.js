@@ -77,7 +77,7 @@ export default function OrderDetailModal({
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/shiprocket/ship/${order._id}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/shiprocket/ship/${order._id}`,
         {},
         {
           headers: {

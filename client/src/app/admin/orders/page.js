@@ -332,7 +332,7 @@ export default function OrdersPage() {
     setLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orders`,
         {
           params: { limit, skip: (page - 1) * limit },
           headers: { Authorization: `Bearer ${token}` },
@@ -351,7 +351,7 @@ export default function OrdersPage() {
     setLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/${orderId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orders/${orderId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`, // Attach the token in the Authorization header
@@ -378,7 +378,7 @@ export default function OrdersPage() {
   const updateOrderStatus = async (id, newStatus) => {
     try {
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/${id}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orders/${id}`,
         {
           status: newStatus,
         },
@@ -406,7 +406,7 @@ export default function OrdersPage() {
     setLoading(true);
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/shiprocket/ship/${orderId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/shiprocket/ship/${orderId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -438,7 +438,7 @@ export default function OrdersPage() {
   const handleTrackOrder = async (awb) => {
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/shiprocket/track/${awb}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/shiprocket/track/${awb}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

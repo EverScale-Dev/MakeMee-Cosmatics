@@ -27,7 +27,7 @@ export default function AdminDashboard() {
   const fetchMetrics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/metrics`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/metrics`, {
         headers: {
           Authorization: `Bearer ${token}`, // Attach the token in the Authorization header
         },
@@ -41,7 +41,7 @@ export default function AdminDashboard() {
   // Fetch recent orders
   const fetchOrders = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/orders`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orders`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`, // Attach the token in the Authorization header
         },

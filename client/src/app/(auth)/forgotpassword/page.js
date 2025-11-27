@@ -56,7 +56,7 @@ export default function ForgotPassword() {
     if (Object.keys(emailErrors).length > 0) return;
 
     try {
-      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/forgot-password`, { email });
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/forgot-password`, { email });
       setMessage(res.data.message);
       setErrorMessage("");
       setShowResetForm(true);
@@ -74,7 +74,7 @@ export default function ForgotPassword() {
     if (Object.keys(resetErrors).length > 0) return;
 
     try {
-      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/reset-password`, {
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/reset-password`, {
         email,
         tempPassword,
         newPassword,

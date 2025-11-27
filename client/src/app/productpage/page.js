@@ -45,7 +45,7 @@ const ProductsPage = () => {
     const fetchProducts = async () => {
       try {
         const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/products`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products`
         );
         setProducts(res.data);
         setFiltered(res.data);

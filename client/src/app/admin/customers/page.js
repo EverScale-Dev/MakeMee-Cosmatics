@@ -55,7 +55,7 @@ export default function AdminCustomerList() {
     setLoading(true);
     try {
       const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/customers`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customers`,
         {
           params: { page: pageNumber, limit },
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -124,13 +124,13 @@ export default function AdminCustomerList() {
     try {
       if (selectedCustomer._id) {
         await axios.put(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/customers/${selectedCustomer._id}`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customers/${selectedCustomer._id}`,
           selectedCustomer,
           { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         );
       } else {
         await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/customers`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customers`,
           selectedCustomer,
           { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         );
@@ -148,7 +148,7 @@ export default function AdminCustomerList() {
 
     try {
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/customers/${customerId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customers/${customerId}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
       fetchCustomers(page);

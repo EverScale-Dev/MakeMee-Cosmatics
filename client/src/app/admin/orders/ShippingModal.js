@@ -31,7 +31,7 @@ const ShippingModal = ({ open, handleClose, order }) => {
     try {
       setLoading(true);
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/porter/create`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/porter/create`,
         porterOrderData
       );
       Swal.fire("Success", "Delivery successfully scheduled!", "success");
@@ -63,7 +63,7 @@ const ShippingModal = ({ open, handleClose, order }) => {
   
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/porter/${order._id}/cancel`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/porter/${order._id}/cancel`,
         {},
         { headers: { Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}` } }
       );

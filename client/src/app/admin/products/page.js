@@ -64,7 +64,7 @@ function SingleProductList() {
   const fetchCategories = async (token) => {
     try {
       const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/categories`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/categories`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -82,7 +82,7 @@ function SingleProductList() {
     try {
       // Products now have category populated (name)
       const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/products`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products`,
         {
           headers: { Authorization: `Bearer ${tokenOverride}` },
         }
@@ -227,7 +227,7 @@ function SingleProductList() {
 
     try {
       await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/products/${selectedProduct._id}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/${selectedProduct._id}`,
         formData,
         {
           headers: {
@@ -257,7 +257,7 @@ function SingleProductList() {
 
     try {
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/products`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products`,
         formData,
         {
           headers: {
@@ -289,7 +289,7 @@ function SingleProductList() {
     if (confirmDelete) {
       try {
         await axios.delete(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/products/${productId}`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/${productId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

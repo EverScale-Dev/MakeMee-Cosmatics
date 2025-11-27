@@ -132,7 +132,7 @@ const Checkout = () => {
       try {
         customerResponse = await axios.post(
           `
-          ${process.env.NEXT_PUBLIC_API_BASE_URL}/customers`,
+          ${process.env.NEXT_PUBLIC_API_BASE_URL}/api/customers`,
           customerData
         );
       } catch (error) {
@@ -171,7 +171,7 @@ const Checkout = () => {
       try {
         orderResponse = await axios.post(
           `
-          ${process.env.NEXT_PUBLIC_API_BASE_URL}/orders`,
+          ${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orders`,
           orderData
         );
       } catch (error) {
@@ -190,7 +190,7 @@ const Checkout = () => {
       if (paymentMethod === "onlinePayment") {
         // Call backend to create Razorpay order
         const razorpayOrderRes = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/payment/razorpay/order`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/payment/razorpay/order`,
           {
             amount: totalAmount * 100, // Razorpay expects amount in paise
             currency: "INR",

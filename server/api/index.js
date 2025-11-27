@@ -23,11 +23,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:3000",
-      "http://72.61.227.110:3000",
-      "http://72.61.227.110",
-      "https://make-mee-cosmatics.vercel.app",
-      "http://makemee.in",
+      "https://makemee.in",
       "https://www.makemee.in"   // optional but recommended
     ],
     credentials: true,
@@ -49,15 +45,15 @@ if (process.env.NODE_ENV === 'development') {
 // Static files
 app.use("/uploads", express.static("public/uploads"));
 
-// Routes
-app.use('/auth', authRoutes);
-app.use('/products', productRoutes);
-app.use('/orders', orderRoutes);
-app.use('/customers', customerRoutes);
-app.use('/metrics', metricsRoutes);
-app.use('/payment', paymentRoutes);
-app.use('/shiprocket', shiprocketRoutes);
-app.use('/contact', contactRoutes);
+// Routes (updated)
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/metrics', metricsRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/shiprocket', shiprocketRoutes);
+app.use('/api/contact', contactRoutes);
 
 
 app.get('/', (req, res) => {

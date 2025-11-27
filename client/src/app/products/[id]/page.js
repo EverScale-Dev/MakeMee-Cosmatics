@@ -143,7 +143,7 @@ const ProductDetail = () => {
 
     const fetchProductAndRelated = async () => {
       try {
-        const productResponse = await api.get(`/products/${id}`);
+        const productResponse = await api.get(`/api/products/${id}`);
         const currentProduct = {
           ...productResponse.data,
           reviewCount: productResponse.data.reviews?.length || 0,
@@ -152,7 +152,7 @@ const ProductDetail = () => {
         setProduct(currentProduct);
 
         // Now fetch related using the freshly fetched product’s category
-        const allProductsResponse = await api.get("/products");
+        const allProductsResponse = await api.get("/api/products");
         const related = allProductsResponse.data
           .filter((p) => p.category === currentProduct.category && p._id !== id)
           .slice(0, 4);

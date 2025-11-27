@@ -16,7 +16,7 @@ function OrderSuccessInner() {
 
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/payment/order-status/${order_id}`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/payment/order-status/${order_id}`
         );
         const data = await res.json();
         setOrderStatus(data);

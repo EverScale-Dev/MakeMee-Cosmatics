@@ -41,7 +41,7 @@ export const ProductList = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/products`);
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products`);
         setProducts(res.data);
       } catch {
         setError("Failed to fetch products.");
