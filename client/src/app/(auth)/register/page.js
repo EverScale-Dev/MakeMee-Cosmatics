@@ -57,7 +57,7 @@ export default function Register() {
       setIsEmailSent(false);
       setIsPasswordDisabled(true);
       setErrorMessage("");
-      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/register`, { fullName, email });
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/register`, { fullName, email });
       if (res.status === 201) {
         setSuccessMessage("Password sent to your email. Please enter it below.");
         setIsPasswordDisabled(false);
@@ -73,7 +73,7 @@ export default function Register() {
   const handlePasswordSubmit = async () => {
     if (!validate()) return;
     try {
-      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/complete-registration`, {
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/complete-registration`, {
         fullName,
         email,
         password,
