@@ -46,7 +46,7 @@ if (process.env.NODE_ENV === 'development') {
 app.use("/uploads", express.static("public/uploads"));
 
 // Routes (updated)
-app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/customers', customerRoutes);
