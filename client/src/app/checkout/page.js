@@ -216,7 +216,7 @@ const Checkout = () => {
             // Verify payment on backend
             try {
               const verifyRes = await axios.post(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/payment/razorpay/verify`,
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/payment/razorpay/verify`,
                 {
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_payment_id: response.razorpay_payment_id,
