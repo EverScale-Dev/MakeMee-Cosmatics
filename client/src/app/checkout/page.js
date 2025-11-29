@@ -139,7 +139,7 @@ const Checkout = () => {
         console.error("Error creating customer:", error);
         await Swal.fire({
           title: "Error",
-          text: "Failed to create customer. Please try again.",
+          text: "Kindly fill all the correct details. Please try again.", //text: "Failed to create customer. Please try again.",
           icon: "error",
         });
         return;

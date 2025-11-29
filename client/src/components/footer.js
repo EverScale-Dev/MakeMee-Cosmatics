@@ -31,7 +31,7 @@ const Footer = () => {
               </Typography>
               <Box sx={{ display: "flex", gap: 2 }}>
                 <Link
-                  href="https://www.instagram.com/makeemee___/"
+                  href="https://www.instagram.com/makemeecosmetics"
                   target="_blank"
                   rel="noopener noreferrer"
                   sx={{ color: "#9CA3AF", "&:hover": { color: "#fff" } }}
