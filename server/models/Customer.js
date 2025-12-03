@@ -5,7 +5,7 @@ const customerSchema = new mongoose.Schema({
   email: { type: String, required: true },
   phone: { type: String, required: true },
   shippingAddress: {
-    apartment_address: { type: String, required: true },
+    apartment_address: String,
     street_address1: { type: String, required: true },
     city: { type: String, required: true },    
     state: { type: String, required: true },

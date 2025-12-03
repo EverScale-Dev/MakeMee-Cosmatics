@@ -86,7 +86,7 @@ const Checkout = () => {
 
   const handleAddressChange = (e) => {
     const { name, value } = e.target;
-    setApartment_address(value);
+    // setApartment_address(value);
     setShippingAddress((prevAddress) => ({
       ...prevAddress,
       [name]: value,
@@ -357,7 +357,7 @@ const Checkout = () => {
                   sx={{ mb: 2 }}
                   value={apartment_address}
                   onChange={handleApartmentAddressChange}
-                  required
+                  // required
                 />
 
                 <Box className="flex space-x-4" sx={{ mb: 2 }}>

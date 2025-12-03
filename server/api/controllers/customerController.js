@@ -23,7 +23,7 @@ exports.createCustomer = async (req, res) => {
         return res.status(400).json({ message: "Shipping address is required and must be an object." });
       }
   
-      const requiredFields = ["apartment_address", "street_address1", "city", "state", "lat", "lng", "pincode"];
+      const requiredFields = ["street_address1", "city", "state", "lat", "lng", "pincode"];
       for (const field of requiredFields) {
         if (!shippingAddress[field]) {
           return res.status(400).json({ message: `Shipping address is missing field: ${field}` });

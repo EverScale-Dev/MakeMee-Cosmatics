@@ -23,8 +23,6 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:3000",
-      "http://localhost:5000",
       "https://makemee.in",
       "https://www.makemee.in"   // optional but recommended
     ],
