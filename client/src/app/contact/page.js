@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaClock, FaPaperPlane } from "react-icons/fa";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Contact = () => {
   const [form, setForm] = useState({
@@ -13,11 +13,20 @@ const Contact = () => {
     message: ""
   });
 
-  const [status, setStatus] = useState("");
+  const [popup, setPopup] = useState({ show: false, type: "", message: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false); // 👉 new state
+
+  const showPopup = (type, message) => {
+    setPopup({ show: true, type, message });
+
+    setTimeout(() => {
+      setPopup({ show: false, type: "", message: "" });
+    }, 3000);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus("Sending...");
+    setIsSubmitting(true); // 👉 start submitting
 
     try {
       const res = await fetch(
@@ -28,20 +37,35 @@ const Contact = () => {
           body: JSON.stringify(form),
         }
       );
+
+      const result = await res.json();
+
       if (res.ok) {
-        setStatus("✅ Message sent successfully!");
+        showPopup("success", "Your message has been sent successfully!");
         setForm({ name: "", email: "", subject: "", message: "" });
       } else {
-        const err = await res.json().catch(() => null);
-        setStatus(err?.message || "❌ Failed to send. Try again.");
+        showPopup("error", result?.message || "Failed to send message. Please try again.");
       }
     } catch (err) {
-      setStatus("❌ Network error. Try again.");
+      showPopup("error", "Network error. Please try again.");
     }
+
+    setIsSubmitting(false); // 👉 done submitting
   };
 
   return (
     <>
+      {/* Popup Message */}
+      <AnimatePresence>
+        {popup.show && (
+          <PopupMessage
+            type={popup.type}
+            message={popup.message}
+            onClose={() => setPopup({ show: false })}
+          />
+        )}
+      </AnimatePresence>
+
       <Header />
       <div className="relative min-h-screen bg-gray-50 flex items-center justify-center px-5 py-16">
         <motion.div
@@ -94,15 +118,24 @@ const Contact = () => {
 
               <motion.button
                 type="submit"
-                className="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-lg font-medium hover:opacity-90 transition"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.96 }}
+                disabled={isSubmitting} // 👉 prevent double submit
+                className={`w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:opacity-90 transition flex justify-center items-center gap-2 ${isSubmitting ? "cursor-not-allowed opacity-70" : "hover:bg-blue-800"}`}
+                whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+                whileTap={{ scale: isSubmitting ? 1 : 0.96 }}
               >
-                Send Message
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    Submitting...
+                  </>
+                ) : (
+                  "Send Message"
+                )}
               </motion.button>
             </form>
-
-            {status && <p className="mt-3 text-sm text-blue-900">{status}</p>}
           </div>
 
           {/* Right Section: Info & Hours */}
@@ -110,7 +143,7 @@ const Contact = () => {
             <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
               <h3 className="text-2xl font-bold text-gray-800 mb-4">Contact Information</h3>
               <InfoItem Icon={FaEnvelope} title="Email" text="makemeecosmetics@gmail.com" sub="We respond within 24 hours" />
-              <InfoItem Icon={FaPhone} title="Phone" text="+91 7249334274" sub="Mon-Fri: 9AM-6PM IST" />
+              <InfoItem Icon={FaPhone} title="Phone" text="+91 9075141925" sub="Mon-Fri: 9AM-6PM IST" />
               <InfoItem Icon={FaMapMarkerAlt} title="Address" text="A/P Derde Korhale, Tal. Kopargaon, Dist. Ahilyanagar, Maharashtra 423601" />
             </div>
 
@@ -132,7 +165,35 @@ const Contact = () => {
   );
 };
 
-/* Reusable Components */
+/* ------------------- Popup Component ------------------- */
+
+const PopupMessage = ({ type, message, onClose }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9, y: 20 }}
+      transition={{ duration: 0.3 }}
+      className={`fixed top-6 right-6 z-50 px-5 py-4 rounded-lg shadow-lg text-white flex items-center gap-3 
+        ${type === "success" ? "bg-green-600" : "bg-red-600"}
+      `}
+    >
+      <span className="text-lg">
+        {type === "success" ? "✔️" : "⚠️"}
+      </span>
+      <p className="font-medium">{message}</p>
+
+      <button
+        className="ml-3 text-white text-xl hover:opacity-70"
+        onClick={onClose}
+      >
+        ×
+      </button>
+    </motion.div>
+  );
+};
+
+/* ------------------- Reusable Components ------------------- */
 
 const InfoItem = ({ Icon, title, text, sub }) => (
   <div className="flex items-start space-x-3 mb-4">
