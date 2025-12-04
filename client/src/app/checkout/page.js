@@ -36,9 +36,7 @@ const Checkout = () => {
     (total, item) => total + item.price * item.quantity,
     0
   );
-  const deliveryCharge = totalAmount < 500 ? 40 : 0;
-  const finalAmount = totalAmount + deliveryCharge;
-
+  
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -67,6 +65,11 @@ const Checkout = () => {
   };
 
   const [paymentMethod, setPaymentMethod] = useState("cashOnDelivery"); // Default payment method
+
+  // Dynamic Delivery Charge Logic
+  const [deliverySettings, setDeliverySettings] = useState(null);
+  const [deliveryCharge, setDeliveryCharge] = useState(0);
+  const finalAmount = totalAmount + deliveryCharge;
 
   const handleAddressSelect = (selectedAddressComponents) => {
     setAddressComponents(selectedAddressComponents);
@@ -283,6 +286,42 @@ const Checkout = () => {
       setLoading(false);
     }
   };
+
+  // Fetch dynamic delivery settings from backend
+  useEffect(() => {
+    const fetchDeliverySettings = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/delivery`
+        );
+        const s = res.data.settings;
+        setDeliverySettings(s);
+
+        if (!s || !s.active) {
+          setDeliveryCharge(0);
+          return;
+        }
+
+        // Apply delivery charge based on rules
+        if (totalAmount >= s.freeDeliveryAbove) {
+          setDeliveryCharge(0);
+        } else {
+          let charge = s.baseDeliveryCharge;
+
+          // Example rule (you can modify)
+          if (totalAmount < s.freeDeliveryAbove) {
+            charge += s.extraCharge;
+          }
+
+          setDeliveryCharge(charge);
+        }
+      } catch (error) {
+        console.log("Delivery settings error:", error);
+      }
+    };
+
+    fetchDeliverySettings();
+  }, [totalAmount]);
 
   if (!isHydrated) {
     return null;
@@ -518,13 +557,13 @@ const Checkout = () => {
                   </div>
 
                   {/* 💡 Offer Message */}
-                  {totalAmount >= 500 ? (
+                  {totalAmount >= deliverySettings?.freeDeliveryAbove ? (
                     <p className="text-sm text-green-600 mt-2 font-medium text-center">
-                      🎉 Free delivery on orders above ₹500!
+                      🎉 Free delivery on orders above ₹{deliverySettings.freeDeliveryAbove}!
                     </p>
                   ) : (
                     <p className="text-sm text-orange-600 mt-2 text-center">
-                      Add items worth ₹{(500 - totalAmount).toFixed(2)} more for free delivery 🚚
+                      Add items worth ₹{(deliverySettings?.freeDeliveryAbove - totalAmount).toFixed(2)} more for free delivery 🚚
                     </p>
                   )}
 

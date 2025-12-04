@@ -24,6 +24,8 @@ import {
   Select,
   TextField,
   CircularProgress,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import EditIcon from "@mui/icons-material/Edit";
@@ -49,6 +51,42 @@ function SingleProductList() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error'
   const [draggingIndex, setDraggingIndex] = React.useState(null);
   const [dropIndex, setDropIndex] = useState(null);
+  const [openDeliverySettings, setOpenDeliverySettings] = useState(false);
+  const [deliverySettings, setDeliverySettings] = useState({
+    freeDeliveryAbove: 999,
+    baseDeliveryCharge: 49,
+    extraCharge: 25,
+    active: true,
+  });
+
+  const handleUpdateDeliverySettings = async () => {
+  try {
+    await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/delivery`,
+      deliverySettings
+    );
+    alert("Delivery Settings Updated");
+    setOpenDeliverySettings(false);
+  } catch (err) {
+    console.error(err);
+    alert("Failed to update delivery settings.");
+  }
+};
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/delivery`
+        );
+        if (res.data.settings) setDeliverySettings(res.data.settings);
+      } catch (err) {
+        console.error("Failed to fetch delivery settings:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -331,49 +369,57 @@ function SingleProductList() {
   return (
     <Box p={4}>
       {/* Header */}
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={4}
-      >
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
         <Typography variant="h4" fontWeight={600}>
           Products List
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<Inventory2Icon />} // 👈 icon fits “Product”
-          sx={{
-            borderRadius: 2,
-            px: 3,
-            py: 1.2,
-            textTransform: "none",
-            boxShadow: 3,
-            "&:hover": { boxShadow: 6 },
-          }}
-          onClick={() => {
-            setSelectedProduct({
-              name: "",
-              brand: "",
-              regularPrice: 0,
-              salePrice: 0,
-              description: "",
-              shortDescription: "",
-              sourcingInfo: "",
-              badge: "",
-              weight: "",
-              rating: 0,
-              reviews: 0,
-              images: [],
-              features: [],
-              ingredients: [],
-            });
-            setOpen(true);
-          }}
-        >
-          Add Product
-        </Button>
+
+        {/* Buttons container */}
+        <Box display="flex" gap={2}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<Inventory2Icon />}
+            sx={{
+              borderRadius: 2,
+              px: 3,
+              py: 1.2,
+              textTransform: "none",
+              boxShadow: 3,
+              "&:hover": { boxShadow: 6 },
+            }}
+            onClick={() => {
+              setSelectedProduct({
+                name: "",
+                brand: "",
+                regularPrice: 0,
+                salePrice: 0,
+                description: "",
+                shortDescription: "",
+                sourcingInfo: "",
+                badge: "",
+                weight: "",
+                rating: 0,
+                reviews: 0,
+                images: [],
+                features: [],
+                ingredients: [],
+              });
+              setOpen(true);
+            }}
+          >
+            Add Product
+          </Button>
+
+          <Button
+            variant="outlined"
+            color="secondary"
+            sx={{ borderRadius: 2, px: 3, py: 1.2, textTransform: "none" }}
+            onClick={() => setOpenDeliverySettings(true)}
+          >
+            Delivery Settings
+          </Button>
+        </Box>
       </Box>
 
       {/* Products Table */}
@@ -993,6 +1039,128 @@ function SingleProductList() {
           </DialogActions>
         </Dialog>
       )}
+
+      {/* Delivery Charges */}
+      <Dialog
+        open={openDeliverySettings}
+        onClose={() => setOpenDeliverySettings(false)}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            p: 4,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            fontWeight: 700,
+            fontSize: "1.5rem",
+            color: "#1e293b",
+            borderBottom: "1px solid #e5e7eb",
+            mb: 2,
+          }}
+        >
+          Delivery Charge Settings
+        </DialogTitle>
+
+        <DialogContent
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 0.5,
+            mt: 0,
+          }}
+        >
+          <TextField
+            label="Free Delivery Above (₹)"
+            type="number"
+            value={deliverySettings.freeDeliveryAbove}
+            onChange={(e) =>
+              setDeliverySettings({
+                ...deliverySettings,
+                freeDeliveryAbove: Number(e.target.value),
+              })
+            }
+            fullWidth
+            variant="outlined"
+            margin="normal"
+          />
+
+          <TextField
+            label="Base Delivery Charge (₹)"
+            type="number"
+            value={deliverySettings.baseDeliveryCharge}
+            onChange={(e) =>
+              setDeliverySettings({
+                ...deliverySettings,
+                baseDeliveryCharge: Number(e.target.value),
+              })
+            }
+            fullWidth
+            variant="outlined"
+            margin="normal"
+          />
+
+          <TextField
+            label="Extra Delivery Charge (₹)"
+            type="number"
+            value={deliverySettings.extraCharge}
+            onChange={(e) =>
+              setDeliverySettings({
+                ...deliverySettings,
+                extraCharge: Number(e.target.value),
+              })
+            }
+            fullWidth
+            variant="outlined"
+            margin="normal"
+          />
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={deliverySettings.active}
+                onChange={(e) =>
+                  setDeliverySettings({
+                    ...deliverySettings,
+                    active: e.target.checked,
+                  })
+                }
+              />
+            }
+            label="Enable Delivery Charges"
+          />
+        </DialogContent>
+
+        <DialogActions sx={{ justifyContent: "space-between", mt: 2 }}>
+          <Button
+            onClick={() => setOpenDeliverySettings(false)}
+            variant="outlined"
+            sx={{ borderRadius: 2, px: 3 }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleUpdateDeliverySettings}
+            variant="contained"
+            sx={{
+              borderRadius: 2,
+              px: 3,
+              background: "linear-gradient(90deg, #3b82f6, #06b6d4)",
+              color: "#fff",
+              "&:hover": {
+                background: "linear-gradient(90deg, #2563eb, #0ea5e9)",
+              },
+            }}
+          >
+            Update
+          </Button>
+        </DialogActions>
+      </Dialog>
+
 
       {/* Snackbar */}
       <Snackbar

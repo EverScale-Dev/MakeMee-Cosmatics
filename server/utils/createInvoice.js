@@ -4,7 +4,7 @@ const path = require("path");
 // === STYLES ===
 const COLORS = {
   primary: "#1F2D5A",       // Deep navy for titles
-  accent: "#007BFF",        // Corporate blue accent
+  accent: "#731162",        // Corporate blue accent
   text: "#222222",          // Main text
   muted: "#666666",         // Secondary info
   background: "#F8FAFC",    // Section background
@@ -141,7 +141,6 @@ function generateTotals(doc, order, y) {
 
   doc.rect(startX, y, boxWidth, 90).fillAndStroke(COLORS.background, COLORS.border);
 
-  const totalAmount = order.totalAmount + (order.deliveryCharges || 0);
   const textX = startX + 15;
 
   doc.fillColor(COLORS.primary).fontSize(11);
@@ -149,12 +148,13 @@ function generateTotals(doc, order, y) {
   doc.text("Delivery Charges:", textX, y + 32);
 
   doc.fillColor(COLORS.text).fontSize(10);
-  doc.text(`₹ ${order.totalAmount.toFixed(2)}`, startX + 180, y + 12, { align: "right" });
-  doc.text(`₹ ${(order.deliveryCharges || 0).toFixed(2)}`, startX + 180, y + 32, { align: "right" });
+  doc.text(`₹ ${order.subtotal.toFixed(2)}`, startX + 180, y + 12, { align: "right" });
+  doc.text(`₹ ${(order.deliveryCharge || 0).toFixed(2)}`, startX + 180, y + 32, { align: "right" });
 
   doc.fillColor(COLORS.primary).fontSize(12).text("Grand Total:", textX, y + 55);
-  doc.fillColor(COLORS.highlight).fontSize(14).text(`₹ ${totalAmount.toFixed(2)}`, startX + 180, y + 53, { align: "right" });
+  doc.fillColor(COLORS.highlight).fontSize(14).text(`₹ ${order.totalAmount.toFixed(2)}`, startX + 180, y + 53, { align: "right" });
 }
+
 
 // === THANK YOU MESSAGE ===
 function generateThankYouMessage(doc) {
@@ -163,7 +163,7 @@ function generateThankYouMessage(doc) {
     .fillColor(COLORS.primary)
     .fontSize(10)
     .text(
-      "Thank you for shopping with MakeMee.\nYour order has been successfully confirmed and is now being prepared with care!\nWe’ll notify you as soon as it’s shipped.\n\nGet ready to enhance your glow — your MakeMee products are on their way!",
+      "Thank you for shopping with MakeMee.\nYour order has been successfully confirmed and is now being prepared with care!\nWe’ll notify you as soon as it’s shipped.\n\nGet ready to enhance your glow your MakeMee products are on their way!",
       60,
       doc.y,
       { width: 480, align: "left" }

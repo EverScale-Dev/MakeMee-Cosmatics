@@ -14,6 +14,7 @@ const paymentRoutes = require("./routes/payment");
 const shiprocketRoutes = require('./routes/shiprocketRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const reviewRoutes = require("./routes/reviewRoutes");
+const deliveryRoutes = require("./routes/deliveryRoutes");
 
 dotenv.config();
 connectDB();
@@ -24,6 +25,8 @@ const app = express();
 app.use(
   cors({
     origin: [
+      "http://localhost:3000",
+      "http://localhost:5000",
       "https://makemee.in",
       "https://www.makemee.in"   // optional but recommended
     ],
@@ -56,7 +59,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/shiprocket', shiprocketRoutes);
 app.use('/api/contact', contactRoutes);
 app.use("/api/review", reviewRoutes);
-
+app.use("/api/delivery", deliveryRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello, MakeMeeCosmetics Server!');

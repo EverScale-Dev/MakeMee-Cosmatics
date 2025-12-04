@@ -621,40 +621,50 @@ const ProductDetail = () => {
                             {product.name}
                           </h5>
                           <p className="text-gray-500 text-sm mb-2 line-clamp-2">
-                            {product.description ||
+                            {product.shortDescription ||
                               "Key benefits of the product..."}
                           </p>
 
-                          <div className="flex items-center text-yellow-400 text-sm mb-2">
-                            <Star fontSize="small" />
-                            <span className="ml-1">{product.rating || 0}</span>
-                            <span className="ml-2 text-gray-500 text-xs">
-                              ({product.reviewCount || 0} Reviews)
-                            </span>
-                          </div>
-
-                          <Box
-                            display="flex"
-                            alignItems="center"
-                            gap={1}
-                            my={1}
-                            mt="auto"
-                          >
+                          {/* ✅ Price Section */}
+                          <Box display="flex" alignItems="center" gap={1} my={1}>
+                            {product.regularPrice &&
+                              product.salePrice < product.regularPrice && (
+                                <Typography
+                                  variant="body1"
+                                  color="text.secondary"
+                                  sx={{
+                                    textDecoration: "line-through",
+                                    fontWeight: "500",
+                                    fontSize: "0.9rem",
+                                  }}
+                                >
+                                  ₹{product.regularPrice}
+                                </Typography>
+                              )}
                             <Typography
                               variant="h6"
-                              sx={{ fontWeight: "bold", color: PRIMARY_COLOR }}
+                              sx={{ fontWeight: "bold", color: "#731162" }}
                             >
-                              ₹{product.salePrice.toLocaleString("en-IN")}
+                              ₹{product.salePrice}
                             </Typography>
-                            {product.regularPrice > product.salePrice && (
-                              <Typography
-                                variant="body1"
-                                color="text.secondary"
-                                sx={{ textDecoration: "line-through" }}
-                              >
-                                ₹{product.regularPrice.toLocaleString("en-IN")}
-                              </Typography>
-                            )}
+                            {product.regularPrice &&
+                              product.salePrice < product.regularPrice && (
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    fontWeight: "bold",
+                                    color: "#F0A400",
+                                    ml: 1,
+                                  }}
+                                >
+                                  {Math.round(
+                                    ((product.regularPrice - product.salePrice) /
+                                      product.regularPrice) *
+                                      100
+                                  )}
+                                  % off
+                                </Typography>
+                              )}
                           </Box>
                         </div>
                       </Link>

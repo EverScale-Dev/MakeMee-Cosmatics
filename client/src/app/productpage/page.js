@@ -273,16 +273,19 @@ const ProductsPage = () => {
                         {product.name}
                       </h5>
                       <p className="text-sm text-gray-500 line-clamp-2 mb-2">
-                        {product.description || "Premium quality product."}
+                        {product.shortDescription || "Premium quality product."}
                       </p>
-                      <Box display="flex" alignItems="center" gap={1}>
+                      {/* ✅ Price Section */}
+                      <Box display="flex" alignItems="center" gap={1} my={1}>
                         {product.regularPrice &&
                           product.salePrice < product.regularPrice && (
                             <Typography
-                              variant="body2"
+                              variant="body1"
+                              color="text.secondary"
                               sx={{
                                 textDecoration: "line-through",
-                                color: "#999",
+                                fontWeight: "500",
+                                fontSize: "0.9rem",
                               }}
                             >
                               ₹{product.regularPrice}
@@ -290,10 +293,28 @@ const ProductsPage = () => {
                           )}
                         <Typography
                           variant="h6"
-                          sx={{ fontWeight: "bold", color: "#C00000" }}
+                          sx={{ fontWeight: "bold", color: "#731162" }}
                         >
                           ₹{product.salePrice}
                         </Typography>
+                        {product.regularPrice &&
+                          product.salePrice < product.regularPrice && (
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontWeight: "bold",
+                                color: "#F0A400",
+                                ml: 1,
+                              }}
+                            >
+                              {Math.round(
+                                ((product.regularPrice - product.salePrice) /
+                                  product.regularPrice) *
+                                  100
+                              )}
+                              % off
+                            </Typography>
+                          )}
                       </Box>
                     </div>
                   </Link>

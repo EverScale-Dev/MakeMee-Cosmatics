@@ -22,7 +22,9 @@ const orderSchema = new mongoose.Schema({
       price: { type: Number, required: true }, // store sale/regular price snapshot
     },
   ],
-
+  
+  subtotal: { type: Number, required: true },         // <-- ADD
+  deliveryCharge: { type: Number, default: 0 },      // <-- ADD
   totalAmount: { type: Number, required: true },
 
   paymentMethod: {

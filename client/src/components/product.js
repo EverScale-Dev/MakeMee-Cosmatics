@@ -164,16 +164,8 @@ const settings = {
                           {product.name}
                         </h5>
                         <p className="text-gray-500 text-sm mb-3 line-clamp-2">
-                          {product.description || "High-quality product with great benefits."}
+                          {product.shortDescription || "High-quality product with great benefits."}
                         </p>
-
-                        <div className="flex items-center text-[#F0A400] text-sm mb-2">
-                          <span>★</span>
-                          <span className="ml-1">{product.rating || 4.5}</span>
-                          <span className="ml-2 text-gray-500 text-xs">
-                            ({product.reviews || 10} Reviews)
-                          </span>
-                        </div>
                       </div>
 
                       {/* ✅ Price Section */}

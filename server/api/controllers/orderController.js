@@ -38,11 +38,21 @@ exports.createOrder = async (req, res) => {
       });
     }
 
+    // ✅ Create new order (minimal change: include subtotal & deliveryCharge)
+    const subtotal = validatedProducts.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
+    const deliveryCharge = Number(req.body.deliveryCharge) || 0;
+    const finalTotal = subtotal + deliveryCharge;
+
     // ✅ Create new order
     const order = await Order.create({
       customer,
       products: validatedProducts,
-      totalAmount,
+      subtotal,          // NEW: save subtotal
+      deliveryCharge,    // NEW: save delivery charge
+      totalAmount: finalTotal,  // update totalAmount to include delivery
       paymentMethod,
       note,
     });
