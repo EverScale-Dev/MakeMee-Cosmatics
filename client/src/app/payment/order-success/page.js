@@ -30,6 +30,29 @@ function OrderSuccessInner() {
     fetchOrderStatus();
   }, [order_id]);
 
+  // ✅ NEW CODE ADDED — Trigger Invoice After Success Page Loads
+  useEffect(() => {
+    if (!orderStatus?.orderId) return;
+
+    const sendInvoice = async () => {
+      try {
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orders/generate-invoice`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderId: orderStatus.orderId }),
+          }
+        );
+      } catch (error) {
+        console.error("Invoice generation failed:", error);
+      }
+    };
+
+    sendInvoice();
+  }, [orderStatus]);
+  // ✅ END OF NEW CODE
+
   useEffect(() => {
     const handlePopState = () => {
       router.push("/");
@@ -75,7 +98,6 @@ function OrderSuccessInner() {
             />
           </svg>
         </div>
-        
 
         <h1 className="text-4xl font-extrabold text-green-600 mb-2 text-center">
           {paymentMethod === "onlinePayment"
@@ -143,7 +165,6 @@ function OrderSuccessInner() {
         </h3>
       </div>
 
-      {/* Back to Home Button */}
       <div className="text-center mb-4">
         <a
           href="/"
@@ -153,7 +174,6 @@ function OrderSuccessInner() {
         </a>
       </div>
 
-      {/* Highlighted Note */}
       <div className="text-center">
         <p className="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm">
           ✅ Check your email for the invoice and order details.

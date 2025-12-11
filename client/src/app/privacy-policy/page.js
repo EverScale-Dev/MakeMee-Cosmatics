@@ -21,7 +21,7 @@ export default function PrivacyPolicy() {
 
         {/* Title */}
         <h1 className="text-3xl font-bold mt-2 mb-2">Privacy Policy</h1>
-        <p className="text-sm text-gray-600">Last updated: 9/25/2025</p>
+        <p className="text-sm text-gray-600">Last updated: 12/12/2025</p>
       </div>
 
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-2xl p-8">
@@ -213,13 +213,11 @@ export default function PrivacyPolicy() {
             <p className="mt-2">
               <strong>MAKEMEE Manufacturing</strong><br />
               Email:{" "}
-              <a href="mailto:privacy@makemee.com" className="text-blue-600">
-                privacy@makemee.com
+              <a href="mailto:makemeecosmetics@gmail.com" className="text-blue-600">
+                makemeecosmetics@gmail.com
               </a>
               <br />
-              Phone: +91-XXXXXXXXXX<br />
-              Address: [Company Address]<br />
-              Data Protection Officer: [DPO Name]
+              Phone: +91-9075141925<br />
             </p>
           </section>
         </div>

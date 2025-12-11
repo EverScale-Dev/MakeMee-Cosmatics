@@ -21,7 +21,7 @@ export default function TermsAndConditions() {
 
         {/* Title */}
         <h1 className="text-3xl font-bold mt-2 mb-2">Terms and Conditions</h1>
-        <p className="text-sm text-gray-600">Last updated: 9/25/2025</p>
+        <p className="text-sm text-gray-600">Last updated: 12/12/2025</p>
       </div>
 
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-2xl p-8">
@@ -147,12 +147,11 @@ export default function TermsAndConditions() {
             <p className="mt-2">
               <strong>MAKEMEE Manufacturing</strong><br />
               Email:{" "}
-              <a href="mailto:info@makemee.com" className="text-blue-600">
-                info@makemee.com
+              <a href="mailto:makemeecosmetics@gmail.com" className="text-blue-600">
+                makemeecosmetics@gmail.com
               </a>
               <br />
-              Phone: +91-XXXXXXXXXX<br />
-              Address: [Company Address]
+              Phone: +91-9075141925<br />
             </p>
           </section>
         </div>

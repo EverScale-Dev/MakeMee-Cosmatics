@@ -8,6 +8,7 @@ const sendEmail = require("../../utils/sendMail");
 // @desc    Create a new order
 // @route   POST /api/orders
 // =========================================================
+
 exports.createOrder = async (req, res) => {
   const { customer, products, totalAmount, paymentMethod, note } = req.body;
 
@@ -62,85 +63,6 @@ exports.createOrder = async (req, res) => {
       .populate("customer")
       .populate("products.product");
 
-    // ✅ Generate Invoice PDF
-    let buffer;
-    try {
-      buffer = await createInvoice(populatedOrder);
-    } catch (error) {
-      console.error("Error generating invoice:", error.message);
-      return res.status(500).json({ message: "Failed to generate invoice" });
-    }
-
-    // ✅ Send Invoice Email to Customer
-    try {
-      await sendEmail({
-        email: existingCustomer.email,
-        subject: "Order Confirmation & Invoice",
-        message: `Thank you for shopping with MakeMee.\n\nYour order has been successfully confirmed and is now being prepared with care!\n\nWe’ll notify you as soon as it’s shipped.\n\nGet ready to enhance your glow your MakeMee products are on their way!`,
-        attachments: [
-          {
-            filename: `Invoice_${order._id}.pdf`,
-            content: buffer,
-          },
-        ],
-      });
-    } catch (error) {
-      console.error("Error sending email to user:", error.message);
-      return res
-        .status(500)
-        .json({ message: "Failed to send invoice email to the customer" });
-    }
-
-    // ✅ Send Email Notification to Admin
-    try {
-      const productsList = populatedOrder.products
-        .map((item, index) => {
-          const { name, price, quantity } = item;
-          return `#${index + 1}
-          Product Name: ${name}
-          Quantity: ${quantity}
-          Price per Unit: ₹${price.toFixed(2)}
-          Subtotal: ₹${(price * quantity).toFixed(2)}`;
-        })
-        .join("\n\n");
-
-      await sendEmail({
-        email: process.env.Admin_Email_Id,
-        subject: `🧾 New Order Received — Order #${order._id}`,
-        message: `📦 **New Order Notification**
-
-        A new order has been successfully placed on MakeMee Cosmetics.
-
-        ━━━━━━━━━━━━━━━━━━━━━━
-        🆔 Order ID: ${order._id}
-        👤 Customer Name: ${existingCustomer.fullName}
-        ✉️ Email: ${existingCustomer.email}
-        📞 Contact: ${existingCustomer.phone || "N/A"}
-        💰 Total Amount: ₹${order.totalAmount.toFixed(2)}
-        🕒 Order Date: ${new Date(order.createdAt).toLocaleString("en-IN")}
-        ━━━━━━━━━━━━━━━━━━━━━━
-
-        🛍️ **Order Details:**
-        ${productsList}
-
-        ━━━━━━━━━━━━━━━━━━━━━━
-        📝 **Customer Note:**
-        ${order.note || "N/A"}
-
-        ━━━━━━━━━━━━━━━━━━━━━━
-        Thank you,
-        MakeMee Cosmetics Team
-        support@makemee.com
-        www.makemee.com
-        ━━━━━━━━━━━━━━━━━━━━━━`,
-      });
-    } catch (error) {
-      console.error("Error sending email to admin:", error.message);
-      return res
-        .status(500)
-        .json({ message: "Failed to send notification email to the admin" });
-    }
-
     // ✅ Send Response
     res.status(201).json({
       message: "Order created successfully",
@@ -156,6 +78,7 @@ exports.createOrder = async (req, res) => {
 // @desc    Get all orders (Paginated)
 // @route   GET /api/orders
 // =========================================================
+
 exports.getAllOrders = async (req, res) => {
   try {
     const { limit = 10, skip = 0 } = req.query;
@@ -193,6 +116,7 @@ exports.getAllOrders = async (req, res) => {
 // @desc    Get a single order by ID
 // @route   GET /api/orders/:id
 // =========================================================
+
 exports.getOrderById = async (req, res) => {
   const { id } = req.params;
 
@@ -231,6 +155,7 @@ exports.getOrderById = async (req, res) => {
 // @desc    Update an order status
 // @route   PUT /api/orders/:id
 // =========================================================
+
 exports.updateOrder = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -279,6 +204,7 @@ exports.updateOrder = async (req, res) => {
 // @desc    Delete an order
 // @route   DELETE /api/orders/:id
 // =========================================================
+
 exports.deleteOrder = async (req, res) => {
   const { id } = req.params;
 
