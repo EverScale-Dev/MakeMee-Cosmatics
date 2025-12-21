@@ -194,7 +194,7 @@ const Checkout = () => {
         const razorpayOrderRes = await axios.post(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/payment/razorpay/order`,
           {
-            amount: totalAmount * 100, // Razorpay expects amount in paise
+            amount: finalAmount * 100, // Razorpay expects amount in paise
             currency: "INR",
             receipt: orderResponse.data._id,
             customer: {
