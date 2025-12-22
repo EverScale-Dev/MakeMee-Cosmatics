@@ -389,7 +389,7 @@ import { useState, useEffect } from "react";
 export default function Banner() {
   const slides = [
     {
-      desktop: "/banners/desktop/z.webp",
+      desktop: "/banners/desktop/desktop_banner_10percentage_01.webp",
       mobile: "/banners/mobile/mobile_banner_10percentage_01.webp",
       alt: "Cosmetic Banner 1",
     },
