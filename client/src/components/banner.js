@@ -399,7 +399,7 @@ export default function Banner() {
       alt: "Cosmetic Banner 2",
     },
     {
-      desktop: "/banners/pre-order-desktop-03.webp",
+      desktop: "/banners/desktop_banner_10percentage_02.webp",
       mobile: "/banners/mobile/mobile_banner_10percentage_01.webp",
       alt: "Cosmetic Banner 3",
     },
