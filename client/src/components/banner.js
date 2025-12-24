@@ -390,17 +390,17 @@ export default function Banner() {
   const slides = [
     {
       desktop: "/banners/desktop/pre-order-desktop-01.webp",
-      mobile: "/banners/mobile/mobile_banner_10percentage_01.webp",
+      mobile: "/banners/mobile/pre-order-mobile-01.webp",
       alt: "Cosmetic Banner 1",
     },
     {
       desktop: "/banners/desktop/pre-order-desktop-02.webp",
-      mobile: "/banners/mobile/mobile_banner_10percentage_02.webp",
+      mobile: "/banners/mobile/pre-order-mobile-01.webp",
       alt: "Cosmetic Banner 2",
     },
     {
       desktop: "/banners/desktop/pre-order-desktop-03.webp",
-      mobile: "/banners/mobile/mobile_banner_10percentage_01.webp",
+      mobile: "/banners/mobile/pre-order-mobile-02.webp",
       alt: "Cosmetic Banner 3",
     },
   ];
