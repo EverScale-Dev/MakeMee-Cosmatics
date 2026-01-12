@@ -110,6 +110,12 @@ exports.getProducts = async (req, res) => {
             // Removed .populate('category', 'name')
             .sort({ createdAt: -1 }); // Sort newest first
 
+        // Disable caching to prevent 304 Not Modified responses
+        res.set({
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
         res.status(200).json(products);
     } catch (error) {
         console.error('Error fetching products:', error.message);

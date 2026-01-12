@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const sendEmail = require("../../utils/sendMail");
 const User = require("../../models/User");
 const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require('google-auth-library');
 
 let temporaryPasswords = {}; // Store temporary passwords in memory (use a DB in production)
 
@@ -250,5 +251,65 @@ if (error) {
     res.status(200).json({ message: "Password has been reset successfully." });
   } catch (error) {
     res.status(500).json({ message: "Error resetting password." });
+  }
+};
+
+// Google OAuth login
+exports.googleAuth = async (req, res) => {
+  const { credential } = req.body;
+
+  if (!credential) {
+    return res.status(400).json({ message: 'Google credential is required' });
+  }
+
+  try {
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+    // Verify the ID token
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture } = payload;
+
+    // Find existing user by googleId or email
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+    if (user) {
+      // Update googleId if user exists with email but no googleId
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.authProvider = 'google';
+        if (picture) user.avatar = picture;
+        await user.save();
+      }
+    } else {
+      // Create new user
+      user = await User.create({
+        fullName: name,
+        email,
+        googleId,
+        authProvider: 'google',
+        avatar: picture,
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '24h',
+    });
+
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      avatar: user.avatar,
+      token,
+    });
+  } catch (error) {
+    console.error('Google auth error:', error.message);
+    res.status(401).json({ message: 'Invalid Google credential' });
   }
 };

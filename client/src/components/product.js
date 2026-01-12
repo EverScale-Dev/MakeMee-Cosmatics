@@ -3,12 +3,13 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { Box, Typography, Snackbar, Alert, IconButton } from "@mui/material";
-import { useDispatch } from "react-redux";
-import { addToCart } from "@/store/slices/cartSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart, syncCartToBackend } from "@/store/slices/cartSlice";
 import Slider from "react-slick";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
+import LoginModal from "./LoginModal";
 
 // ✅ Custom Arrows (updated brand colors)
 const NextArrow = ({ onClick }) => (
@@ -36,7 +37,10 @@ export const ProductList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [pendingProduct, setPendingProduct] = useState(null);
   const dispatch = useDispatch();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -54,6 +58,13 @@ export const ProductList = () => {
 
   const handleAddToCart = (product, e) => {
     e.stopPropagation();
+
+    if (!isAuthenticated) {
+      setPendingProduct(product);
+      setLoginModalOpen(true);
+      return;
+    }
+
     const cartItem = {
       id: product._id,
       name: product.name,
@@ -62,7 +73,26 @@ export const ProductList = () => {
       image: Array.isArray(product.images) ? product.images[0] : product.images,
     };
     dispatch(addToCart(cartItem));
+    // Sync to backend for logged-in users
+    dispatch(syncCartToBackend({ action: 'add', item: cartItem }));
     setSnackbarOpen(true);
+  };
+
+  const handleLoginSuccess = () => {
+    if (pendingProduct) {
+      const cartItem = {
+        id: pendingProduct._id,
+        name: pendingProduct.name,
+        price: pendingProduct.salePrice,
+        quantity: 1,
+        image: Array.isArray(pendingProduct.images) ? pendingProduct.images[0] : pendingProduct.images,
+      };
+      dispatch(addToCart(cartItem));
+      // Sync to backend for logged-in users
+      dispatch(syncCartToBackend({ action: 'add', item: cartItem }));
+      setSnackbarOpen(true);
+      setPendingProduct(null);
+    }
   };
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
@@ -247,6 +277,16 @@ const settings = {
           Product added to cart!
         </Alert>
       </Snackbar>
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={loginModalOpen}
+        onClose={() => {
+          setLoginModalOpen(false);
+          setPendingProduct(null);
+        }}
+        onSuccess={handleLoginSuccess}
+      />
     </>
   );
 };

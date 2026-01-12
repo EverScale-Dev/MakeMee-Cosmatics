@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useDispatch } from "react-redux";
-import { addToCart } from "@/store/slices/cartSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart, syncCartToBackend } from "@/store/slices/cartSlice";
+import LoginModal from "@/components/LoginModal";
 import {
   Box,
   Typography,
@@ -37,8 +38,11 @@ const ProductsPage = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [priceInput, setPriceInput] = useState({ min: "", max: "" });
   const [priceRange, setPriceRange] = useState({ min: 0, max: Infinity });
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [pendingProduct, setPendingProduct] = useState(null);
 
   const dispatch = useDispatch();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   // ✅ Fetch products
   useEffect(() => {
@@ -62,6 +66,13 @@ const ProductsPage = () => {
   // ✅ Add to Cart
   const handleAddToCart = (product, e) => {
     e.stopPropagation();
+
+    if (!isAuthenticated) {
+      setPendingProduct(product);
+      setLoginModalOpen(true);
+      return;
+    }
+
     const cartItem = {
       id: product._id,
       name: product.name,
@@ -70,12 +81,36 @@ const ProductsPage = () => {
       image: Array.isArray(product.images) ? product.images[0] : product.images,
     };
     dispatch(addToCart(cartItem));
+    // Sync to backend for logged-in users
+    dispatch(syncCartToBackend({ action: 'add', item: cartItem }));
     setSnackbarOpen(true);
     setAdded((prev) => ({ ...prev, [product._id]: true }));
     setTimeout(
       () => setAdded((prev) => ({ ...prev, [product._id]: false })),
       2500
     );
+  };
+
+  const handleLoginSuccess = () => {
+    if (pendingProduct) {
+      const cartItem = {
+        id: pendingProduct._id,
+        name: pendingProduct.name,
+        price: pendingProduct.salePrice,
+        quantity: 1,
+        image: Array.isArray(pendingProduct.images) ? pendingProduct.images[0] : pendingProduct.images,
+      };
+      dispatch(addToCart(cartItem));
+      // Sync to backend for logged-in users
+      dispatch(syncCartToBackend({ action: 'add', item: cartItem }));
+      setSnackbarOpen(true);
+      setAdded((prev) => ({ ...prev, [pendingProduct._id]: true }));
+      setTimeout(
+        () => setAdded((prev) => ({ ...prev, [pendingProduct._id]: false })),
+        2500
+      );
+      setPendingProduct(null);
+    }
   };
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
@@ -357,6 +392,16 @@ const ProductsPage = () => {
           Product added to cart!
         </Alert>
       </Snackbar>
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={loginModalOpen}
+        onClose={() => {
+          setLoginModalOpen(false);
+          setPendingProduct(null);
+        }}
+        onSuccess={handleLoginSuccess}
+      />
     </>
   );
 };

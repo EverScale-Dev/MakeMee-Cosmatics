@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
-import { useDispatch } from "react-redux";
+import api from "@/utils/axiosClient";
 import { useRouter } from "next/navigation";
 import { clearCart } from "@/store/slices/cartSlice";
 import {
@@ -26,9 +26,20 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [note, setNote] = useState("");
 
+  // Auth state
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const user = useSelector((state) => state.auth.user);
+
   useEffect(() => {
     setIsHydrated(true);
   }, []);
+
+  // Auth guard - redirect to login if not authenticated
+  useEffect(() => {
+    if (isHydrated && !isAuthenticated) {
+      router.push("/login?redirect=/checkout");
+    }
+  }, [isHydrated, isAuthenticated, router]);
 
   const cartItems = useSelector((state) => state.cart.items);
   const totalQuantity = useSelector((state) => state.cart.totalQuantity);
@@ -37,8 +48,8 @@ const Checkout = () => {
     0
   );
   
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState(user?.fullName || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState({ email: "", phone: "" });
   const [apartment_address, setApartment_address] = useState("");
@@ -172,17 +183,19 @@ const Checkout = () => {
 
       let orderResponse;
       try {
-        orderResponse = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orders`,
-          orderData
-        );
+        orderResponse = await api.post("/api/orders", orderData);
       } catch (error) {
         console.error("Error creating order:", error);
         await Swal.fire({
           title: "Error",
-          text: "Failed to place order. Please try again.",
+          text: error.response?.status === 401
+            ? "Please login to place an order."
+            : "Failed to place order. Please try again.",
           icon: "error",
         });
+        if (error.response?.status === 401) {
+          router.push("/login?redirect=/checkout");
+        }
         return;
       }
 
@@ -191,19 +204,16 @@ const Checkout = () => {
       // 3. If Online Payment, trigger Razorpay Checkout
       if (paymentMethod === "onlinePayment") {
         // Call backend to create Razorpay order
-        const razorpayOrderRes = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/payment/razorpay/order`,
-          {
-            amount: finalAmount * 100, // Razorpay expects amount in paise
-            currency: "INR",
-            receipt: orderResponse.data._id,
-            customer: {
-              name: fullName,
-              email,
-              contact: phone,
-            },
-          }
-        );
+        const razorpayOrderRes = await api.post("/api/payment/razorpay/order", {
+          amount: finalAmount * 100, // Razorpay expects amount in paise
+          currency: "INR",
+          receipt: orderResponse.data._id,
+          customer: {
+            name: fullName,
+            email,
+            contact: phone,
+          },
+        });
 
         const { orderId, key } = razorpayOrderRes.data;
 
@@ -217,16 +227,12 @@ const Checkout = () => {
           handler: async function (response) {
             // Verify payment on backend
             try {
-              const verifyRes = await axios.post(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/payment/razorpay/verify`,
-                {
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  // orderId: orderResponse.data._id,
-                  orderId: orderResponse.data.order._id,
-                }
-              );
+              const verifyRes = await api.post("/api/payment/razorpay/verify", {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                orderId: orderResponse.data.order._id,
+              });
               if (verifyRes.data.success) {
                 await Swal.fire({
                   title: "Payment Successful!",
@@ -325,6 +331,16 @@ const Checkout = () => {
 
   if (!isHydrated) {
     return null;
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <CircularProgress />
+        <span className="ml-2">Redirecting to login...</span>
+      </div>
+    );
   }
 
   return (

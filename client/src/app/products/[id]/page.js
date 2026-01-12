@@ -5,9 +5,10 @@ import "slick-carousel/slick/slick-theme.css";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
-import { addToCart } from "@/store/slices/cartSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart, syncCartToBackend } from "@/store/slices/cartSlice";
 import api from "@/utils/axiosClient";
+import LoginModal from "@/components/LoginModal";
 
 // UI/MUI Imports
 import { motion } from "framer-motion";
@@ -87,14 +88,26 @@ const ProductDetail = () => {
   const [cartSidebarOpen, setCartSidebarOpen] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(0);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [pendingProduct, setPendingProduct] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null); // 'cart' or 'buyNow'
 
   const dispatch = useDispatch();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   // === HANDLERS ===
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
   const handleAddToCart = (productToAdd = product) => {
     if (!productToAdd?._id) return;
+
+    if (!isAuthenticated) {
+      setPendingProduct(productToAdd);
+      setPendingAction('cart');
+      setLoginModalOpen(true);
+      return;
+    }
+
     const cartItem = {
       id: productToAdd._id,
       name: productToAdd.name,
@@ -103,12 +116,22 @@ const ProductDetail = () => {
       image: productToAdd.images?.[0] || defaultProductState.images[0],
     };
     dispatch(addToCart(cartItem));
+    // Sync to backend for logged-in users
+    dispatch(syncCartToBackend({ action: 'add', item: cartItem }));
     setSnackbarOpen(true);
     setCartSidebarOpen(true);
   };
 
   const handleBuyNow = () => {
     if (!product?._id) return;
+
+    if (!isAuthenticated) {
+      setPendingProduct(product);
+      setPendingAction('buyNow');
+      setLoginModalOpen(true);
+      return;
+    }
+
     const cartItem = {
       id: product._id,
       name: product.name,
@@ -117,7 +140,34 @@ const ProductDetail = () => {
       image: product.images?.[0] || defaultProductState.images[0],
     };
     dispatch(addToCart(cartItem));
+    // Sync to backend for logged-in users
+    dispatch(syncCartToBackend({ action: 'add', item: cartItem }));
     router.push("/checkout");
+  };
+
+  const handleLoginSuccess = () => {
+    if (pendingProduct) {
+      const cartItem = {
+        id: pendingProduct._id,
+        name: pendingProduct.name,
+        price: pendingProduct.salePrice,
+        quantity: 1,
+        image: pendingProduct.images?.[0] || defaultProductState.images[0],
+      };
+      dispatch(addToCart(cartItem));
+      // Sync to backend for logged-in users
+      dispatch(syncCartToBackend({ action: 'add', item: cartItem }));
+
+      if (pendingAction === 'buyNow') {
+        router.push("/checkout");
+      } else {
+        setSnackbarOpen(true);
+        setCartSidebarOpen(true);
+      }
+
+      setPendingProduct(null);
+      setPendingAction(null);
+    }
   };
 
   // --- IMAGE GALLERY ---
@@ -719,6 +769,18 @@ const ProductDetail = () => {
         open={cartSidebarOpen}
         onClose={() => setCartSidebarOpen(false)}
       />
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={loginModalOpen}
+        onClose={() => {
+          setLoginModalOpen(false);
+          setPendingProduct(null);
+          setPendingAction(null);
+        }}
+        onSuccess={handleLoginSuccess}
+      />
+
       <Footer />
     </>
   );

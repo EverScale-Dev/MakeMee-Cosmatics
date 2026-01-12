@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { removeFromCart, addToCart } from "@/store/slices/cartSlice";
+import { removeFromCart, addToCart, syncCartToBackend } from "@/store/slices/cartSlice";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import CloseIcon from "@mui/icons-material/Close";
@@ -17,17 +17,25 @@ const CartSidebar = ({ open, onClose }) => {
   const dispatch = useDispatch();
 
   const handleIncrease = (item) => {
-    dispatch(addToCart({ ...item, quantity: item.quantity + 1 }));
+    const updatedItem = { ...item, quantity: item.quantity + 1 };
+    dispatch(addToCart(updatedItem));
+    // Sync to backend for logged-in users
+    dispatch(syncCartToBackend({ action: 'update', item: updatedItem }));
   };
 
   const handleDecrease = (item) => {
     if (item.quantity > 1) {
-      dispatch(addToCart({ ...item, quantity: item.quantity - 1 }));
+      const updatedItem = { ...item, quantity: item.quantity - 1 };
+      dispatch(addToCart(updatedItem));
+      // Sync to backend for logged-in users
+      dispatch(syncCartToBackend({ action: 'update', item: updatedItem }));
     }
   };
 
   const handleRemove = (id) => {
     dispatch(removeFromCart(id));
+    // Sync to backend for logged-in users
+    dispatch(syncCartToBackend({ action: 'remove', item: { id } }));
   };
 
   return (
