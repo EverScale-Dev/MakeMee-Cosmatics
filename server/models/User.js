@@ -8,6 +8,14 @@ const userSchema = new mongoose.Schema({
   googleId: { type: String, unique: true, sparse: true },
   authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
   avatar: { type: String },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  phone: { type: String },
+  address: {
+    street: { type: String },
+    city: { type: String },
+    state: { type: String },
+    pincode: { type: String },
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

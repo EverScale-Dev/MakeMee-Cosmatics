@@ -12,11 +12,16 @@ import {
   ListItemText,
   CircularProgress,
   useMediaQuery,
+  Avatar,
+  Menu,
+  MenuItem,
+  Divider,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import axios from "axios";
 
 const Header = () => {
@@ -27,8 +32,18 @@ const Header = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
   const dropdownRef = useRef(null);
   const totalQuantity = useSelector((state) => state.cart.totalQuantity);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+
+  const handleUserMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setAnchorEl(null);
+  };
 
   // scroll shadow
   useEffect(() => {
@@ -189,7 +204,70 @@ const Header = () => {
         )}
 
         {/* ==== Right Icons ==== */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* User Icon */}
+          {isAuthenticated ? (
+            <>
+              <IconButton
+                onClick={handleUserMenuOpen}
+                sx={{ color: "#000", p: 0.5 }}
+              >
+                <Avatar
+                  src={user?.avatar}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    bgcolor: "#731162",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  {user?.fullName?.charAt(0)?.toUpperCase()}
+                </Avatar>
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleUserMenuClose}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "right" }}
+                PaperProps={{
+                  sx: { mt: 1, minWidth: 180, borderRadius: 2 },
+                }}
+              >
+                <Box sx={{ px: 2, py: 1 }}>
+                  <Box sx={{ fontWeight: 600, fontSize: "0.9rem" }}>
+                    {user?.fullName}
+                  </Box>
+                  <Box sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
+                    {user?.email}
+                  </Box>
+                </Box>
+                <Divider />
+                <MenuItem
+                  component={Link}
+                  href="/profile"
+                  onClick={handleUserMenuClose}
+                >
+                  My Profile
+                </MenuItem>
+                <MenuItem
+                  component={Link}
+                  href="/orders"
+                  onClick={handleUserMenuClose}
+                >
+                  My Orders
+                </MenuItem>
+              </Menu>
+            </>
+          ) : (
+            <Link href="/login">
+              <IconButton sx={{ color: "#000" }}>
+                <PersonOutlineIcon />
+              </IconButton>
+            </Link>
+          )}
+
+          {/* Cart Icon */}
           <Link href="/cart">
             <IconButton sx={{ color: "#000", position: "relative" }}>
               <ShoppingCartOutlinedIcon />

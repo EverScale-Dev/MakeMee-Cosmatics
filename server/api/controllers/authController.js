@@ -254,6 +254,222 @@ if (error) {
   }
 };
 
+// User registration with password
+exports.registerUser = async (req, res) => {
+  const { fullName, email, password } = req.body;
+
+  const schema = Joi.object({
+    fullName: Joi.string().min(3).max(50).required().messages({
+      'string.empty': 'Full name is required.',
+      'string.min': 'Full name must be at least 3 characters.',
+    }),
+    email: Joi.string().email().required().messages({
+      'string.empty': 'Email is required.',
+      'string.email': 'Invalid email format.',
+    }),
+    password: Joi.string().min(6).required().messages({
+      'string.empty': 'Password is required.',
+      'string.min': 'Password must be at least 6 characters.',
+    }),
+  });
+
+  const { error } = schema.validate({ fullName, email, password });
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  try {
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User with this email already exists' });
+    }
+
+    // Create new user
+    const user = await User.create({
+      fullName,
+      email,
+      password,
+      authProvider: 'local',
+      role: 'user',
+    });
+
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '24h',
+    });
+
+    res.status(201).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      authProvider: user.authProvider,
+      role: user.role,
+      token,
+    });
+  } catch (error) {
+    console.error('Error registering user:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// User login (for regular users)
+exports.userLogin = async (req, res) => {
+  const { email, password } = req.body;
+
+  const schema = Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().min(5).required(),
+  });
+
+  const { error } = schema.validate({ email, password });
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Check if user registered with Google
+    if (user.authProvider === 'google' && !user.password) {
+      return res.status(401).json({ message: 'Please login with Google' });
+    }
+
+    if (!(await user.matchPassword(password))) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '24h',
+    });
+
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      avatar: user.avatar,
+      authProvider: user.authProvider,
+      role: user.role,
+      token,
+    });
+  } catch (error) {
+    console.error('Error logging in:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Admin login (separate from user login)
+exports.adminLogin = async (req, res) => {
+  const { email, password } = req.body;
+
+  const schema = Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().min(5).required(),
+  });
+
+  const { error } = schema.validate({ email, password });
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Check if user is an admin
+    if (user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied. Admin only.' });
+    }
+
+    const token = jwt.sign({ id: user._id, role: 'admin' }, process.env.JWT_SECRET, {
+      expiresIn: '24h',
+    });
+
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
+      token,
+    });
+  } catch (error) {
+    console.error('Error in admin login:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get user profile
+exports.getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.User._id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      avatar: user.avatar,
+      authProvider: user.authProvider,
+      role: user.role,
+      phone: user.phone,
+      address: user.address,
+      createdAt: user.createdAt,
+    });
+  } catch (error) {
+    console.error('Error fetching profile:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Update user profile
+exports.updateProfile = async (req, res) => {
+  const { fullName, phone, address } = req.body;
+
+  try {
+    const user = await User.findById(req.User._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update allowed fields
+    if (fullName) user.fullName = fullName;
+    if (phone !== undefined) user.phone = phone;
+    if (address) {
+      user.address = {
+        street: address.street || user.address?.street,
+        city: address.city || user.address?.city,
+        state: address.state || user.address?.state,
+        pincode: address.pincode || user.address?.pincode,
+      };
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      avatar: user.avatar,
+      authProvider: user.authProvider,
+      role: user.role,
+      phone: user.phone,
+      address: user.address,
+    });
+  } catch (error) {
+    console.error('Error updating profile:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // Google OAuth login
 exports.googleAuth = async (req, res) => {
   const { credential } = req.body;
@@ -306,6 +522,8 @@ exports.googleAuth = async (req, res) => {
       fullName: user.fullName,
       email: user.email,
       avatar: user.avatar,
+      authProvider: user.authProvider,
+      role: user.role,
       token,
     });
   } catch (error) {

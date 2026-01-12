@@ -1,197 +1,285 @@
 "use client";
 import { useState } from "react";
-import axios from "axios";
-import { TextField, Button, Box, Typography, Card, CardContent, CircularProgress, Alert, Link } from "@mui/material";
-import { styled } from "@mui/system";
-import { useRouter } from "next/navigation";
-
-const RegisterCard = styled(Card)(({ theme }) => ({
-  maxWidth: 500,
-  width: "100%",
-  boxShadow: "0px 8px 30px rgba(0, 0, 0, 0.1)",
-  borderRadius: "16px",
-  padding: theme.spacing(4),
-  margin: theme.spacing(2),
-  transition: "0.3s",
-  "&:hover": {
-    boxShadow: "0px 12px 40px rgba(0, 0, 0, 0.15)",
-  },
-}));
-
-const SubmitButton = styled(Button)({
-  padding: "0.75rem 1.5rem",
-  fontSize: "1.1rem",
-  marginTop: "1.5rem",
-  borderRadius: "10px",
-  textTransform: "none",
-});
+import { useRouter, useSearchParams } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { GoogleLogin } from "@react-oauth/google";
+import Link from "next/link";
+import {
+  Box,
+  TextField,
+  Button,
+  Typography,
+  Alert,
+  Divider,
+  CircularProgress,
+} from "@mui/material";
+import { setCredentials } from "../../../store/slices/authSlice";
+import { mergeCartOnLogin } from "../../../store/slices/cartSlice";
+import api from "../../../utils/axiosClient";
 
 export default function Register() {
-  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isPasswordDisabled, setIsPasswordDisabled] = useState(true);
-  const [isEmailSent, setIsEmailSent] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errors, setErrors] = useState({});
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [isRegistered, setIsRegistered] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const dispatch = useDispatch();
+  const redirectUrl = searchParams.get("redirect") || "/";
 
-  const validate = () => {
-    const newErrors = {};
-    if (!fullName.trim()) newErrors.fullName = "Full Name is required.";
-    if (!email.trim()) newErrors.email = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = "Invalid email format.";
-    if (!isPasswordDisabled && !password.trim()) newErrors.password = "Password is required.";
-    else if (password && password.length < 6) newErrors.password = "Password must be at least 6 characters.";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError(null);
 
-  const handleRegister = async () => {
-    if (!validate()) return;
+    // Validate passwords match
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      setLoading(true);
-      setIsEmailSent(false);
-      setIsPasswordDisabled(true);
-      setErrorMessage("");
-      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/register`, { fullName, email });
-      if (res.status === 201) {
-        setSuccessMessage("Password sent to your email. Please enter it below.");
-        setIsPasswordDisabled(false);
-        setIsEmailSent(true);
-      }
-    } catch (error) {
-      setErrorMessage("Error registering user.");
+      const res = await api.post("/api/auth/register-user", {
+        fullName,
+        email,
+        password,
+      });
+      const { _id, fullName: name, email: userEmail, authProvider, role, token } = res.data;
+
+      dispatch(
+        setCredentials({
+          user: { _id, fullName: name, email: userEmail, authProvider, role },
+          token,
+        })
+      );
+
+      // Merge guest cart with user's cart
+      dispatch(mergeCartOnLogin());
+
+      router.push(redirectUrl);
+    } catch (err) {
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePasswordSubmit = async () => {
-    if (!validate()) return;
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    setError(null);
+
     try {
-      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/complete-registration`, {
-        fullName,
-        email,
-        password,
+      const response = await api.post("/api/auth/google", {
+        credential: credentialResponse.credential,
       });
-      if (res.status === 201) {
-        setSuccessMessage("Registration completed successfully!");
-        setErrorMessage("");
-        setPassword("");
-        setFullName("");
-        setEmail("");
-        setIsPasswordDisabled(true);
-        setIsEmailSent(false);
-        setIsRegistered(true);
-      }
-    } catch (error) {
-      setErrorMessage("Password is incorrect.");
+      const { _id, fullName, email: userEmail, avatar, authProvider, role, token } = response.data;
+
+      dispatch(
+        setCredentials({
+          user: { _id, fullName, email: userEmail, avatar, authProvider, role },
+          token,
+        })
+      );
+
+      // Merge guest cart with user's cart
+      dispatch(mergeCartOnLogin());
+
+      router.push(redirectUrl);
+    } catch (err) {
+      setError(err.response?.data?.message || "Google sign-up failed");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleResetPassword = () => {
-    router.push("/resetpassword");
+  const handleGoogleError = () => {
+    setError("Google sign-up was cancelled or failed");
   };
 
   return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" bgcolor="#f5f5f5" p={2}>
-      <RegisterCard>
-        <CardContent>
-          <Typography variant="h5" align="center" gutterBottom fontWeight={600}>
-            Admin Registration
-          </Typography>
-
-          <TextField
-            label="Full Name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            fullWidth
-            margin="normal"
-            variant="outlined"
-            error={!!errors.fullName}
-            helperText={errors.fullName}
-            sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-          />
-
-          <TextField
-            label="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            fullWidth
-            margin="normal"
-            variant="outlined"
-            error={!!errors.email}
-            helperText={errors.email}
-            sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-          />
-
-          {isEmailSent && (
-            <>
-              <TextField
-                label="Password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                fullWidth
-                margin="normal"
-                variant="outlined"
-                error={!!errors.password}
-                helperText={errors.password}
-                disabled={isPasswordDisabled}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-              />
-              <SubmitButton
-                variant="contained"
-                color="primary"
-                onClick={handlePasswordSubmit}
-                disabled={isPasswordDisabled}
-                fullWidth
-              >
-                Complete Registration
-              </SubmitButton>
-            </>
-          )}
-
-          {!isEmailSent && (
-            <SubmitButton
-              variant="contained"
-              color="primary"
-              onClick={handleRegister}
-              fullWidth
-              disabled={loading}
-              startIcon={loading && <CircularProgress size={20} color="inherit" />}
-            >
-              {loading ? "Sending..." : "Send Password to Email"}
-            </SubmitButton>
-          )}
-
-          {errorMessage && <Alert severity="error" sx={{ mt: 2, borderRadius: 2 }}>{errorMessage}</Alert>}
-          {successMessage && <Alert severity="success" sx={{ mt: 2, borderRadius: 2 }}>{successMessage}</Alert>}
-
-          {isRegistered && (
-            <Button
-              variant="outlined"
-              color="primary"
-              fullWidth
-              onClick={handleResetPassword}
-              sx={{ mt: 2, borderRadius: 2 }}
-            >
-              Reset Password
-            </Button>
-          )}
-
-          <Link href="/login" sx={{ textDecoration: 'none', mt: 2, display: 'block' }}>
-            <Button variant="outlined" fullWidth sx={{ borderRadius: 2 }}>
-              Already have an account? Login
-            </Button>
+    <Box
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      minHeight="100vh"
+      bgcolor="#f8f9fa"
+      px={2}
+      py={4}
+    >
+      <Box
+        component="form"
+        onSubmit={handleRegister}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          width: { xs: "100%", sm: 420 },
+          p: { xs: 3, sm: 5 },
+          bgcolor: "white",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+          borderRadius: 3,
+        }}
+      >
+        {/* Logo */}
+        <Box display="flex" justifyContent="center" mb={3}>
+          <Link href="/">
+            <img
+              src="/logo.webp"
+              alt="MakeMee Logo"
+              style={{ width: 150, height: "auto" }}
+            />
           </Link>
-        </CardContent>
-      </RegisterCard>
+        </Box>
+
+        <Typography
+          variant="h5"
+          gutterBottom
+          textAlign="center"
+          fontWeight={600}
+          color="#333"
+        >
+          Create Account
+        </Typography>
+        <Typography
+          variant="body2"
+          textAlign="center"
+          color="text.secondary"
+          mb={3}
+        >
+          Join us for a better shopping experience
+        </Typography>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {/* Google Sign Up */}
+        <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            useOneTap={false}
+            theme="outline"
+            size="large"
+            text="signup_with"
+            shape="rectangular"
+            width="100%"
+          />
+        </Box>
+
+        <Divider sx={{ my: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            or sign up with email
+          </Typography>
+        </Divider>
+
+        <TextField
+          label="Full Name"
+          type="text"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          fullWidth
+          margin="normal"
+          required
+          size="medium"
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+            },
+          }}
+        />
+
+        <TextField
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          fullWidth
+          margin="normal"
+          required
+          size="medium"
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+            },
+          }}
+        />
+
+        <TextField
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          fullWidth
+          margin="normal"
+          required
+          size="medium"
+          helperText="At least 6 characters"
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+            },
+          }}
+        />
+
+        <TextField
+          label="Confirm Password"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          fullWidth
+          margin="normal"
+          required
+          size="medium"
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+            },
+          }}
+        />
+
+        <Button
+          variant="contained"
+          type="submit"
+          fullWidth
+          disabled={loading}
+          sx={{
+            mt: 3,
+            py: 1.5,
+            borderRadius: 2,
+            fontWeight: 600,
+            textTransform: "none",
+            fontSize: "1rem",
+            bgcolor: "#731162",
+            "&:hover": {
+              bgcolor: "#5a0d4d",
+            },
+          }}
+        >
+          {loading ? <CircularProgress size={24} color="inherit" /> : "Create Account"}
+        </Button>
+
+        <Box mt={3} textAlign="center">
+          <Typography variant="body2" color="text.secondary">
+            Already have an account?{" "}
+            <Link
+              href="/login"
+              style={{ color: "#731162", fontWeight: 600, textDecoration: "none" }}
+            >
+              Sign In
+            </Link>
+          </Typography>
+        </Box>
+      </Box>
     </Box>
   );
 }

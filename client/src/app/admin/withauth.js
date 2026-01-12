@@ -1,17 +1,56 @@
 // admin/useAuth.js
 "use client";
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import api from '@/utils/axiosClient';
 
-const useAuth = () => {
+const useAdminAuth = () => {
   const router = useRouter();
+  const pathname = usePathname();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token'); // Adjust the key based on your token storage method
-    if (!token) {                                
-      router.push('/login'); // Redirect to login if token is not present
-    }
-  }, [router]);
+    const checkAdminAuth = async () => {
+      // Skip auth check for admin login page
+      if (pathname === '/admin/login') {
+        setIsAuthorized(true);
+        setLoading(false);
+        return;
+      }
+
+      const adminToken = localStorage.getItem('adminToken');
+
+      if (!adminToken) {
+        router.push('/admin/login');
+        return;
+      }
+
+      try {
+        // Verify admin token with backend
+        const res = await api.get('/api/auth/me', {
+          headers: { Authorization: `Bearer ${adminToken}` }
+        });
+
+        if (res.data.role !== 'admin') {
+          localStorage.removeItem('adminToken');
+          router.push('/admin/login');
+          return;
+        }
+
+        setIsAuthorized(true);
+      } catch (error) {
+        localStorage.removeItem('adminToken');
+        router.push('/admin/login');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAdminAuth();
+  }, [router, pathname]);
+
+  return { isAuthorized, loading };
 };
 
-export default useAuth;
+export default useAdminAuth;

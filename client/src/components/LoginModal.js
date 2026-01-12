@@ -23,11 +23,11 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
         credential: credentialResponse.credential,
       });
 
-      const { _id, fullName, email, avatar, token } = response.data;
+      const { _id, fullName, email, avatar, authProvider, role, token } = response.data;
 
       dispatch(
         setCredentials({
-          user: { _id, fullName, email, avatar },
+          user: { _id, fullName, email, avatar, authProvider, role },
           token,
         })
       );

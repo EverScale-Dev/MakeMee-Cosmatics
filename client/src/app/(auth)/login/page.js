@@ -1,10 +1,18 @@
 "use client";
 import { useState } from "react";
-import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { GoogleLogin } from "@react-oauth/google";
-import { Box, TextField, Button, Typography, Alert, Link, Divider } from "@mui/material";
+import Link from "next/link";
+import {
+  Box,
+  TextField,
+  Button,
+  Typography,
+  Alert,
+  Divider,
+  CircularProgress,
+} from "@mui/material";
 import { setCredentials } from "../../../store/slices/authSlice";
 import { mergeCartOnLogin } from "../../../store/slices/cartSlice";
 import api from "../../../utils/axiosClient";
@@ -23,24 +31,24 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
     try {
-      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`, { email, password });
-      const { _id, fullName, email: userEmail, token } = res.data;
+      const res = await api.post("/api/auth/user-login", { email, password });
+      const { _id, fullName, email: userEmail, avatar, authProvider, role, token } = res.data;
 
-      dispatch(setCredentials({
-        user: { _id, fullName, email: userEmail },
-        token,
-      }));
+      dispatch(
+        setCredentials({
+          user: { _id, fullName, email: userEmail, avatar, authProvider, role },
+          token,
+        })
+      );
 
-      // Check if it's admin login (email/password) - redirect to admin
-      // For customer login, redirect to intended destination
-      if (redirectUrl === "/") {
-        router.push("/admin");
-      } else {
-        router.push(redirectUrl);
-      }
+      // Merge guest cart with user's cart
+      dispatch(mergeCartOnLogin());
+
+      router.push(redirectUrl);
     } catch (err) {
-      setError("Invalid email or password");
+      setError(err.response?.data?.message || "Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -49,18 +57,21 @@ export default function Login() {
   const handleGoogleSuccess = async (credentialResponse) => {
     setLoading(true);
     setError(null);
+
     try {
       const response = await api.post("/api/auth/google", {
         credential: credentialResponse.credential,
       });
-      const { _id, fullName, email: userEmail, avatar, token } = response.data;
+      const { _id, fullName, email: userEmail, avatar, authProvider, role, token } = response.data;
 
-      dispatch(setCredentials({
-        user: { _id, fullName, email: userEmail, avatar },
-        token,
-      }));
+      dispatch(
+        setCredentials({
+          user: { _id, fullName, email: userEmail, avatar, authProvider, role },
+          token,
+        })
+      );
 
-      // Merge guest cart with user's cart in database
+      // Merge guest cart with user's cart
       dispatch(mergeCartOnLogin());
 
       router.push(redirectUrl);
@@ -81,7 +92,7 @@ export default function Login() {
       justifyContent="center"
       alignItems="center"
       minHeight="100vh"
-      bgcolor="#f3f4f6"
+      bgcolor="#f8f9fa"
       px={2}
     >
       <Box
@@ -90,19 +101,40 @@ export default function Login() {
         sx={{
           display: "flex",
           flexDirection: "column",
-          width: { xs: "100%", sm: 400 },
-          p: 5,
+          width: { xs: "100%", sm: 420 },
+          p: { xs: 3, sm: 5 },
           bgcolor: "white",
-          boxShadow: 4,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
           borderRadius: 3,
-          transition: "0.3s",
-          "&:hover": {
-            boxShadow: 6,
-          },
         }}
       >
-        <Typography variant="h5" gutterBottom textAlign="center" fontWeight={600}>
-          Sign In
+        {/* Logo */}
+        <Box display="flex" justifyContent="center" mb={3}>
+          <Link href="/">
+            <img
+              src="/logo.webp"
+              alt="MakeMee Logo"
+              style={{ width: 150, height: "auto" }}
+            />
+          </Link>
+        </Box>
+
+        <Typography
+          variant="h5"
+          gutterBottom
+          textAlign="center"
+          fontWeight={600}
+          color="#333"
+        >
+          Welcome Back
+        </Typography>
+        <Typography
+          variant="body2"
+          textAlign="center"
+          color="text.secondary"
+          mb={3}
+        >
+          Sign in to continue to your account
         </Typography>
 
         {error && (
@@ -121,13 +153,13 @@ export default function Login() {
             size="large"
             text="signin_with"
             shape="rectangular"
-            disabled={loading}
+            width="100%"
           />
         </Box>
 
         <Divider sx={{ my: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            or admin login
+            or sign in with email
           </Typography>
         </Divider>
 
@@ -139,6 +171,7 @@ export default function Login() {
           fullWidth
           margin="normal"
           required
+          size="medium"
           sx={{
             "& .MuiOutlinedInput-root": {
               borderRadius: 2,
@@ -154,6 +187,7 @@ export default function Login() {
           fullWidth
           margin="normal"
           required
+          size="medium"
           sx={{
             "& .MuiOutlinedInput-root": {
               borderRadius: 2,
@@ -161,46 +195,47 @@ export default function Login() {
           }}
         />
 
+        <Link
+          href="/forgotpassword"
+          style={{ textDecoration: "none", alignSelf: "flex-end", marginTop: 4 }}
+        >
+          <Typography variant="body2" color="primary" fontWeight={500}>
+            Forgot Password?
+          </Typography>
+        </Link>
+
         <Button
           variant="contained"
-          color="primary"
           type="submit"
           fullWidth
+          disabled={loading}
           sx={{
             mt: 3,
             py: 1.5,
             borderRadius: 2,
             fontWeight: 600,
             textTransform: "none",
+            fontSize: "1rem",
+            bgcolor: "#731162",
             "&:hover": {
-              backgroundColor: "primary.dark",
+              bgcolor: "#5a0d4d",
             },
           }}
         >
-          Login
+          {loading ? <CircularProgress size={24} color="inherit" /> : "Sign In"}
         </Button>
 
-        <Button
-          component={Link}
-          href="/register"
-          variant="outlined"
-          fullWidth
-          sx={{
-            mt: 2,
-            py: 1.5,
-            borderRadius: 2,
-            fontWeight: 600,
-            textTransform: "none",
-          }}
-        >
-          Register
-        </Button>
-
-        <Link href="/forgotpassword" sx={{ mt: 2, textAlign: "center", display: "block" }}>
-          <Typography variant="body2" color="primary" fontWeight={500}>
-            Forgot Password?
+        <Box mt={3} textAlign="center">
+          <Typography variant="body2" color="text.secondary">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/register"
+              style={{ color: "#731162", fontWeight: 600, textDecoration: "none" }}
+            >
+              Sign Up
+            </Link>
           </Typography>
-        </Link>
+        </Box>
       </Box>
     </Box>
   );

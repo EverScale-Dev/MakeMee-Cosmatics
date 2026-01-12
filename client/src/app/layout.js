@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import LoadingOverlay from "../components/LoadingOverlay";
 import CartHydrator from "../components/CartHydrator";
+import AuthHydrator from "../components/AuthHydrator";
 import Script from "next/script";
 
 const defaultTitle = "MakeMee Cosmetics | Premium Beauty Products Online";
@@ -84,9 +85,11 @@ export default function RootLayout({ children }) {
 
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
           <Provider store={store}>
-            <CartHydrator>
-              {children}
-            </CartHydrator>
+            <AuthHydrator>
+              <CartHydrator>
+                {children}
+              </CartHydrator>
+            </AuthHydrator>
             <LoadingOverlay show={false} />
           </Provider>
         </GoogleOAuthProvider>
