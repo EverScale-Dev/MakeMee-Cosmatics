@@ -47,13 +47,14 @@ exports.createOrder = async (req, res) => {
     const deliveryCharge = Number(req.body.deliveryCharge) || 0;
     const finalTotal = subtotal + deliveryCharge;
 
-    // ✅ Create new order
+    // ✅ Create new order (link to logged-in user if available)
     const order = await Order.create({
+      user: req.User?._id,  // Link to logged-in user
       customer,
       products: validatedProducts,
-      subtotal,          // NEW: save subtotal
-      deliveryCharge,    // NEW: save delivery charge
-      totalAmount: finalTotal,  // update totalAmount to include delivery
+      subtotal,
+      deliveryCharge,
+      totalAmount: finalTotal,
       paymentMethod,
       note,
     });
@@ -71,6 +72,40 @@ exports.createOrder = async (req, res) => {
   } catch (error) {
     console.error("Error creating order:", error.message);
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// =========================================================
+// @desc    Get logged-in user's orders
+// @route   GET /api/orders/my
+// =========================================================
+
+exports.getMyOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.User._id })
+      .sort({ createdAt: -1 })
+      .populate("customer", "fullName email phone shippingAddress")
+      .populate("products.product");
+
+    res.status(200).json({
+      count: orders.length,
+      orders: orders.map((order) => ({
+        _id: order._id,
+        orderId: order.orderId,
+        customer: order.customer,
+        products: order.products,
+        subtotal: order.subtotal,
+        deliveryCharge: order.deliveryCharge,
+        totalAmount: order.totalAmount,
+        paymentMethod: order.paymentMethod,
+        status: order.status,
+        createdAt: order.createdAt,
+        note: order.note,
+      })),
+    });
+  } catch (error) {
+    console.error("Error fetching user orders:", error.message);
+    res.status(500).json({ message: "Server error" });
   }
 };
 

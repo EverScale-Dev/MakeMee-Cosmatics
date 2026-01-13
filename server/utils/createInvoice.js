@@ -1,5 +1,6 @@
 const PDFDocument = require("pdfkit");
 const path = require("path");
+const fs = require("fs");
 
 const COLORS = {
   primary: "#1F2D5A",
@@ -8,168 +9,245 @@ const COLORS = {
   muted: "#666666",
   background: "#F8FAFC",
   border: "#E5E7EB",
-  highlight: "#1E88E5",
+  highlight: "#731162",
+  white: "#FFFFFF",
+};
+
+// Page dimensions
+const PAGE = {
+  left: 50,
+  right: 545,
+  width: 495,
 };
 
 // === HEADER ===
 function generateHeader(doc, order, logoPath) {
-  doc.image(logoPath, 60, 45, { width: 70 });
+  const startY = 40;
 
-  doc.fontSize(18).fillColor(COLORS.primary).text("MakeMee Cosmetics", 150, 50);
-  doc.fontSize(10).fillColor(COLORS.muted)
-    .text("Derde Korhale, Kopargaon Ahilyanagar, Maharashtra 423601", 150, 70)
-    .text("support@makemee.com | +91 9876543210", 150, 83);
+  // Logo (if exists)
+  if (fs.existsSync(logoPath)) {
+    doc.image(logoPath, PAGE.left, startY, { width: 60 });
+  }
 
-  const infoX = 400;
-  doc.fontSize(11).fillColor(COLORS.primary).text("INVOICE", infoX, 50, { align: "right" });
-  doc.fontSize(10).fillColor(COLORS.text)
-    .text(`Order ID: ${order.orderId}`, infoX, 65, { align: "right" })
-    .text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, infoX, 78, { align: "right" });
+  // Company name and details
+  doc.fontSize(20).fillColor(COLORS.accent).font("Helvetica-Bold")
+    .text("MakeMee Cosmetics", PAGE.left + 70, startY);
 
-  doc.moveTo(60, 110).lineTo(550, 110).strokeColor(COLORS.accent).lineWidth(1).stroke();
+  doc.fontSize(9).fillColor(COLORS.muted).font("Helvetica")
+    .text("Derde Korhale, Kopargaon, Ahilyanagar", PAGE.left + 70, startY + 22)
+    .text("Maharashtra 423601, India", PAGE.left + 70, startY + 33)
+    .text("support@makemee.in | +91 98765 43210", PAGE.left + 70, startY + 44);
+
+  // Invoice title and order info (right aligned)
+  doc.fontSize(24).fillColor(COLORS.accent).font("Helvetica-Bold")
+    .text("INVOICE", PAGE.right - 120, startY, { width: 120, align: "right" });
+
+  doc.fontSize(10).fillColor(COLORS.text).font("Helvetica")
+    .text(`Order #${order.orderId}`, PAGE.right - 150, startY + 28, { width: 150, align: "right" })
+    .text(`Date: ${new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`, PAGE.right - 150, startY + 42, { width: 150, align: "right" });
+
+  // Divider line
+  doc.moveTo(PAGE.left, 100).lineTo(PAGE.right, 100).strokeColor(COLORS.accent).lineWidth(2).stroke();
+
+  return 115;
 }
 
 // === CUSTOMER SECTION ===
-function generateCustomerSection(doc, order) {
-  doc.moveDown(2);
-  const sectionTop = doc.y;
-  doc.rect(60, sectionTop, 480, 90).fillAndStroke(COLORS.background, COLORS.border);
-
-  const y = sectionTop + 10;
+function generateCustomerSection(doc, order, startY) {
   const customer = order.customer;
+  const addr = customer.shippingAddress || {};
 
-  doc.fillColor(COLORS.primary).fontSize(12).text("Shipping Information", 70, y);
+  // Bill To section
+  doc.fontSize(11).fillColor(COLORS.accent).font("Helvetica-Bold")
+    .text("BILL TO:", PAGE.left, startY);
 
-  doc.fillColor(COLORS.text).fontSize(10)
-    .text(customer.fullName, 70, y + 18)
-    .text(customer.email, 70, y + 31)
-    .text(customer.phone, 70, y + 44);
+  doc.fontSize(10).fillColor(COLORS.text).font("Helvetica-Bold")
+    .text(customer.fullName || "Customer", PAGE.left, startY + 16);
 
-  const addr = customer.shippingAddress;
-  doc.text(`${addr.apartment_address}, ${addr.street_address1}`, 70, y + 57)
-    .text(`${addr.city}, ${addr.state} - ${addr.pincode}`, 70, y + 70);
+  doc.fontSize(9).fillColor(COLORS.muted).font("Helvetica");
 
-  doc.moveDown(4);
+  let addressY = startY + 30;
+  if (addr.apartment_address) {
+    doc.text(addr.apartment_address, PAGE.left, addressY);
+    addressY += 12;
+  }
+  if (addr.street_address1) {
+    doc.text(addr.street_address1, PAGE.left, addressY);
+    addressY += 12;
+  }
+  if (addr.city || addr.state || addr.pincode) {
+    doc.text(`${addr.city || ""}, ${addr.state || ""} - ${addr.pincode || ""}`, PAGE.left, addressY);
+    addressY += 12;
+  }
+
+  // Contact info on the right
+  doc.fontSize(11).fillColor(COLORS.accent).font("Helvetica-Bold")
+    .text("CONTACT:", PAGE.left + 280, startY);
+
+  doc.fontSize(9).fillColor(COLORS.muted).font("Helvetica")
+    .text(customer.email || "", PAGE.left + 280, startY + 16)
+    .text(customer.phone || "", PAGE.left + 280, startY + 28);
+
+  // Payment method
+  doc.fontSize(11).fillColor(COLORS.accent).font("Helvetica-Bold")
+    .text("PAYMENT:", PAGE.left + 280, startY + 48);
+
+  doc.fontSize(9).fillColor(COLORS.muted).font("Helvetica")
+    .text(order.paymentMethod === "onlinePayment" ? "Online Payment" : "Cash on Delivery", PAGE.left + 280, startY + 62);
+
+  return startY + 90;
 }
 
 // === ORDER TABLE ===
-function generateTable(doc, order) {
-  const startX = 60;
-  let y = doc.y;
+function generateTable(doc, order, startY) {
+  const tableTop = startY + 10;
+  const rowHeight = 28;
 
-  const tableWidth = 480;
-  const colWidths = [210, 80, 90, 100];
-  const headers = ["Product", "Quantity", "Price", "Total"];
-  const rowHeight = 25;
+  // Column positions (fixed positions for better alignment)
+  const cols = {
+    product: PAGE.left,
+    qty: PAGE.left + 250,
+    price: PAGE.left + 320,
+    total: PAGE.left + 400,
+  };
 
   // Table Header
-  doc.rect(startX, y, tableWidth, rowHeight).fill(COLORS.accent);
-  headers.forEach((header, i) => {
-    doc.fillColor("#FFFFFF").fontSize(10)
-      .text(header, startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0), y + 7, { width: colWidths[i], align: "center" });
-  });
-  y += rowHeight;
+  doc.rect(PAGE.left, tableTop, PAGE.width, rowHeight).fill(COLORS.accent);
+
+  doc.fontSize(10).fillColor(COLORS.white).font("Helvetica-Bold");
+  doc.text("Product", cols.product + 10, tableTop + 9);
+  doc.text("Qty", cols.qty, tableTop + 9, { width: 60, align: "center" });
+  doc.text("Price", cols.price, tableTop + 9, { width: 70, align: "right" });
+  doc.text("Total", cols.total, tableTop + 9, { width: 85, align: "right" });
+
+  let y = tableTop + rowHeight;
 
   // Table Rows
   order.products.forEach((item, idx) => {
-    const { name, quantity, price, product } = item;
-    const weights = product.weights ? product.weights.map(w => w.weight).join(", ") : "";
-    const bgColor = idx % 2 === 0 ? "#FFFFFF" : COLORS.background;
+    const { name, quantity, price } = item;
+    const bgColor = idx % 2 === 0 ? COLORS.white : COLORS.background;
 
     // Row background
-    doc.rect(startX, y, tableWidth, rowHeight).fill(bgColor);
+    doc.rect(PAGE.left, y, PAGE.width, rowHeight).fill(bgColor);
 
-    // Product + weights
-    doc.fillColor(COLORS.text).fontSize(10).text(name, startX + 5, y + 7, { width: colWidths[0] - 10 });
-    if (weights) doc.fontSize(8).fillColor(COLORS.muted).text(weights, startX + 5, y + 16, { width: colWidths[0] - 10 });
+    // Draw borders
+    doc.rect(PAGE.left, y, PAGE.width, rowHeight).stroke(COLORS.border);
 
-    // Quantity
-    doc.fillColor(COLORS.text).fontSize(10).text(quantity, startX + colWidths[0], y + 7, { width: colWidths[1], align: "center" });
+    // Product name
+    doc.fontSize(9).fillColor(COLORS.text).font("Helvetica")
+      .text(name, cols.product + 10, y + 9, { width: 230 });
 
-    // Price
-    doc.text(`₹ ${price.toFixed(2)}`, startX + colWidths[0] + colWidths[1], y + 7, { width: colWidths[2], align: "right" });
+    // Quantity (centered)
+    doc.text(String(quantity), cols.qty, y + 9, { width: 60, align: "center" });
 
-    // Total
-    doc.text(`₹ ${(price * quantity).toFixed(2)}`, startX + colWidths[0] + colWidths[1] + colWidths[2], y + 7, { width: colWidths[3], align: "right" });
+    // Price (right aligned)
+    doc.text(`₹${price.toFixed(2)}`, cols.price, y + 9, { width: 70, align: "right" });
+
+    // Total (right aligned)
+    doc.text(`₹${(price * quantity).toFixed(2)}`, cols.total, y + 9, { width: 85, align: "right" });
 
     y += rowHeight;
   });
 
-  // Table Borders
-  for (let i = 0; i <= order.products.length + 1; i++) {
-    doc.moveTo(startX, doc.y - rowHeight * (order.products.length + 1) + i * rowHeight)
-       .lineTo(startX + tableWidth, doc.y - rowHeight * (order.products.length + 1) + i * rowHeight)
-       .strokeColor(COLORS.border)
-       .lineWidth(0.5).stroke();
-  }
+  // Draw outer table border
+  doc.rect(PAGE.left, tableTop, PAGE.width, y - tableTop).stroke(COLORS.border);
 
-  // Column lines
-  let x = startX;
-  colWidths.forEach(w => {
-    x += w;
-    doc.moveTo(x, y - rowHeight * (order.products.length + 1)).lineTo(x, y).strokeColor(COLORS.border).lineWidth(0.5).stroke();
+  // Draw column separators
+  doc.strokeColor(COLORS.border).lineWidth(0.5);
+  [cols.qty, cols.price, cols.total].forEach(x => {
+    doc.moveTo(x, tableTop).lineTo(x, y).stroke();
   });
 
-  return y + 10;
+  return y + 15;
 }
 
 // === TOTALS SECTION ===
 function generateTotals(doc, order, y) {
-  const startX = 320;
-  const boxWidth = 230;
-  const boxHeight = 90;
+  const boxX = PAGE.left + 280;
+  const boxWidth = 215;
+  const labelX = boxX + 15;
+  const valueX = boxX + boxWidth - 15;
 
-  doc.rect(startX, y, boxWidth, boxHeight).fillAndStroke(COLORS.background, COLORS.border);
+  // Subtotal row
+  doc.fontSize(10).fillColor(COLORS.muted).font("Helvetica")
+    .text("Subtotal:", labelX, y);
+  doc.fontSize(10).fillColor(COLORS.text).font("Helvetica")
+    .text(`₹${(order.subtotal || 0).toFixed(2)}`, valueX - 80, y, { width: 80, align: "right" });
 
-  const textX = startX + 15;
-  doc.fillColor(COLORS.primary).fontSize(11)
-    .text("Subtotal:", textX, y + 12)
-    .text("Delivery Charges:", textX, y + 32);
+  // Delivery row
+  doc.fontSize(10).fillColor(COLORS.muted).font("Helvetica")
+    .text("Delivery:", labelX, y + 18);
+  doc.fontSize(10).fillColor(COLORS.text).font("Helvetica")
+    .text(`₹${(order.deliveryCharge || 0).toFixed(2)}`, valueX - 80, y + 18, { width: 80, align: "right" });
 
-  doc.fillColor(COLORS.text).fontSize(10)
-    .text(`₹ ${order.subtotal.toFixed(2)}`, startX + 180, y + 12, { align: "right" })
-    .text(`₹ ${(order.deliveryCharge || 0).toFixed(2)}`, startX + 180, y + 32, { align: "right" });
+  // Divider line
+  doc.moveTo(boxX, y + 38).lineTo(boxX + boxWidth, y + 38).strokeColor(COLORS.border).lineWidth(1).stroke();
 
-  doc.fillColor(COLORS.primary).fontSize(12).text("Grand Total:", textX, y + 55);
-  doc.fillColor(COLORS.highlight).fontSize(14).text(`₹ ${order.totalAmount.toFixed(2)}`, startX + 180, y + 53, { align: "right" });
+  // Grand Total row (highlighted)
+  doc.rect(boxX, y + 45, boxWidth, 30).fill(COLORS.accent);
+  doc.fontSize(11).fillColor(COLORS.white).font("Helvetica-Bold")
+    .text("Grand Total:", labelX, y + 54);
+  doc.fontSize(14).fillColor(COLORS.white).font("Helvetica-Bold")
+    .text(`₹${(order.totalAmount || 0).toFixed(2)}`, valueX - 90, y + 52, { width: 90, align: "right" });
+
+  return y + 90;
 }
 
-// === THANK YOU ===
-function generateThankYouMessage(doc) {
-  doc.moveDown(3);
-  doc.fillColor(COLORS.primary).fontSize(10)
+// === THANK YOU MESSAGE ===
+function generateThankYouMessage(doc, y) {
+  const messageY = y + 20;
+
+  doc.rect(PAGE.left, messageY, PAGE.width, 70).fill(COLORS.background);
+
+  doc.fontSize(11).fillColor(COLORS.accent).font("Helvetica-Bold")
+    .text("Thank you for your order!", PAGE.left + 15, messageY + 12);
+
+  doc.fontSize(9).fillColor(COLORS.muted).font("Helvetica")
     .text(
-      "Thank you for shopping with MakeMee.\nYour order has been successfully confirmed and is now being prepared with care!\nWe’ll notify you as soon as it’s shipped.\n\nGet ready to enhance your glow, your MakeMee products are on their way!",
-      60,
-      doc.y,
-      { width: 480, align: "left" }
+      "Your order has been confirmed and is being prepared with care. " +
+      "We'll notify you when it ships. Get ready to enhance your glow!",
+      PAGE.left + 15,
+      messageY + 30,
+      { width: PAGE.width - 30 }
     );
+
+  return messageY + 85;
 }
 
 // === FOOTER ===
 function generateFooter(doc) {
-  doc.moveDown(3);
-  doc.strokeColor(COLORS.accent).lineWidth(0.5).moveTo(60, doc.y).lineTo(550, doc.y).stroke();
+  const footerY = 720;
 
-  doc.moveDown(0.8).fillColor(COLORS.primary).fontSize(10)
-    .text("Thank you for choosing MakeMee Cosmetics!", { align: "center" })
-    .fillColor(COLORS.muted).fontSize(9)
-    .text("Be your own kind of beautiful.", { align: "center" });
+  // Divider line
+  doc.moveTo(PAGE.left, footerY).lineTo(PAGE.right, footerY).strokeColor(COLORS.accent).lineWidth(1).stroke();
+
+  // Footer content
+  doc.fontSize(9).fillColor(COLORS.accent).font("Helvetica-Bold")
+    .text("MakeMee Cosmetics", PAGE.left, footerY + 12);
+
+  doc.fontSize(8).fillColor(COLORS.muted).font("Helvetica")
+    .text("Be your own kind of beautiful.", PAGE.left, footerY + 24);
+
+  // Support info on right
+  doc.fontSize(8).fillColor(COLORS.muted).font("Helvetica")
+    .text("Questions? Contact us:", PAGE.right - 150, footerY + 12, { width: 150, align: "right" })
+    .text("support@makemee.in", PAGE.right - 150, footerY + 24, { width: 150, align: "right" });
 }
 
 // === MAIN FUNCTION ===
 const createInvoice = (order) => {
-  const doc = new PDFDocument({ margin: 50 });
+  const doc = new PDFDocument({ margin: 50, size: "A4" });
   const buffers = [];
   const logoPath = path.join(__dirname, "../public/logo.png");
 
   doc.on("data", buffers.push.bind(buffers));
 
-  generateHeader(doc, order, logoPath);
-  generateCustomerSection(doc, order);
-  const tableEndY = generateTable(doc, order);
-  generateTotals(doc, order, tableEndY + 15);
-  generateThankYouMessage(doc);
+  // Generate all sections with proper Y coordinate flow
+  const headerEndY = generateHeader(doc, order, logoPath);
+  const customerEndY = generateCustomerSection(doc, order, headerEndY);
+  const tableEndY = generateTable(doc, order, customerEndY);
+  const totalsEndY = generateTotals(doc, order, tableEndY);
+  generateThankYouMessage(doc, totalsEndY);
   generateFooter(doc);
 
   doc.end();

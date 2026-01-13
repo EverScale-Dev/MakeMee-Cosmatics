@@ -23,6 +23,13 @@ exports.generateInvoice = async (req, res) => {
         .json({ success: false, message: "Order not found" });
     }
 
+    // Check if invoice was already sent (prevent duplicate emails on page refresh)
+    if (order.invoiceSent) {
+      return res
+        .status(200)
+        .json({ success: true, message: "Invoice already sent", alreadySent: true });
+    }
+
     // Generate invoice buffer
     let buffer;
     try {
@@ -55,6 +62,10 @@ exports.generateInvoice = async (req, res) => {
         .status(500)
         .json({ success: false, message: "Failed to send invoice email" });
     }
+
+    // Mark invoice as sent to prevent duplicate emails
+    order.invoiceSent = true;
+    await order.save();
 
     // Send notification to admin
     try {

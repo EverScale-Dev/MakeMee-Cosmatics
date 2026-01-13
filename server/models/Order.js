@@ -4,6 +4,13 @@ const AutoIncrement = require("mongoose-sequence")(mongoose);
 const orderSchema = new mongoose.Schema({
   orderId: { type: Number, unique: true },
 
+  // Link to logged-in user (for order history)
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+
+  // Link to customer (shipping info)
   customer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Customer",
@@ -37,6 +44,7 @@ const orderSchema = new mongoose.Schema({
   note: { type: String },
 
   isViewed: { type: Boolean, default: false },
+  invoiceSent: { type: Boolean, default: false },
 
   status: {
     type: String,
