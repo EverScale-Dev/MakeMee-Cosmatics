@@ -9,9 +9,12 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     increment();
-    // Add auth token if available
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
+    // Add auth token if available (don't overwrite if already set)
+    if (typeof window !== 'undefined' && !config.headers.Authorization) {
+      // Check for admin token first, then user token
+      const adminToken = localStorage.getItem('adminToken');
+      const userToken = localStorage.getItem('token');
+      const token = adminToken || userToken;
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
