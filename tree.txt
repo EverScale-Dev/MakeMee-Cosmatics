@@ -1,0 +1,49 @@
+├───client
+│   ├───.next
+│   ├───node_modules
+│   ├───public
+│   │   ├───Category-Img
+│   │   ├───Product-Img
+│   │   └───Promo
+│   └───src
+│       ├───app
+│       │   ├───(auth)
+│       │   │   ├───forgotpassword
+│       │   │   ├───login
+│       │   │   ├───register
+│       │   │   └───resetpassword
+│       │   ├───about
+│       │   ├───admin
+│       │   │   ├───customers
+│       │   │   ├───orders
+│       │   │   └───products
+│       │   ├───cart
+│       │   ├───checkout
+│       │   ├───contact
+│       │   ├───orderInvoice
+│       │   │   └───[id]
+│       │   ├───payment
+│       │   │   ├───order-success
+│       │   │   └───redirect
+│       │   ├───privacy-policy
+│       │   ├───productpage
+│       │   ├───products
+│       │   │   └───[id]
+│       │   ├───terms-and-conditions
+│       │   └───thankyou
+│       ├───components
+│       ├───context
+│       ├───store
+│       │   └───slices
+│       ├───styles
+│       └───utils
+└───server
+    ├───api
+    │   ├───controllers
+    │   └───routes
+    ├───config
+    ├───middlewares
+    ├───models
+    ├───public
+    │   └───uploads
+    └───utils
