@@ -46,12 +46,30 @@ const orderSchema = new mongoose.Schema({
   isViewed: { type: Boolean, default: false },
   invoiceSent: { type: Boolean, default: false },
 
+  // Shiprocket shipment data
+  shiprocket: {
+    orderId: { type: String },           // Shiprocket order ID
+    shipmentId: { type: String },        // Shiprocket shipment ID
+    awb: { type: String },               // Air Way Bill tracking number
+    courierName: { type: String },       // Courier company name
+    courierCompanyId: { type: Number },  // Courier company ID
+    trackingUrl: { type: String },       // Live tracking URL
+    labelUrl: { type: String },          // Shipping label PDF URL
+    pickupLocation: { type: String },    // Pickup warehouse location
+    shipmentStatus: { type: String },    // Current shipment status
+    createdAt: { type: Date },           // When shipment was created
+  },
+
   status: {
     type: String,
     enum: [
       "pending payment",
       "processing",
       "on hold",
+      "shipped",
+      "in transit",
+      "out for delivery",
+      "delivered",
       "completed",
       "refunded",
       "cancelled",
