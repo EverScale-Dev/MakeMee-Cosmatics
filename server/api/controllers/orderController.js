@@ -120,7 +120,7 @@ exports.getAllOrders = async (req, res) => {
 
     const orders = await Order.find()
       .sort({ createdAt: -1 })
-      .populate("customer", "fullName email")
+      .populate("customer", "fullName email phone shippingAddress")
       .populate("products.product")
       .limit(Number(limit))
       .skip(Number(skip));
@@ -134,8 +134,12 @@ exports.getAllOrders = async (req, res) => {
         orderId: order.orderId,
         customer: order.customer,
         products: order.products,
+        subtotal: order.subtotal,
+        deliveryCharge: order.deliveryCharge,
         totalAmount: order.totalAmount,
+        paymentMethod: order.paymentMethod,
         status: order.status,
+        shiprocket: order.shiprocket || null,
         createdAt: order.createdAt,
         note: order.note,
         isViewed: order.isViewed,
@@ -174,8 +178,12 @@ exports.getOrderById = async (req, res) => {
       orderId: order.orderId,
       customer: order.customer,
       products: order.products,
+      subtotal: order.subtotal,
+      deliveryCharge: order.deliveryCharge,
       totalAmount: order.totalAmount,
+      paymentMethod: order.paymentMethod,
       status: order.status,
+      shiprocket: order.shiprocket || null,
       createdAt: order.createdAt,
       note: order.note,
       isViewed: order.isViewed,

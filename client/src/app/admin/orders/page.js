@@ -294,10 +294,28 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import TrackChangesIcon from "@mui/icons-material/TrackChanges";
+import Chip from "@mui/material/Chip";
 import Swal from "sweetalert2";
 import ShippingModal from "./ShippingModal";
 import OrderDetailModal from "./OrderDetailModal";
 import useAuth from "../withauth";
+
+// Helper function to get shipment status for display
+const getShipmentStatusBadge = (shiprocket) => {
+  if (!shiprocket?.shipmentId) {
+    return { label: "Not Created", color: "default" };
+  }
+  if (!shiprocket?.awb) {
+    return { label: "AWB Pending", color: "warning" };
+  }
+  if (shiprocket?.shipmentStatus?.toLowerCase().includes("delivered")) {
+    return { label: "Delivered", color: "success" };
+  }
+  if (shiprocket?.shipmentStatus?.toLowerCase().includes("transit")) {
+    return { label: "In Transit", color: "info" };
+  }
+  return { label: "Shipped", color: "primary" };
+};
 
 export default function OrdersPage() {
   useAuth();
@@ -486,13 +504,15 @@ export default function OrdersPage() {
                     "Order ID",
                     "Customer",
                     "Date",
-                    "Total Amount",
+                    "Amount",
+                    "Payment",
                     "Status",
+                    "Shipment",
                     "Actions",
                   ].map((header) => (
                     <TableCell
                       key={header}
-                      sx={{ fontWeight: 600, color: "#333" }}
+                      sx={{ fontWeight: 600, color: "#333", whiteSpace: "nowrap" }}
                     >
                       {header}
                     </TableCell>
@@ -501,99 +521,126 @@ export default function OrdersPage() {
               </TableHead>
               <TableBody>
                 {orders.length > 0 ? (
-                  orders.map(
-                    (order) => (
-                      console.log("order", order),
-                      (
-                        <TableRow
-                          key={order.orderId}
-                          sx={{
-                            backgroundColor: order.isViewed
-                              ? "#e0f7fa"
-                              : "#f9f9f9",
-                            "&:hover": { backgroundColor: "#e8f0fe" },
-                          }}
-                        >
-                          <TableCell>{order.orderId}</TableCell>
-                          <TableCell>
-                            {order.customer?.fullName || "Guest"}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(order.createdAt).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>₹ {order.totalAmount}</TableCell>
-                          <TableCell>
-                            <Typography
-                              sx={{
-                                px: 1.5,
-                                py: 0.5,
-                                display: "inline-block",
-                                borderRadius: "20px",
-                                fontSize: 13,
-                                fontWeight: 500,
-                                backgroundColor:
-                                  order.status === "completed"
-                                  ? "rgba(34,197,94,0.1)"
+                  orders.map((order) => {
+                    const shipmentBadge = getShipmentStatusBadge(order.shiprocket);
+                    return (
+                      <TableRow
+                        key={order.orderId}
+                        sx={{
+                          backgroundColor: order.isViewed
+                            ? "#ffffff"
+                            : "#fffef0",
+                          "&:hover": { backgroundColor: "#f5f5f5" },
+                        }}
+                      >
+                        <TableCell sx={{ fontWeight: 600 }}>
+                          #{order.orderId}
+                        </TableCell>
+                        <TableCell>
+                          {order.customer?.fullName || "Guest"}
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap" }}>
+                          {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                          })}
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 500 }}>
+                          ₹{order.totalAmount?.toFixed(0)}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={order.paymentMethod === "cashOnDelivery" ? "COD" : "Online"}
+                            color={order.paymentMethod === "cashOnDelivery" ? "warning" : "success"}
+                            size="small"
+                            sx={{ fontWeight: 500, fontSize: 11 }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={order.status}
+                            size="small"
+                            sx={{
+                              fontWeight: 500,
+                              fontSize: 11,
+                              textTransform: "capitalize",
+                              backgroundColor:
+                                order.status === "completed" || order.status === "delivered"
+                                  ? "rgba(34,197,94,0.15)"
                                   : order.status === "processing"
-                                  ? "rgba(2,136,209,0.1)"
-                                  : order.status === "on hold"
-                                  ? "rgba(218,165,32,0.1)"
-                                  : order.status === "pending payment"
-                                  ? "rgba(255,165,0,0.1)"
-                                  : order.status === "refunded"
-                                  ? "rgba(0,128,128,0.1)"
-                                  : order.status === "cancelled"
-                                  ? "rgba(220,38,38,0.1)"
-                                  : order.status === "failed"
-                                  ? "rgba(107,114,128,0.1)"
-                                  : "rgba(30,41,59,0.05)",
-                              }}
-                            >
-                              {order.status}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
+                                    ? "rgba(2,136,209,0.15)"
+                                    : order.status === "shipped" || order.status === "in transit"
+                                      ? "rgba(59,130,246,0.15)"
+                                      : order.status === "on hold"
+                                        ? "rgba(218,165,32,0.15)"
+                                        : order.status === "pending payment"
+                                          ? "rgba(255,165,0,0.15)"
+                                          : order.status === "cancelled" || order.status === "failed"
+                                            ? "rgba(220,38,38,0.15)"
+                                            : "rgba(107,114,128,0.15)",
+                              color:
+                                order.status === "completed" || order.status === "delivered"
+                                  ? "#166534"
+                                  : order.status === "processing"
+                                    ? "#0277bd"
+                                    : order.status === "shipped" || order.status === "in transit"
+                                      ? "#1d4ed8"
+                                      : order.status === "on hold"
+                                        ? "#92400e"
+                                        : order.status === "pending payment"
+                                          ? "#c2410c"
+                                          : order.status === "cancelled" || order.status === "failed"
+                                            ? "#dc2626"
+                                            : "#374151",
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={shipmentBadge.label}
+                            color={shipmentBadge.color}
+                            size="small"
+                            variant="outlined"
+                            sx={{ fontWeight: 500, fontSize: 11 }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <IconButton
+                            color="primary"
+                            onClick={() => handleViewOrder(order._id)}
+                            size="small"
+                            sx={{ "&:hover": { backgroundColor: "#e3f2fd" } }}
+                          >
+                            <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            color="secondary"
+                            onClick={() => handleOpenShippingModal(order._id)}
+                            size="small"
+                            disabled={!!order.shiprocket?.shipmentId}
+                            sx={{ "&:hover": { backgroundColor: "#fff3e0" } }}
+                          >
+                            <LocalShippingIcon fontSize="small" />
+                          </IconButton>
+                          {order?.shiprocket?.awb && (
                             <IconButton
-                              color="primary"
-                              onClick={() => handleViewOrder(order._id)}
-                              sx={{
-                                "&:hover": { backgroundColor: "#e3f2fd" },
-                                mr: 1,
-                              }}
+                              color="info"
+                              onClick={() =>
+                                handleTrackOrder(order.shiprocket.awb)
+                              }
+                              size="small"
+                              sx={{ "&:hover": { backgroundColor: "#e1f5fe" } }}
                             >
-                              <VisibilityIcon />
+                              <TrackChangesIcon fontSize="small" />
                             </IconButton>
-                            <IconButton
-                              color="secondary"
-                              onClick={() => handleOpenShippingModal(order._id)}
-                              sx={{
-                                "&:hover": { backgroundColor: "#fff3e0" },
-                                mr: 1,
-                              }}
-                            >
-                              <LocalShippingIcon />
-                            </IconButton>
-                            {order?.shiprocket?.awb && (
-                              <IconButton
-                                color="info"
-                                onClick={() =>
-                                  handleTrackOrder(order.shiprocket.awb)
-                                }
-                                sx={{
-                                  "&:hover": { backgroundColor: "#e1f5fe" },
-                                }}
-                              >
-                                <TrackChangesIcon />
-                              </IconButton>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      )
-                    )
-                  )
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} align="center">
+                    <TableCell colSpan={8} align="center">
                       No orders found.
                     </TableCell>
                   </TableRow>

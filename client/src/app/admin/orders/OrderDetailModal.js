@@ -22,10 +22,13 @@ import {
   Grid,
   Chip,
   CircularProgress,
+  Alert,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import PaymentIcon from "@mui/icons-material/Payment";
 import Swal from "sweetalert2";
 import axios from "axios";
 
@@ -88,8 +91,8 @@ export default function OrderDetailModal({
 
       Swal.fire({
         icon: "success",
-        title: "Shipment Created",
-        text: "Order has been successfully transferred to Shiprocket.",
+        title: res.data.alreadyExists ? "Shipment Exists" : "Shipment Created",
+        text: res.data.message || "Order has been successfully transferred to Shiprocket.",
       });
 
       setTimeout(() => {
@@ -108,6 +111,71 @@ export default function OrderDetailModal({
       setLoading(false);
     }
   };
+
+  const handleRetryAwb = async () => {
+    if (!order) return;
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/shiprocket/assign-awb/${order._id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: res.data.alreadyExists ? "AWB Already Assigned" : "AWB Assigned",
+        text: res.data.message || "AWB has been successfully assigned.",
+      });
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error("AWB Assignment Error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to Assign AWB",
+        text:
+          error.response?.data?.error ||
+          "An unexpected error occurred while assigning AWB.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper to get shipment status display
+  const getShipmentStatusInfo = () => {
+    if (!order.shiprocket?.shipmentId) {
+      return { label: "Not Created", color: "default", canCreate: true };
+    }
+    if (!order.shiprocket?.awb) {
+      return { label: "AWB Pending", color: "warning", canRetryAwb: true };
+    }
+    if (order.shiprocket?.shipmentStatus) {
+      return { label: order.shiprocket.shipmentStatus, color: "info" };
+    }
+    return { label: "Ready to Ship", color: "success" };
+  };
+
+  // Helper to check if order can have shipment created
+  const canCreateShipment = () => {
+    // Don't allow if shipment already exists
+    if (order.shiprocket?.shipmentId) return false;
+    // Don't allow if order is cancelled, refunded, or failed
+    if (["cancelled", "refunded", "failed"].includes(order.status)) return false;
+    // For online payment, check if status indicates payment complete
+    if (order.paymentMethod === "onlinePayment" && order.status === "pending payment") return false;
+    return true;
+  };
+
+  const shipmentStatus = getShipmentStatusInfo();
 
   // If no order, render nothing
   if (!order) return null;
@@ -146,40 +214,70 @@ export default function OrderDetailModal({
       <Divider />
 
       <DialogContent dividers>
-        <Grid container spacing={4}>
-          {/* ================= LEFT: Customer Info ================= */}
+        <Grid container spacing={3}>
+          {/* ================= LEFT COLUMN ================= */}
           <Grid item xs={12} md={6}>
-            <Paper elevation={1} sx={{ p: 3, mb: 4 }}>
-              <Typography variant="h5" gutterBottom>
+            {/* Customer & Shipping */}
+            <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" fontWeight={600} gutterBottom>
                 Customer & Shipping
               </Typography>
-              <Typography variant="body1">
-                <strong>Name:</strong> {order.customer.fullName}
-              </Typography>
-              <Typography variant="body1">
-                <strong>Email:</strong> {order.customer.email}
-              </Typography>
-              <Typography variant="body1">
-                <strong>Phone:</strong> {order.customer.phone}
-              </Typography>
-              <Typography variant="body1" sx={{ mt: 1 }}>
-                <strong>Shipping Address:</strong>
-                <Box component="span" ml={1} color="text.secondary">
-                  {`${order.customer.shippingAddress?.street_address1 || ""}, ${
-                    order.customer.shippingAddress?.city || ""
-                  }, ${order.customer.shippingAddress?.state || ""} - ${
-                    order.customer.shippingAddress?.pincode || ""
-                  }`}
-                </Box>
-              </Typography>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                <Typography variant="body2">
+                  <strong>Name:</strong> {order.customer?.fullName || "N/A"}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Email:</strong> {order.customer?.email || "N/A"}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Phone:</strong> {order.customer?.phone || "N/A"}
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  <strong>Address:</strong>{" "}
+                  {order.customer?.shippingAddress?.apartment_address &&
+                    `${order.customer.shippingAddress.apartment_address}, `}
+                  {order.customer?.shippingAddress?.street_address1 || ""},{" "}
+                  {order.customer?.shippingAddress?.city || ""},{" "}
+                  {order.customer?.shippingAddress?.state || ""} -{" "}
+                  {order.customer?.shippingAddress?.pincode || ""}
+                </Typography>
+              </Box>
             </Paper>
 
-            {/* Status Update & Shipping Initiation */}
+            {/* Payment Details */}
+            <Paper elevation={1} sx={{ p: 3, mb: 3, bgcolor: order.paymentMethod === "cashOnDelivery" ? "#fff8e1" : "#e8f5e9" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                <PaymentIcon color={order.paymentMethod === "cashOnDelivery" ? "warning" : "success"} />
+                <Typography variant="h6" fontWeight={600}>
+                  Payment Details
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography variant="body2"><strong>Method:</strong></Typography>
+                  <Chip
+                    label={order.paymentMethod === "cashOnDelivery" ? "Cash on Delivery" : "Online Payment"}
+                    color={order.paymentMethod === "cashOnDelivery" ? "warning" : "success"}
+                    size="small"
+                  />
+                </Box>
+                <Typography variant="body2">
+                  <strong>Status:</strong>{" "}
+                  {order.status === "pending payment"
+                    ? "Awaiting Payment"
+                    : order.paymentMethod === "cashOnDelivery"
+                      ? "Collect on Delivery"
+                      : "Paid"}
+                </Typography>
+              </Box>
+            </Paper>
+
+            {/* Order Management */}
             <Paper elevation={1} sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
+              <Typography variant="h6" fontWeight={600} gutterBottom>
                 Order Management
               </Typography>
-              <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
+              <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 2 }}>
                 <InputLabel id="status-select-label">Update Status</InputLabel>
                 <Select
                   labelId="status-select-label"
@@ -191,6 +289,10 @@ export default function OrderDetailModal({
                   <MenuItem value="pending payment">Pending Payment</MenuItem>
                   <MenuItem value="processing">Processing</MenuItem>
                   <MenuItem value="on hold">On Hold</MenuItem>
+                  <MenuItem value="shipped">Shipped</MenuItem>
+                  <MenuItem value="in transit">In Transit</MenuItem>
+                  <MenuItem value="out for delivery">Out for Delivery</MenuItem>
+                  <MenuItem value="delivered">Delivered</MenuItem>
                   <MenuItem value="completed">Completed</MenuItem>
                   <MenuItem value="refunded">Refunded</MenuItem>
                   <MenuItem value="cancelled">Cancelled</MenuItem>
@@ -203,106 +305,140 @@ export default function OrderDetailModal({
                 startIcon={<EditIcon />}
                 onClick={handleStatusChange}
                 fullWidth
-                sx={{ mb: 1 }}
+                size="small"
               >
                 Save Status
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={
-                  loading ? (
-                    <CircularProgress size={20} color="inherit" />
-                  ) : (
-                    <LocalShippingIcon />
-                  )
-                }
-                onClick={handleInitiateShipment}
-                disabled={order.shiprocket?.awb_code || loading}
-                fullWidth
-              >
-                {order.shiprocket?.awb_code
-                  ? "Shipment Created"
-                  : loading
-                    ? "Creating Shipment..."
-                    : "Create Shiprocket Shipment"}
               </Button>
             </Paper>
           </Grid>
 
-          {/* ================= RIGHT: Shiprocket + Summary ================= */}
+          {/* ================= RIGHT COLUMN ================= */}
           <Grid item xs={12} md={6}>
-            <Paper
-              elevation={1}
-              sx={{ p: 3, mb: 4, backgroundColor: "#f5f5f5" }}
-            >
-              <Typography variant="h5" gutterBottom>
-                Shipment Details (Shiprocket)
-              </Typography>
-              <Typography variant="body1">
-                <strong>Shiprocket ID:</strong>{" "}
-                {order.shiprocket?.shiprocket_order_id || "N/A"}
-              </Typography>
-              <Typography variant="body1">
-                <strong>AWB / Tracking:</strong>{" "}
-                {order.shiprocket?.awb_code || "N/A"}
-              </Typography>
-              <Typography variant="body1">
-                <strong>Courier:</strong>{" "}
-                {order.shiprocket?.courier_name || "N/A"}
-              </Typography>
-              <Typography variant="body1" sx={{ mt: 1 }}>
-                <Button
-                  variant="outlined"
+            {/* Shipment Details */}
+            <Paper elevation={1} sx={{ p: 3, mb: 3, bgcolor: "#f5f5f5" }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <LocalShippingIcon color="primary" />
+                  <Typography variant="h6" fontWeight={600}>
+                    Shipment Details
+                  </Typography>
+                </Box>
+                <Chip
+                  label={shipmentStatus.label}
+                  color={shipmentStatus.color}
                   size="small"
-                  href={order.shiprocket?.tracking_url}
-                  target="_blank"
-                  disabled={!order.shiprocket?.tracking_url}
-                  sx={{ mt: 1 }}
-                >
-                  View Live Tracking
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  href={order.shiprocket?.label_url}
-                  target="_blank"
-                  disabled={!order.shiprocket?.label_url}
-                  sx={{ mt: 1, ml: 1 }}
-                >
-                  Print Label
-                </Button>
-              </Typography>
+                />
+              </Box>
+
+              {order.shiprocket?.shipmentId ? (
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                  <Typography variant="body2">
+                    <strong>Shiprocket Order ID:</strong> {order.shiprocket.orderId || "N/A"}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Shipment ID:</strong> {order.shiprocket.shipmentId}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>AWB / Tracking:</strong> {order.shiprocket.awb || "Pending"}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Courier:</strong> {order.shiprocket.courierName || "Pending"}
+                  </Typography>
+                  {order.shiprocket.shipmentStatus && (
+                    <Typography variant="body2">
+                      <strong>Shipment Status:</strong> {order.shiprocket.shipmentStatus}
+                    </Typography>
+                  )}
+
+                  <Box sx={{ display: "flex", gap: 1, mt: 2, flexWrap: "wrap" }}>
+                    {order.shiprocket.trackingUrl && (
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        href={order.shiprocket.trackingUrl}
+                        target="_blank"
+                      >
+                        Track Shipment
+                      </Button>
+                    )}
+                    {order.shiprocket.labelUrl && (
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        href={order.shiprocket.labelUrl}
+                        target="_blank"
+                      >
+                        Print Label
+                      </Button>
+                    )}
+                    {!order.shiprocket.awb && (
+                      <Button
+                        variant="contained"
+                        size="small"
+                        color="warning"
+                        startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <RefreshIcon />}
+                        onClick={handleRetryAwb}
+                        disabled={loading}
+                      >
+                        {loading ? "Assigning..." : "Retry AWB"}
+                      </Button>
+                    )}
+                  </Box>
+                </Box>
+              ) : (
+                <Box>
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    Shipment has not been created yet.
+                  </Alert>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <LocalShippingIcon />}
+                    onClick={handleInitiateShipment}
+                    disabled={!canCreateShipment() || loading}
+                    fullWidth
+                  >
+                    {loading ? "Creating Shipment..." : "Create Shiprocket Shipment"}
+                  </Button>
+                  {!canCreateShipment() && order.status === "pending payment" && order.paymentMethod === "onlinePayment" && (
+                    <Typography variant="caption" color="error" sx={{ mt: 1, display: "block" }}>
+                      Cannot create shipment - payment pending
+                    </Typography>
+                  )}
+                </Box>
+              )}
             </Paper>
 
             {/* Order Summary */}
-            <Box>
-              <Typography variant="h5" gutterBottom>
+            <Paper elevation={1} sx={{ p: 3 }}>
+              <Typography variant="h6" fontWeight={600} gutterBottom>
                 Order Summary
               </Typography>
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                <strong>Order Note:</strong> {order.note || "None"}
-              </Typography>
-              <Box display="flex" justifyContent="space-between" mt={1}>
-                <Typography variant="body1">Subtotal:</Typography>
-                <Typography variant="body1">
-                  ₹ {order.subTotal?.toFixed(2) || "N/A"}
+              {order.note && (
+                <Typography variant="body2" sx={{ mb: 2, fontStyle: "italic", color: "text.secondary" }}>
+                  <strong>Note:</strong> {order.note}
+                </Typography>
+              )}
+              <Box display="flex" justifyContent="space-between" mb={0.5}>
+                <Typography variant="body2">Subtotal:</Typography>
+                <Typography variant="body2">
+                  ₹ {order.subtotal?.toFixed(2) || "0.00"}
                 </Typography>
               </Box>
-              <Box display="flex" justifyContent="space-between">
-                <Typography variant="body1">Shipping:</Typography>
-                <Typography variant="body1">
-                  ₹ {order.shippingFee?.toFixed(2) || "0.00"}
+              <Box display="flex" justifyContent="space-between" mb={0.5}>
+                <Typography variant="body2">Delivery Charge:</Typography>
+                <Typography variant="body2">
+                  ₹ {order.deliveryCharge?.toFixed(2) || "0.00"}
                 </Typography>
               </Box>
               <Divider sx={{ my: 1 }} />
               <Box display="flex" justifyContent="space-between">
-                <Typography variant="h6">Total Payable:</Typography>
-                <Typography variant="h6" color="primary.main">
-                  ₹ {order.totalAmount?.toFixed(2) || "N/A"}
+                <Typography variant="subtitle1" fontWeight={600}>Total:</Typography>
+                <Typography variant="subtitle1" fontWeight={600} color="primary.main">
+                  ₹ {order.totalAmount?.toFixed(2) || "0.00"}
                 </Typography>
               </Box>
-            </Box>
+            </Paper>
           </Grid>
         </Grid>
 
