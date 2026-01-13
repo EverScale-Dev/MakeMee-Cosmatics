@@ -2,6 +2,39 @@ const Order = require("../../models/Order");
 const createInvoice = require("../../utils/createInvoice");
 const sendEmail = require("../../utils/sendMail");
 
+// GET /api/orders/:orderId/download-invoice
+exports.downloadInvoice = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await Order.findOne({ orderId: Number(orderId) })
+      .populate("customer")
+      .populate("products.product");
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // Verify the order belongs to the logged-in user
+    if (order.user && order.user.toString() !== req.User._id.toString()) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Generate invoice PDF
+    const buffer = await createInvoice(order);
+
+    // Set headers for PDF download
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename=Invoice_${order.orderId}.pdf`);
+    res.setHeader("Content-Length", buffer.length);
+
+    return res.send(buffer);
+  } catch (error) {
+    console.error("Download invoice error:", error);
+    return res.status(500).json({ success: false, message: "Failed to generate invoice" });
+  }
+};
+
 // POST /api/orders/generate-invoice
 exports.generateInvoice = async (req, res) => {
   try {

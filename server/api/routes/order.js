@@ -8,7 +8,7 @@ const {
   getMyOrders
 } = require('../controllers/orderController');
 
-const { generateInvoice } = require('../controllers/invoiceController');
+const { generateInvoice, downloadInvoice } = require('../controllers/invoiceController');
 
 const protect = require('../../middlewares/protect');
 const router = express.Router();
@@ -17,6 +17,7 @@ const router = express.Router();
 router.post('/', protect, createOrder);                    // Create order (auth required)
 router.get('/my', protect, getMyOrders);                   // Get logged-in user's orders
 router.post('/generate-invoice', protect, generateInvoice); // Generate & send invoice
+router.get('/:orderId/download-invoice', protect, downloadInvoice); // Download invoice PDF
 
 // Admin/general routes
 router.get('/', protect, getAllOrders);        // Get all orders

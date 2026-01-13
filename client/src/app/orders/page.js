@@ -11,10 +11,12 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Button,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import DownloadIcon from "@mui/icons-material/Download";
 import api from "@/utils/axiosClient";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
@@ -35,6 +37,32 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [downloadingInvoice, setDownloadingInvoice] = useState(null);
+
+  const handleDownloadInvoice = async (orderId) => {
+    setDownloadingInvoice(orderId);
+    try {
+      const response = await api.get(`/api/orders/${orderId}/download-invoice`, {
+        responseType: "blob",
+      });
+
+      // Create download link
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Invoice_${orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to download invoice:", err);
+      alert("Failed to download invoice. Please try again.");
+    } finally {
+      setDownloadingInvoice(null);
+    }
+  };
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -277,6 +305,36 @@ export default function OrdersPage() {
                       </Typography>
                     </Box>
                   )}
+
+                  {/* Download Invoice Button */}
+                  <Box sx={{ mt: 3, pt: 2, borderTop: "1px solid #eee" }}>
+                    <Button
+                      variant="outlined"
+                      startIcon={
+                        downloadingInvoice === order.orderId ? (
+                          <CircularProgress size={18} color="inherit" />
+                        ) : (
+                          <DownloadIcon />
+                        )
+                      }
+                      onClick={() => handleDownloadInvoice(order.orderId)}
+                      disabled={downloadingInvoice === order.orderId}
+                      sx={{
+                        borderColor: "#731162",
+                        color: "#731162",
+                        textTransform: "none",
+                        fontWeight: 600,
+                        "&:hover": {
+                          borderColor: "#5a0d4d",
+                          bgcolor: "#f8f4f7",
+                        },
+                      }}
+                    >
+                      {downloadingInvoice === order.orderId
+                        ? "Downloading..."
+                        : "Download Invoice"}
+                    </Button>
+                  </Box>
                 </AccordionDetails>
               </Accordion>
             ))}
