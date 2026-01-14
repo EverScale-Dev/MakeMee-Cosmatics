@@ -16,6 +16,8 @@ import Profile from "./pages/Profile";
 import Wishlist from "./pages/Whishlist";
 import TrackOrder from "./pages/OrderTrackingPage";
 import Orders from "./pages/AllOrders";
+import About from "./pages/About";
+import SignUp from "./pages/SignUp";
 
 
 function AppLayout() {
@@ -23,7 +25,7 @@ function AppLayout() {
 
   const hideNavbarRoutes = [
     "/account",
-    "/orders", // covers /orders/:id
+   // covers /orders/:id
   ];
 
   const shouldHideNavbar = hideNavbarRoutes.some(route =>
@@ -45,12 +47,14 @@ function AppLayout() {
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/about" element={<About />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/orders/:id" element={<TrackOrder />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/account" element={<Profile />} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/signup" element={<SignUp />} />
         </Routes>
       </main>
 

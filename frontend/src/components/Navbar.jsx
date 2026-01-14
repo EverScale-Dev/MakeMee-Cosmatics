@@ -122,7 +122,7 @@ const Navbar = ({
             <Link
               key={link.path}
               to={link.path}
-              className="text-sm font-medium tracking-wide text-gray-700 hover:opacity-70 transition-opacity"
+              className="text-lg font-medium tracking-wide text-gray-700 hover:text-[#F0A400] transition-opacity"
             >
               {link.name}
             </Link>
@@ -161,7 +161,7 @@ const Navbar = ({
               {/* SEARCH ICON */}
               <button
                 onClick={() => setIsSearchOpen((prev) => !prev)}
-                className="transition-colors text-gray-700"
+                className="transition-colors text-gray-700 hover:text-[#F0A400]"
               >
                 <Search size={20} />
               </button>
@@ -172,7 +172,7 @@ const Navbar = ({
               <>
                 <Link
                   to="/wishlist"
-                  className={`relative transition-colors text-gray-700`}
+                  className={`relative transition-colors text-gray-700 hover:text-[#F0A400]`}
                 >
                   <Heart size={20} />
                   {wishlistCount > 0 && (
@@ -184,7 +184,7 @@ const Navbar = ({
 
                 <Link
                   to="/cart"
-                  className={`relative transition-colors text-gray-700`}
+                  className={`relative transition-colors text-gray-700 hover:text-[#F0A400]`}
                 >
                   <ShoppingCart size={20} />
                   {cartCount > 0 && (
@@ -196,7 +196,7 @@ const Navbar = ({
 
                 <Link
                   to="/account"
-                  className={`hidden md:block transition-colors text-gray-700`}
+                  className={`hidden md:block transition-colors text-gray-700 hover:text-[#F0A400]`}
                 >
                   <User size={20} />
                 </Link>

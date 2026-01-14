@@ -102,7 +102,7 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
             <Link to="/shop">
               <button className="px-8 py-4 text-lg font-semibold rounded-full
                 bg-[#FC6CB4] text-white
-                hover:bg-[#e85aa0] transition">
+                hover:bg-[#F0A400] transition">
                 Shop Now
               </button>
             </Link>
@@ -134,7 +134,7 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
       </section>
 
       {/* ================= FEATURED PRODUCTS ================= */}
-      <AnimatedSection className="py-20 bg-white">
+      <AnimatedSection className="py-20 bg-base">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-[#731162] mb-4">
@@ -172,7 +172,7 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
       <StorySection />
 
       {/* ================= TESTIMONIALS ================= */}
-      <AnimatedSection className="py-20 bg-[#FC6CB4]/5">
+      <AnimatedSection className="py-20 bg-[#FC6CB4]/5 ">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold text-[#731162] mb-4">
             What Our Customers Say

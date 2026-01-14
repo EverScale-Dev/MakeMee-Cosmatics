@@ -55,7 +55,7 @@ const Shop = () => {
   }, [selectedCategory, sortBy, searchQuery]);
 
   return (
-    <main className="pt-28 pb-20 bg-[#FFFFFF]">
+    <main className="pt-28 pb-20 bg-base">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-16">
 
         {/* ================= HEADER ================= */}

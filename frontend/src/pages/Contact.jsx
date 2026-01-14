@@ -18,12 +18,12 @@ const Contact = () => {
   }, []);
 
   return (
-    <section className="min-h-screen bg-[#FFF1F7] px-8 pt-24 pb-16">
+    <section className="min-h-screen bg-base px-8 pt-24 pb-16">
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
         
         {/* LEFT CONTENT — BOTTOM ALIGNED */}
         <div className="animate flex flex-col justify-end">
-          <h1 className="text-4xl font-bold text-black mb-4">
+          <h1 className="text-4xl font-bold text-black mb-4 text-main">
             Contact Us
           </h1>
 

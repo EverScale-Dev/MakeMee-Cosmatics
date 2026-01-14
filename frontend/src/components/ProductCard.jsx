@@ -21,7 +21,7 @@ const ProductCard = ({ product }) => {
     const handleMouseEnter = () => {
       gsap.to(card, {
         y: -10,
-        boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+        boxShadow: "0 20px 40px rgba(115 17 98)",
         duration: 0.4,
         ease: "power2.out",
       });

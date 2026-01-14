@@ -56,20 +56,20 @@ const orderHistoryItems = [
 
 const OrderTrackingPage = () => {
   return (
-    <div className="min-h-screen bg-background p-6 mt-10">
-      <div className="mx-auto max-w-5xl">
-        <h2 className="mb-8 text-2xl font-bold">Order Tracking</h2>
+    <div className="min-h-screen bg-background p-6 pt-25 bg-base"> 
+      <div className="mx-auto max-w-4xl ">
+        <h2 className="mb-8 text-2xl font-bold text-main">Order Tracking</h2>
 
         {/* Main Layout */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 ">
           {/* Timeline Section */}
-          <div className="md:col-span-2 rounded-lg border bg-card p-6 shadow-sm">
+          <div className="md:col-span-2 rounded-lg  bg-card p-6 shadow-lg bg-white">
             <TrackingTimeline items={orderHistoryItems} />
           </div>
 
           {/* Order Summary Section */}
-          <div className="h-fit rounded-lg border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold">Order Summary</h3>
+          <div className="h-fit rounded-lg  bg-card p-6 shadow-sm bg-white">
+            <h3 className="mb-4 text-lg font-semibold text-main">Order Summary</h3>
 
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
