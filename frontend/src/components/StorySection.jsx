@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import AnimatedSection from "./AnimatedSection";
 
 import heroImg from "../assets/img1.jpg";
 import serumImg from "../assets/img2.jpg";
@@ -10,16 +11,16 @@ gsap.registerPlugin(ScrollTrigger);
 
 const StorySection = () => {
   const sectionRef = useRef(null);
-  const imagesRef = useRef(null);
-  
 
   useEffect(() => {
+    // ❗ Desktop only animation
+    if (window.innerWidth < 1024) return;
+
     const ctx = gsap.context(() => {
-      /* FLOATING PARALLAX TIMELINE */
       gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: "bottom bottom",
+          start: "top top",
           end: "+=120%",
           scrub: 1.2,
           pin: true,
@@ -40,37 +41,21 @@ const StorySection = () => {
             stagger: 0.15,
             ease: "none",
           }
-        )
-        .fromTo(
-          ".overlay-content",
-          {
-            opacity: 0,
-            y: 40,
-          },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.6,
-          },
-          "-=0.4"
         );
     }, sectionRef);
 
     return () => ctx.revert();
   }, []);
 
-   
-
-  
-
   return (
     <section
       ref={sectionRef}
-      className="relative h-screen px-6 lg:px-24 py-32 bg-white overflow-hidden"
+      className="relative bg-white overflow-hidden px-6 lg:px-24 py-24 lg:py-32
+                 min-h-auto lg:h-[800px]"
     >
-      
-      <div className="grid lg:grid-cols-2 gap-16 items-start relative z-10 -top-40">
-        <div className="max-w-xl pt-24">
+      {/* ================= TEXT ================= */}
+      <AnimatedSection className="grid gap-12 lg:gap-16 items-center justify-center relative z-10 lg:-top-10">
+        <div className="max-w-xl mx-auto lg:mx-0 text-center lg:text-center">
           <p className="uppercase tracking-widest text-[#FC6CB4] text-sm mb-4">
             Our Story
           </p>
@@ -79,39 +64,63 @@ const StorySection = () => {
             Beauty in Its Purest Form
           </h1>
 
-          <p className="text-neutral-600 mb-6 leading-relaxed">
+          <p className="text-neutral-600 mb-6 leading-relaxed ">
             At Lumière, we believe beauty is intentional.
             Crafted with nature, refined by science.
           </p>
 
-          <p className="text-neutral-600 leading-relaxed">
-            Designed to elevate your everyday ritual.
-          </p>
         </div>
+      </AnimatedSection>
+
+      {/* ================= IMAGES ================= */}
+      {/* MOBILE: simple stacked */}
+      <div className="relative mt-16 space-y-6 lg:hidden">
+        <img
+          src={heroImg}
+          alt="Hero"
+          className="w-full rounded-3xl shadow-xl"
+        />
+        <img
+          src={serumImg}
+          alt="Serum"
+          className="w-full rounded-3xl shadow-xl"
+        />
+        <img
+          src={lifestyleImg}
+          alt="Lifestyle"
+          className="w-full rounded-3xl shadow-xl"
+        />
       </div>
 
-      {/* FLOATING IMAGE OVERLAY */}
-      <div
-        ref={imagesRef}
-        className="absolute inset-0 flex items-center justify-center pointer-events-none "
-      >
+      {/* DESKTOP: floating parallax */}
+      <div className="hidden lg:flex absolute inset-0 items-center justify-center pointer-events-none">
         <div className="relative w-full max-w-4xl mx-auto">
           {/* MAIN IMAGE */}
-          <div className="parallax-img absolute top-0 left-1/2 -translate-x-1/2 w-[85%] rounded-3xl overflow-hidden shadow-2xl">
-            <img src={heroImg} className="w-full h-full object-cover" />
+          <div className="parallax-img absolute top-10 left-1/2 -translate-x-1/2 w-[85%] rounded-3xl overflow-hidden shadow-2xl">
+            <img
+              src={heroImg}
+              className="w-full h-full object-cover"
+              alt="Hero"
+            />
           </div>
 
-          {/* IMAGE LEFT */}
-          <div className="parallax-img absolute -left-10 top-32 w-[40%] rounded-3xl overflow-hidden shadow-xl">
-            <img src={serumImg} className="w-full h-full object-cover" />
+          {/* LEFT IMAGE */}
+          <div className="parallax-img absolute -left-10 top-42 w-[40%] rounded-3xl overflow-hidden shadow-xl">
+            <img
+              src={serumImg}
+              className="w-full h-full object-cover"
+              alt="Serum"
+            />
           </div>
 
-          {/* IMAGE RIGHT */}
-          <div className="parallax-img absolute -right-10 top-52 w-[40%] rounded-3xl overflow-hidden shadow-xl">
-            <img src={lifestyleImg} className="w-full h-full object-cover" />
+          {/* RIGHT IMAGE */}
+          <div className="parallax-img absolute -right-10 top-62 w-[40%] rounded-3xl overflow-hidden shadow-xl">
+            <img
+              src={lifestyleImg}
+              className="w-full h-full object-cover"
+              alt="Lifestyle"
+            />
           </div>
-
-
         </div>
       </div>
     </section>
