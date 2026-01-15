@@ -33,7 +33,7 @@ export default function Profile() {
   const [editOpen, setEditOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-base">
       <div className="max-w-6xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-semibold mb-8">My Profile</h1>
 
@@ -49,7 +49,7 @@ export default function Profile() {
           <div className="lg:col-span-2 space-y-6">
             <AddressSection />
             <OrdersSection />
-            <PaymentSection />
+
             <SupportSection />
           </div>
         </div>
@@ -95,7 +95,7 @@ function ProfileCard({ user, onEdit }) {
         <InfoRow icon={Phone} label="Mobile" value={user.phone} />
       </div>
 
-      <Button className="mt-6" icon={Pencil} onClick={onEdit}>
+      <Button className="mt-6 cursor-pointer" icon={Pencil} onClick={onEdit}>
         Edit Profile
       </Button>
     </Card>
@@ -243,21 +243,36 @@ function Toggle({ label }) {
   );
 }
 
-function Button({ children, icon: Icon, variant, ...props }) {
+function Button({
+  children,
+  icon: Icon,
+  variant = "ghost",
+  className = "",
+  ...props
+}) {
+  const baseStyles =
+    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed";
+
+  const variants = {
+    primary:
+      "bg-[#731162] text-white hover:bg-[#5e0d4f]",
+    ghost:
+      "border border-[#731162] text-[#731162] hover:bg-[#731162] hover:text-white",
+    danger:
+      "bg-red-600 text-white hover:bg-red-700"
+  };
+
   return (
     <button
       {...props}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm
-        ${variant === "ghost"
-          ? "border"
-          : "bg-black text-white"}
-      `}
+      className={`${baseStyles} ${variants[variant]} ${className}`}
     >
       {Icon && <Icon size={16} />}
       {children}
     </button>
   );
 }
+
 
 function SmallButton({ children, icon: Icon, variant }) {
   return (

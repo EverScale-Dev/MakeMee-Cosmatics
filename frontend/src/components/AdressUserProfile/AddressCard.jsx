@@ -7,7 +7,7 @@ export default function AddressCard({
   onSetDefault,
 }) {
   return (
-    <div className="border rounded-xl p-4 text-sm space-y-2">
+    <div className="shadow-lg rounded-xl p-4 text-sm space-y-2">
       <div className="flex justify-between items-center">
         <span className="font-medium">{data.name}</span>
         {data.isDefault && (

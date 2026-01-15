@@ -45,7 +45,7 @@ export default function OrdersSection() {
       </div>
 
       {/* SCROLLABLE LIST */}
-      <div className="max-h-80 overflow-y-auto space-y-3 pr-1">
+      <div className="max-h-80 pb-4 overflow-y-auto space-y-3 pr-1">
         {mockOrders.map((order) => (
           <OrderCard
             key={order.id}
@@ -64,3 +64,4 @@ export default function OrdersSection() {
     </section>
   );
 }
+

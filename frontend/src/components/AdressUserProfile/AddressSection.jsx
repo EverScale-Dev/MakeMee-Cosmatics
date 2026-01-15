@@ -66,7 +66,7 @@ export default function AddressSection() {
       </div>
 
       {/* SCROLLABLE ADDRESS LIST */}
-      <div className="max-h-64 overflow-y-auto space-y-3 pr-1">
+      <div className="max-h-64 pb-4 overflow-y-auto space-y-3 pr-1">
         {addresses.map((addr) => (
           <AddressCard
             key={addr.id}

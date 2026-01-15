@@ -6,7 +6,7 @@ export default function OrderCard({ data, onView }) {
   const navigate = useNavigate();
 
   return (
-    <div className="border rounded-xl p-4 space-y-3">
+    <div className="shadow-lg  rounded-xl p-4 space-y-4">
       <div className="flex justify-between items-center">
         <span className="font-medium">Order #{data.id}</span>
         <OrderStatusBadge status={data.status} />
@@ -40,17 +40,34 @@ export default function OrderCard({ data, onView }) {
   );
 }
 
-function ActionButton({ icon: Icon, label, variant, ...props }) {
+
+
+function ActionButton({
+  children,
+  icon: Icon,
+  variant = "ghost",
+  className = "",
+  label,
+  ...props
+}) {
+  const baseStyles =
+    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed";
+
+  const variants = {
+    primary:
+      "bg-[#731162] text-white hover:bg-[#5e0d4f]",
+    ghost:
+      "border border-[#731162] text-[#731162] hover:bg-[#731162] hover:text-white",
+    danger:
+      "bg-red-600 text-white hover:bg-red-700"
+  };
+
   return (
     <button
       {...props}
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs
-        ${variant === "ghost"
-          ? "border"
-          : "bg-gray-900 text-white"}
-      `}
+      className={`${baseStyles} ${variants[variant]} ${className}`}
     >
-      {Icon && <Icon size={14} />}
+      {Icon && <Icon size={16} />}
       {label}
     </button>
   );
