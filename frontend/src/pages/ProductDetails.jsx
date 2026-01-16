@@ -60,8 +60,7 @@ const ProductDetails = () => {
   const relatedProducts = products
     .filter(
       (p) =>
-        p.id !== product.id &&
-        p.tags.some((tag) => product.tags.includes(tag))
+        p.id !== product.id && p.tags.some((tag) => product.tags.includes(tag))
     )
     .slice(0, 4);
 
@@ -77,15 +76,13 @@ const ProductDetails = () => {
     {
       id: "usage",
       label: "How to Use",
-      content:
-        product.usage || "Follow instructions on the product packaging.",
+      content: product.usage || "Follow instructions on the product packaging.",
     },
   ];
 
   return (
     <main className="pt-28 pb-20 min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
         {/* Breadcrumb */}
         <Link
           to="/shop"
@@ -98,7 +95,6 @@ const ProductDetails = () => {
         {/* Product Section */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xl">
           <div className="grid lg:grid-cols-2 gap-12 xl:gap-20">
-
             {/* Images */}
             <AnimatedSection>
               <div className="aspect-square rounded-3xl overflow-hidden bg-black/5">
@@ -120,7 +116,11 @@ const ProductDetails = () => {
                         : "border-transparent opacity-60 hover:opacity-100"
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img
+                      src={img}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
                   </button>
                 ))}
               </div>
@@ -128,7 +128,6 @@ const ProductDetails = () => {
 
             {/* Details */}
             <AnimatedSection className="space-y-6">
-
               {/* Tags */}
               <div className="flex gap-2 flex-wrap">
                 {product.tags.map((tag) => (
@@ -185,16 +184,12 @@ const ProductDetails = () => {
               </div>
 
               {/* Short Description */}
-              <p className="text-black/70">
-                {product.shortDescription}
-              </p>
+              <p className="text-black/70">{product.shortDescription}</p>
 
               {/* Stock */}
               <div className="flex items-center gap-2">
                 <Check className="w-5 h-5 text-[#731162]" />
-                <span className="text-[#731162] font-medium">
-                  In Stock
-                </span>
+                <span className="text-[#731162] font-medium">In Stock</span>
               </div>
 
               {/* Quantity */}
@@ -218,26 +213,29 @@ const ProductDetails = () => {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={handleAddToCart}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-[#FC6CB4] text-black rounded-full hover:bg-[#F0A400] transition"
-                >
-                  <ShoppingBag className="w-5 h-5" />
-                  Add to Cart
-                </button>
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                <div className="flex flex-col sm:flex-row gap-3 w-full">
+                  <button
+                    onClick={handleAddToCart}
+                    className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-3 
+                  bg-[#FC6CB4] text-black rounded-full 
+                  hover:bg-[#F0A400] transition"
+                      >
+                    <ShoppingBag className="w-5 h-5" />
+                    Add to Cart
+                  </button>
 
-                <button
-                  onClick={handleBuyNow}
-                  className="flex-1 px-6 py-3 border border-black text-black rounded-full hover:bg-black/5 transition"
-                >
-                  Buy Now
-                </button>
+                  <button
+                    onClick={handleBuyNow}
+                    className="w-full sm:flex-1 px-6 py-3 
+                    border border-black text-black rounded-full 
+                    hover:bg-black/5 transition"
+                  >
+                    Buy Now
+                  </button>
+                </div>
 
-                <button
-                  onClick={() => toggleWishlist(product)}
-                  className="p-3"
-                >
+                <button onClick={() => toggleWishlist(product)} className="p-3">
                   <Heart
                     className={`w-6 h-6 ${
                       isInWishlist(product.id)
@@ -256,9 +254,7 @@ const ProductDetails = () => {
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={`relative pb-2 ${
-                        activeTab === tab.id
-                          ? "text-black"
-                          : "text-black/50"
+                        activeTab === tab.id ? "text-black" : "text-black/50"
                       }`}
                     >
                       {tab.label}

@@ -1,14 +1,17 @@
-import { useRef, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useRef, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-import ProductCard from '../components/ProductCard';
-import AnimatedSection from '../components/AnimatedSection';
-import StorySection from '../components/StorySection';
-import { getFeaturedProducts } from '../data/products';
-import { useHeroAnimation } from '../animations/useHeroAnimation';
+import ProductCard from "../components/ProductCard";
+import AnimatedSection from "../components/AnimatedSection";
+import StorySection from "../components/StorySection";
+import { getFeaturedProducts } from "../data/products";
+import { useHeroAnimation } from "../animations/useHeroAnimation";
+
+import pcbanner from "../assets/banner-desktop.gif";
+import pcbannerMobile from "../assets/banner-mobile.gif";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -22,9 +25,9 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
   const featuredProducts = getFeaturedProducts();
 
   const heroImages = [
-    'https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    'https://images.pexels.com/photos/3685523/pexels-photo-3685523.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    'https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    "https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/3685523/pexels-photo-3685523.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg?auto=compress&cs=tinysrgb&w=1200",
   ];
 
   useHeroAnimation({ titleRef, subtitleRef, ctaRef, imageRef });
@@ -50,25 +53,24 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
 
   const testimonials = [
     {
-      name: 'Sarah Johnson',
-      text: 'These products have completely transformed my skincare routine.',
+      name: "Sarah Johnson",
+      text: "These products have completely transformed my skincare routine.",
       rating: 5,
     },
     {
-      name: 'Emily Chen',
-      text: 'Cruelty-free, natural, and incredibly effective.',
+      name: "Emily Chen",
+      text: "Cruelty-free, natural, and incredibly effective.",
       rating: 5,
     },
     {
-      name: 'Maria Garcia',
-      text: 'Premium quality and visible results.',
+      name: "Maria Garcia",
+      text: "Premium quality and visible results.",
       rating: 5,
     },
   ];
 
   return (
     <div className="bg-white text-black">
-
       {/* ================= HERO ================= */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#731162] to-[#FC6CB4]">
         <div
@@ -76,8 +78,8 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
           className="absolute inset-0 opacity-25"
           style={{
             backgroundImage: `url(${heroImages[currentSlide]})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            backgroundSize: "cover",
+            backgroundPosition: "center",
           }}
         />
 
@@ -98,19 +100,26 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
             Premium skincare crafted with nature's finest ingredients.
           </p>
 
-          <div ref={ctaRef} className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div
+            ref={ctaRef}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
             <Link to="/shop">
-              <button className="px-8 py-4 text-lg font-semibold rounded-full
+              <button
+                className="px-8 py-4 text-lg font-semibold rounded-full
                 bg-[#FC6CB4] text-white
-                hover:bg-[#F0A400] transition">
+                hover:bg-[#F0A400] transition"
+              >
                 Shop Now
               </button>
             </Link>
 
             <Link to="/about">
-              <button className="px-8 py-4 text-lg font-semibold rounded-full
+              <button
+                className="px-8 py-4 text-lg font-semibold rounded-full
                 border-2 border-white text-white
-                hover:bg-white hover:text-[#731162] transition">
+                hover:bg-white hover:text-[#731162] transition"
+              >
                 Our Story
               </button>
             </Link>
@@ -124,9 +133,7 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
               key={index}
               onClick={() => setCurrentSlide(index)}
               className={`h-2 rounded-full transition-all ${
-                currentSlide === index
-                  ? 'bg-[#F0A400] w-8'
-                  : 'bg-white/50 w-2'
+                currentSlide === index ? "bg-[#F0A400] w-8" : "bg-white/50 w-2"
               }`}
             />
           ))}
@@ -158,9 +165,11 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
 
           <div className="text-center mt-12">
             <Link to="/shop">
-              <button className="inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold
+              <button
+                className="inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold
                 rounded-full border-2 border-[#731162] text-[#731162]
-                hover:bg-[#731162] hover:text-white transition">
+                hover:bg-[#731162] hover:text-white transition"
+              >
                 View All Products
                 <ArrowRight size={20} />
               </button>
@@ -168,6 +177,22 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
           </div>
         </div>
       </AnimatedSection>
+
+      <section className="w-full">
+        {/* Desktop / Laptop Banner */}
+        <img
+          src={pcbanner}
+          alt="Promotional Banner"
+          className="hidden md:block w-full object-cover"
+        />
+
+        {/* Mobile Banner */}
+        <img
+          src={pcbannerMobile}
+          alt="Promotional Banner"
+          className="block md:hidden w-full object-cover"
+        />
+      </section>
 
       <StorySection />
 
@@ -189,7 +214,9 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
               >
                 <div className="flex justify-center mb-4">
                   {[...Array(t.rating)].map((_, j) => (
-                    <span key={j} className="text-[#F0A400] text-xl">★</span>
+                    <span key={j} className="text-[#F0A400] text-xl">
+                      ★
+                    </span>
                   ))}
                 </div>
                 <p className="text-black/70 mb-4">"{t.text}"</p>

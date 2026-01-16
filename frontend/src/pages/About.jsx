@@ -206,7 +206,7 @@ useEffect(() => {
       {showStory && (
         <section
           ref={storyRef}
-          className="fixed inset-0 z-50 bg-[#FDEBF3] overflow-y-auto"
+          className="fixed inset-0 z-50 bg-[#FDEBF3] overflow-y-auto pt-20 sm:pt-0 no-scrollbar"
         >
           {/* BACK BUTTON */}
           <button

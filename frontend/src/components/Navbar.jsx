@@ -229,9 +229,7 @@ const Navbar = ({
             {/* MOBILE MENU BUTTON */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={`md:hidden transition-colors ${
-                isScrolled ? "text-gray-700" : "text-white"
-              }`}
+              className={`md:hidden transition-colors text-gray-700 hover:text-[#F0A400]`}
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -240,7 +238,7 @@ const Navbar = ({
 
         {/* MOBILE MENU */}
         {isMobileMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-gray-200">
+          <div className="bg-white md:hidden mt-4 pb-4 border-t border-gray-200">
             <div className="flex flex-col space-y-4 mt-4">
               {navLinks.map((link) => (
                 <Link
