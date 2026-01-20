@@ -9,51 +9,71 @@ import { useWishlist } from "@/context/WishlistContext";
 const ProductCard = ({ product }) => {
   const cardRef = useRef(null);
   const imageRef = useRef(null);
+  
+
 
   const { addToCart, isInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   useEffect(() => {
-    const card = cardRef.current;
-    const image = imageRef.current;
-    if (!card || !image) return;
+  const card = cardRef.current;
+  const image = imageRef.current;
+  if (!card || !image) return;
 
-    const handleMouseEnter = () => {
-      gsap.to(card, {
-        y: -10,
-        boxShadow: "0 10px 30px rgba(115 17 98, 0.6)",
-        duration: 0.4,
-        ease: "power2.out",
-      });
+  const hasHoverImage = product.images.length > 1;
+
+  const handleMouseEnter = () => {
+    gsap.to(card, {
+      y: -10,
+      boxShadow: "0 10px 30px rgba(115 17 98, 0.6)",
+      duration: 0.4,
+      ease: "power2.out",
+    });
+
+    gsap.to(image, { scale: 1.05, duration: 0.4 });
+
+    if (hasHoverImage) {
       gsap.to(image, {
-        scale: 1.05,
-        duration: 0.4,
-        ease: "power2.out",
+        opacity: 0,
+        duration: 0.2,
+        onComplete: () => {
+          image.src = product.images[1];
+          gsap.to(image, { opacity: 1, duration: 0.2 });
+        },
       });
-    };
+    }
+  };
 
-    const handleMouseLeave = () => {
-      gsap.to(card, {
-        y: 0,
-        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-        duration: 0.4,
-        ease: "power2.out",
-      });
+  const handleMouseLeave = () => {
+    gsap.to(card, {
+      y: 0,
+      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+      duration: 0.4,
+    });
+
+    gsap.to(image, { scale: 1, duration: 0.4 });
+
+    if (hasHoverImage) {
       gsap.to(image, {
-        scale: 1,
-        duration: 0.4,
-        ease: "power2.out",
+        opacity: 0,
+        duration: 0.2,
+        onComplete: () => {
+          image.src = product.images[0];
+          gsap.to(image, { opacity: 1, duration: 0.2 });
+        },
       });
-    };
+    }
+  };
 
-    card.addEventListener("mouseenter", handleMouseEnter);
-    card.addEventListener("mouseleave", handleMouseLeave);
+  card.addEventListener("mouseenter", handleMouseEnter);
+  card.addEventListener("mouseleave", handleMouseLeave);
 
-    return () => {
-      card.removeEventListener("mouseenter", handleMouseEnter);
-      card.removeEventListener("mouseleave", handleMouseLeave);
-    };
-  }, []);
+  return () => {
+    card.removeEventListener("mouseenter", handleMouseEnter);
+    card.removeEventListener("mouseleave", handleMouseLeave);
+  };
+}, [product.images]);
+
 
   return (
     <div
@@ -64,7 +84,7 @@ const ProductCard = ({ product }) => {
         <Link to={`/product/${product.id}`}>
           <img
             ref={imageRef}
-            src={product.image}
+            src={product.images[0]}
             alt={product.name}
             className="w-full h-full object-cover"
           />

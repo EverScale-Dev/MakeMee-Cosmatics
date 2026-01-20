@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FiEdit, FiTrash2 } from "react-icons/fi";
 import AddProductModal from "../AddProductModal";
 
 export default function Products() {
@@ -8,30 +9,45 @@ export default function Products() {
       name: "Face Serum",
       price: 40,
       stock: 120,
-      category: "Skin Care"
+      category: "Skin Care",
+      badge: "Best Seller"
     },
     {
       id: 2,
       name: "Body Lotion",
       price: 25,
       stock: 80,
-      category: "Body Care"
+      category: "Body Care",
+      badge: "New"
     }
   ]);
 
   const [showModal, setShowModal] = useState(false);
+  const [editProduct, setEditProduct] = useState(null);
 
-  const addProduct = (product) => {
-    setProducts((prev) => [
-      ...prev,
-      { ...product, id: Date.now() }
-    ]);
+  const addOrUpdateProduct = (product) => {
+    if (editProduct) {
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === editProduct.id ? { ...product, id: editProduct.id } : p
+        )
+      );
+    } else {
+      setProducts((prev) => [...prev, { ...product, id: Date.now() }]);
+    }
+
+    setEditProduct(null);
     setShowModal(false);
+  };
+
+  const deleteProduct = (id) => {
+    if (!window.confirm("Delete this product?")) return;
+    setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
   return (
     <>
-      {/* PAGE CONTENT (blur only this) */}
+      {/* PAGE CONTENT */}
       <div className={showModal ? "blur-sm pointer-events-none" : ""}>
         <div className="space-y-6">
           {/* Header */}
@@ -54,15 +70,49 @@ export default function Products() {
                   <th>Category</th>
                   <th>Price</th>
                   <th>Stock</th>
+                  <th>Badge</th>
+                  <th className="text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {products.map((product) => (
-                  <tr key={product.id} className="border-b last:border-none">
+                  <tr
+                    key={product.id}
+                    className="border-b last:border-none hover:bg-gray-50"
+                  >
                     <td className="p-4 font-medium">{product.name}</td>
                     <td className="text-center">{product.category}</td>
                     <td className="text-center">${product.price}</td>
                     <td className="text-center">{product.stock}</td>
+
+                    {/* Badge */}
+                    <td className="text-center">
+                      <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-600">
+                        {product.badge || "—"}
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="text-center">
+                      <div className="flex justify-center gap-3">
+                        <button
+                          onClick={() => {
+                            setEditProduct(product);
+                            setShowModal(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <FiEdit size={16} />
+                        </button>
+
+                        <button
+                          onClick={() => deleteProduct(product.id)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -71,11 +121,16 @@ export default function Products() {
         </div>
       </div>
 
-      {/* MODAL (NOT BLURRED) */}
+      {/* MODAL */}
       {showModal && (
         <AddProductModal
-          onClose={() => setShowModal(false)}
-          onAdd={addProduct}
+          onClose={() => {
+            setShowModal(false);
+            setEditProduct(null);
+          }}
+          onAdd={addOrUpdateProduct}
+          initialData={editProduct}   // 👈 edit support
+          isEdit={Boolean(editProduct)}
         />
       )}
     </>

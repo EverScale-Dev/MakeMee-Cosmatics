@@ -18,6 +18,8 @@ import TrackOrder from "./pages/OrderTrackingPage";
 import Orders from "./pages/AllOrders";
 import About from "./pages/About";
 import SignUp from "./pages/SignUp";
+import Checkout from "./pages/Checkout";
+import OrderSuccess from "./pages/OrderSuccess";
 
 
 function AppLayout() {
@@ -49,11 +51,13 @@ function AppLayout() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/about" element={<About />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/orders/:id" element={<TrackOrder />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/account" element={<Profile />} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="/signup" element={<SignUp />} />
         </Routes>
       </main>

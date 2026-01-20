@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import OrderDetailsModal from "../OrderDetailsModal";
 
 const ordersData = [
   {
@@ -79,6 +80,7 @@ const ITEMS_PER_PAGE = 6;
 export default function Orders() {
   const [showFilter, setShowFilter] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const [filters, setFilters] = useState({
     name: "",
@@ -244,7 +246,6 @@ export default function Orders() {
       )}
 
       {/* Orders Table */}
-      <div className="bg-white rounded-xl shadow overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b text-gray-500">
             <tr>
@@ -254,6 +255,7 @@ export default function Orders() {
               <th className="text-center">Date</th>
               <th className="text-center">Amount</th>
               <th className="text-center">Status</th>
+              <th className="text-center">Actions</th>
             </tr>
           </thead>
 
@@ -264,68 +266,39 @@ export default function Orders() {
                 <td>{order.customer}</td>
                 <td>{order.product}</td>
                 <td className="text-center">{order.date}</td>
-                <td className="text-center">${order.amount}</td>
+                <td className="text-center">₹ {order.amount}</td>
                 <td className="text-center">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle[order.status]}`}
-                  >
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle[order.status]}`}>
                     {order.status}
                   </span>
                 </td>
-              </tr>
-            ))}
-
-            {paginatedOrders.length === 0 && (
-              <tr>
-                <td colSpan="6" className="p-6 text-center text-gray-400">
-                  No orders found
+                <td className="text-center space-x-3">
+                  <button
+                    onClick={() => setSelectedOrder(order)}
+                    className="text-lg"
+                    title="View Order"
+                  >
+                    👁️
+                  </button>
+                  <button
+                    onClick={() => alert("Create shipment")}
+                    className="text-lg"
+                    title="Create Shipment"
+                  >
+                    🚚
+                  </button>
                 </td>
               </tr>
-            )}
+            ))}
           </tbody>
         </table>
 
-        {/* Pagination */}
-        {filteredOrders.length > 0 && (
-          <div className="flex items-center justify-between p-4">
-            <p className="text-sm text-gray-500">
-              Page {safeCurrentPage} of {totalPages}
-            </p>
-
-            <div className="flex gap-2">
-              <button
-                disabled={safeCurrentPage === 1}
-                onClick={() => setCurrentPage(safeCurrentPage - 1)}
-                className="px-3 py-1 text-sm border rounded disabled:opacity-40"
-              >
-                Prev
-              </button>
-
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 text-sm border rounded ${
-                    safeCurrentPage === i + 1
-                      ? "bg-black text-white"
-                      : ""
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-
-              <button
-                disabled={safeCurrentPage === totalPages}
-                onClick={() => setCurrentPage(safeCurrentPage + 1)}
-                className="px-3 py-1 text-sm border rounded disabled:opacity-40"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+        {selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+        />
+      )}
     </div>
   );
 }

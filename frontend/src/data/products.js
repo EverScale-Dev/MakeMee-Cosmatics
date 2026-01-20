@@ -9,7 +9,7 @@ export const products = [
     shortDescription: "Brightening serum with Vitamin C & Hyaluronic Acid",
     category: "Serums",
     images: [
-      "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?auto=format&fit=crop&w=800&q=80",
+      "https://res.cloudinary.com/dudxft40g/image/upload/v1766301176/products/winter-combo-1766301174702.png",
       "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80"
     ],
     rating: 4.8,
@@ -70,7 +70,7 @@ export const products = [
     shortDescription: "Nourishing lip treatment with rose hip oil",
     category: "Lip Care",
     images: [
-      "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?auto=format&fit=crop&w=800&q=80",
+      "https://res.cloudinary.com/dudxft40g/image/upload/v1764063278/products/foaming-face-wash-1764063276702.webp",
       "https://images.unsplash.com/photo-1600180758890-6b94519a8ba6?auto=format&fit=crop&w=800&q=80"
     ],
     rating: 4.6,
@@ -90,7 +90,7 @@ export const products = [
     shortDescription: "Luxurious blend of 9 botanical oils",
     category: "Face Oils",
     images: [
-      "https://images.unsplash.com/photo-1608571424268-5d6f6d4f76d5?auto=format&fit=crop&w=800&q=80",
+      "https://res.cloudinary.com/dudxft40g/image/upload/v1764063136/products/anti-ageing-cream-1764063133811.webp",
       "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=800&q=80"
     ],
     rating: 4.9,
@@ -130,7 +130,7 @@ export const products = [
     shortDescription: "Depuffing eye cream with cooling effect",
     category: "Eye Care",
     images: [
-      "https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&w=800&q=80",
+      "https://res.cloudinary.com/dudxft40g/image/upload/v1764062944/products/vitamin-c-serum-1764062943617.webp",
       "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=800&q=80"
     ],
     rating: 4.5,

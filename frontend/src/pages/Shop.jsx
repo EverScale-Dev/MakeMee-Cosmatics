@@ -1,25 +1,24 @@
-import { useState, useMemo } from 'react';
-import { Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
-import ProductCard from '@/components/ProductCard';
-import AnimatedSection from '@/components/AnimatedSection';
-import { products, categories } from '@/data/products';
-import { usePageTransition } from '@/hooks/useGSAP';
+import { useState, useMemo } from "react";
+import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
+import ProductCard from "@/components/ProductCard";
+import AnimatedSection from "@/components/AnimatedSection";
+import { products, categories } from "@/data/products";
+import { usePageTransition } from "@/hooks/useGSAP";
+import BannerCarousel from "@/components/BannerCarousel";
 
 const Shop = () => {
   usePageTransition();
 
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [sortBy, setSortBy] = useState('featured');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sortBy, setSortBy] = useState("featured");
+  const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
   const filteredProducts = useMemo(() => {
     let filtered = products;
 
-    if (selectedCategory !== 'All') {
-      filtered = filtered.filter(
-        (p) => p.category === selectedCategory
-      );
+    if (selectedCategory !== "All") {
+      filtered = filtered.filter((p) => p.category === selectedCategory);
     }
 
     if (searchQuery) {
@@ -28,24 +27,22 @@ const Shop = () => {
         (p) =>
           p.name.toLowerCase().includes(query) ||
           p.description.toLowerCase().includes(query) ||
-          p.tags.some((tag) =>
-            tag.toLowerCase().includes(query)
-          )
+          p.tags.some((tag) => tag.toLowerCase().includes(query)),
       );
     }
 
     switch (sortBy) {
-      case 'price-low':
+      case "price-low":
         filtered = [...filtered].sort((a, b) => a.price - b.price);
         break;
-      case 'price-high':
+      case "price-high":
         filtered = [...filtered].sort((a, b) => b.price - a.price);
         break;
-      case 'rating':
+      case "rating":
         filtered = [...filtered].sort((a, b) => b.rating - a.rating);
         break;
-      case 'newest':
-        filtered = filtered.filter((p) => p.tags.includes('new'));
+      case "newest":
+        filtered = filtered.filter((p) => p.tags.includes("new"));
         break;
       default:
         break;
@@ -57,22 +54,16 @@ const Shop = () => {
   return (
     <main className="pt-28 pb-20 bg-base">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-16">
-
         {/* ================= HEADER ================= */}
         <AnimatedSection className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-semibold text-[#731162] mb-4">
-            Shop All Products
-          </h1>
-          <p className="text-black/70 max-w-2xl mx-auto">
-            Discover our complete collection of premium skincare,
-            crafted with the finest natural ingredients.
-          </p>
+          <div className="mb-12 rounded-3xl overflow-hidden">
+            <BannerCarousel />
+          </div>
         </AnimatedSection>
 
         {/* ================= FILTER BAR ================= */}
         <AnimatedSection className="mb-10">
           <div className="flex flex-col lg:flex-row lg:items-center gap-4 p-5 bg-white rounded-3xl shadow-lg">
-
             {/* SEARCH */}
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#731162]" />
@@ -94,8 +85,8 @@ const Shop = () => {
                   onClick={() => setSelectedCategory(category)}
                   className={`px-5 py-2 text-sm font-medium rounded-full transition-all ${
                     selectedCategory === category
-                      ? 'bg-[#731162] text-white shadow'
-                      : 'bg-[#FC6CB4]/10 text-[#731162] hover:bg-[#FC6CB4]/20'
+                      ? "bg-[#731162] text-white shadow"
+                      : "bg-[#FC6CB4]/10 text-[#731162] hover:bg-[#FC6CB4]/20"
                   }`}
                 >
                   {category}
@@ -136,9 +127,7 @@ const Shop = () => {
           {/* ================= MOBILE FILTERS ================= */}
           {showFilters && (
             <div className="lg:hidden mt-4 p-5 bg-white rounded-3xl shadow-lg">
-              <h4 className="font-medium text-[#731162] mb-4">
-                Categories
-              </h4>
+              <h4 className="font-medium text-[#731162] mb-4">Categories</h4>
               <div className="flex flex-wrap gap-3">
                 {categories.map((category) => (
                   <button
@@ -149,8 +138,8 @@ const Shop = () => {
                     }}
                     className={`px-4 py-2 text-sm rounded-full transition ${
                       selectedCategory === category
-                        ? 'bg-[#731162] text-white'
-                        : 'bg-[#FC6CB4]/10 text-[#731162] hover:bg-[#FC6CB4]/20'
+                        ? "bg-[#731162] text-white"
+                        : "bg-[#FC6CB4]/10 text-[#731162] hover:bg-[#FC6CB4]/20"
                     }`}
                   >
                     {category}
@@ -163,10 +152,9 @@ const Shop = () => {
 
         {/* ================= RESULTS COUNT ================= */}
         <p className="text-sm text-black/60 mb-8">
-          Showing {filteredProducts.length}{' '}
-          {filteredProducts.length === 1 ? 'product' : 'products'}
-          {selectedCategory !== 'All' &&
-            ` in ${selectedCategory}`}
+          Showing {filteredProducts.length}{" "}
+          {filteredProducts.length === 1 ? "product" : "products"}
+          {selectedCategory !== "All" && ` in ${selectedCategory}`}
         </p>
 
         {/* ================= PRODUCTS GRID ================= */}
@@ -181,14 +169,12 @@ const Shop = () => {
           </AnimatedSection>
         ) : (
           <div className="text-center py-20">
-            <p className="text-lg text-black/60 mb-6">
-              No products found
-            </p>
+            <p className="text-lg text-black/60 mb-6">No products found</p>
             <button
               onClick={() => {
-                setSelectedCategory('All');
-                setSearchQuery('');
-                setSortBy('featured');
+                setSelectedCategory("All");
+                setSearchQuery("");
+                setSortBy("featured");
               }}
               className="px-8 py-4 rounded-full font-semibold
               bg-[#FC6CB4] text-white

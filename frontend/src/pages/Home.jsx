@@ -178,6 +178,7 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
         </div>
       </AnimatedSection>
 
+      {/* ================= PROMOTIONAL BANNER ================= */}
       <section className="w-full">
         {/* Desktop / Laptop Banner */}
         <img
