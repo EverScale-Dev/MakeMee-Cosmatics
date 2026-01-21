@@ -305,16 +305,45 @@ const getShipmentStatusBadge = (shiprocket) => {
   if (!shiprocket?.shipmentId) {
     return { label: "Not Created", color: "default" };
   }
-  if (!shiprocket?.awb) {
+
+  // Use internal status if available
+  const internalStatus = shiprocket?.status;
+
+  if (internalStatus === "pending_awb" || !shiprocket?.awb) {
+    // Show error indicator if there's an error
+    if (shiprocket?.awbErrorCode) {
+      return { label: "AWB Error", color: "error" };
+    }
     return { label: "AWB Pending", color: "warning" };
   }
-  if (shiprocket?.shipmentStatus?.toLowerCase().includes("delivered")) {
+
+  if (internalStatus === "ready" || shiprocket?.awb) {
+    const shipmentStatus = shiprocket?.shipmentStatus?.toLowerCase() || "";
+    if (shipmentStatus.includes("delivered")) {
+      return { label: "Delivered", color: "success" };
+    }
+    if (shipmentStatus.includes("transit") || shipmentStatus.includes("out for")) {
+      return { label: "In Transit", color: "info" };
+    }
+    if (shipmentStatus.includes("picked") || shipmentStatus.includes("shipped")) {
+      return { label: "Shipped", color: "primary" };
+    }
+    return { label: "Ready", color: "success" };
+  }
+
+  if (internalStatus === "shipped") {
+    return { label: "Shipped", color: "primary" };
+  }
+
+  if (internalStatus === "delivered") {
     return { label: "Delivered", color: "success" };
   }
-  if (shiprocket?.shipmentStatus?.toLowerCase().includes("transit")) {
-    return { label: "In Transit", color: "info" };
+
+  if (internalStatus === "cancelled") {
+    return { label: "Cancelled", color: "error" };
   }
-  return { label: "Shipped", color: "primary" };
+
+  return { label: "Unknown", color: "default" };
 };
 
 export default function OrdersPage() {

@@ -56,8 +56,18 @@ const orderSchema = new mongoose.Schema({
     trackingUrl: { type: String },       // Live tracking URL
     labelUrl: { type: String },          // Shipping label PDF URL
     pickupLocation: { type: String },    // Pickup warehouse location
-    shipmentStatus: { type: String },    // Current shipment status
+    shipmentStatus: { type: String },    // Current shipment status from Shiprocket
     createdAt: { type: Date },           // When shipment was created
+    // Internal status tracking
+    status: {
+      type: String,
+      enum: ["pending_awb", "ready", "pickup_scheduled", "shipped", "delivered", "cancelled"],
+      default: "pending_awb"
+    },
+    awbError: { type: String },          // Error message if AWB assignment failed
+    awbErrorCode: { type: String },      // Error code (UNAUTHORIZED, COD_NOT_ENABLED, etc.)
+    awbRetryCount: { type: Number, default: 0 }, // Number of AWB retry attempts
+    lastAwbAttempt: { type: Date },      // Last AWB assignment attempt time
   },
 
   status: {

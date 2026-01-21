@@ -155,13 +155,49 @@ export default function OrderDetailModal({
     if (!order.shiprocket?.shipmentId) {
       return { label: "Not Created", color: "default", canCreate: true };
     }
-    if (!order.shiprocket?.awb) {
-      return { label: "AWB Pending", color: "warning", canRetryAwb: true };
+
+    // Use internal status field if available
+    const internalStatus = order.shiprocket?.status;
+
+    if (internalStatus === "pending_awb" || !order.shiprocket?.awb) {
+      return {
+        label: "AWB Pending",
+        color: "warning",
+        canRetryAwb: true,
+        errorMessage: order.shiprocket?.awbError,
+        errorCode: order.shiprocket?.awbErrorCode,
+        retryCount: order.shiprocket?.awbRetryCount || 0,
+      };
     }
-    if (order.shiprocket?.shipmentStatus) {
-      return { label: order.shiprocket.shipmentStatus, color: "info" };
+
+    if (internalStatus === "ready" || order.shiprocket?.awb) {
+      // Check shipment status from Shiprocket
+      const shipmentStatus = order.shiprocket?.shipmentStatus?.toUpperCase();
+      if (shipmentStatus?.includes("DELIVERED")) {
+        return { label: "Delivered", color: "success" };
+      }
+      if (shipmentStatus?.includes("TRANSIT") || shipmentStatus?.includes("OUT FOR")) {
+        return { label: shipmentStatus, color: "info" };
+      }
+      if (shipmentStatus?.includes("PICKED") || shipmentStatus?.includes("SHIPPED")) {
+        return { label: "Shipped", color: "primary" };
+      }
+      return { label: "Ready to Ship", color: "success" };
     }
-    return { label: "Ready to Ship", color: "success" };
+
+    if (internalStatus === "shipped") {
+      return { label: "Shipped", color: "primary" };
+    }
+
+    if (internalStatus === "delivered") {
+      return { label: "Delivered", color: "success" };
+    }
+
+    if (internalStatus === "cancelled") {
+      return { label: "Cancelled", color: "error" };
+    }
+
+    return { label: order.shiprocket?.shipmentStatus || "Unknown", color: "default" };
   };
 
   // Helper to check if order can have shipment created
@@ -332,6 +368,28 @@ export default function OrderDetailModal({
 
               {order.shiprocket?.shipmentId ? (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                  {/* AWB Error Alert - show when AWB is pending with error */}
+                  {shipmentStatus.canRetryAwb && shipmentStatus.errorMessage && (
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                      <Typography variant="body2" fontWeight={600}>
+                        AWB Assignment Failed
+                      </Typography>
+                      <Typography variant="caption" display="block">
+                        {shipmentStatus.errorMessage}
+                      </Typography>
+                      {shipmentStatus.errorCode && (
+                        <Typography variant="caption" color="text.secondary">
+                          Error Code: {shipmentStatus.errorCode}
+                        </Typography>
+                      )}
+                      {shipmentStatus.retryCount > 0 && (
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Retry attempts: {shipmentStatus.retryCount}
+                        </Typography>
+                      )}
+                    </Alert>
+                  )}
+
                   <Typography variant="body2">
                     <strong>Shiprocket Order ID:</strong> {order.shiprocket.orderId || "N/A"}
                   </Typography>
@@ -339,14 +397,27 @@ export default function OrderDetailModal({
                     <strong>Shipment ID:</strong> {order.shiprocket.shipmentId}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>AWB / Tracking:</strong> {order.shiprocket.awb || "Pending"}
+                    <strong>AWB / Tracking:</strong>{" "}
+                    {order.shiprocket.awb || (
+                      <span style={{ color: "#ed6c02" }}>Pending Assignment</span>
+                    )}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Courier:</strong> {order.shiprocket.courierName || "Pending"}
+                    <strong>Courier:</strong>{" "}
+                    {order.shiprocket.courierName || (
+                      <span style={{ color: "#9e9e9e" }}>Not assigned</span>
+                    )}
                   </Typography>
                   {order.shiprocket.shipmentStatus && (
                     <Typography variant="body2">
                       <strong>Shipment Status:</strong> {order.shiprocket.shipmentStatus}
+                    </Typography>
+                  )}
+                  {order.shiprocket.awbRetryCount > 0 && !order.shiprocket.awb && (
+                    <Typography variant="caption" color="text.secondary">
+                      Last attempt: {order.shiprocket.lastAwbAttempt
+                        ? new Date(order.shiprocket.lastAwbAttempt).toLocaleString()
+                        : "N/A"}
                     </Typography>
                   )}
 
@@ -380,7 +451,7 @@ export default function OrderDetailModal({
                         onClick={handleRetryAwb}
                         disabled={loading}
                       >
-                        {loading ? "Assigning..." : "Retry AWB"}
+                        {loading ? "Assigning..." : `Retry AWB${shipmentStatus.retryCount > 0 ? ` (${shipmentStatus.retryCount})` : ""}`}
                       </Button>
                     )}
                   </Box>

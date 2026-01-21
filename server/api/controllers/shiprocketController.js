@@ -9,6 +9,62 @@ const {
   ShiprocketError,
 } = require("../../utils/shiprocket");
 
+// AWB error classification helper
+function classifyAwbError(error) {
+  const message = (error.message || "").toLowerCase();
+  const details = error.details || {};
+  const detailsStr = JSON.stringify(details).toLowerCase();
+
+  // Check for specific error patterns
+  if (message.includes("unauthorized") || detailsStr.includes("unauthorized") ||
+      message.includes("permission") || detailsStr.includes("permission")) {
+    return {
+      code: "UNAUTHORIZED",
+      message: "Account does not have permission for AWB assignment. Contact Shiprocket support.",
+      isRetryable: false,
+    };
+  }
+
+  if (message.includes("cod") && (message.includes("not enabled") || message.includes("disabled"))) {
+    return {
+      code: "COD_NOT_ENABLED",
+      message: "COD is not enabled for this courier. Enable COD in Shiprocket dashboard.",
+      isRetryable: false,
+    };
+  }
+
+  if (message.includes("courier") && (message.includes("not available") || message.includes("unavailable"))) {
+    return {
+      code: "COURIER_UNAVAILABLE",
+      message: "No courier available for this route. Try again later or contact Shiprocket.",
+      isRetryable: true,
+    };
+  }
+
+  if (message.includes("serviceable") || message.includes("pincode")) {
+    return {
+      code: "NOT_SERVICEABLE",
+      message: "Pickup or delivery location not serviceable by available couriers.",
+      isRetryable: false,
+    };
+  }
+
+  if (message.includes("weight") || message.includes("dimension")) {
+    return {
+      code: "INVALID_DIMENSIONS",
+      message: "Package weight or dimensions invalid for available couriers.",
+      isRetryable: false,
+    };
+  }
+
+  // Default: unknown error, may be retryable
+  return {
+    code: "AWB_ASSIGNMENT_FAILED",
+    message: error.message || "AWB assignment failed for unknown reason.",
+    isRetryable: true,
+  };
+}
+
 // Validation helper
 function validateOrderForShipping(order) {
   const errors = [];
@@ -219,32 +275,60 @@ exports.shipOrder = async (req, res) => {
       });
     }
 
-    // Initialize shiprocket data
+    // Initialize shiprocket data with pending_awb status
     order.shiprocket = {
       orderId: String(srOrder.order_id),
       shipmentId: String(srOrder.shipment_id),
       pickupLocation: pickupLocation,
       createdAt: new Date(),
+      status: "pending_awb",  // Start with pending_awb
+      awbRetryCount: 0,
     };
 
-    // Step 2: Assign AWB (courier)
+    // CRITICAL: Save shipmentId to DB IMMEDIATELY (before AWB attempt)
+    // This ensures we never lose the shipment even if AWB fails
+    await order.save();
+    console.log(`[Shiprocket] Shipment ${srOrder.shipment_id} saved to DB for order ${order.orderId}`);
+
+    // Step 2: Attempt AWB assignment (may fail due to account permissions)
     let awbResult;
+    let awbError = null;
     try {
+      order.shiprocket.lastAwbAttempt = new Date();
+      order.shiprocket.awbRetryCount = 1;
+
       awbResult = await assignAwb(srOrder.shipment_id);
 
       if (awbResult.response?.data?.awb_code) {
         order.shiprocket.awb = awbResult.response.data.awb_code;
         order.shiprocket.courierName = awbResult.response.data.courier_name;
         order.shiprocket.courierCompanyId = awbResult.response.data.courier_company_id;
+        order.shiprocket.status = "ready";
+        order.shiprocket.awbError = null;
+        order.shiprocket.awbErrorCode = null;
         console.log(`[Shiprocket] AWB assigned: ${order.shiprocket.awb}`);
       } else if (awbResult.awb_code) {
         order.shiprocket.awb = awbResult.awb_code;
         order.shiprocket.courierName = awbResult.courier_name;
         order.shiprocket.courierCompanyId = awbResult.courier_company_id;
+        order.shiprocket.status = "ready";
+        order.shiprocket.awbError = null;
+        order.shiprocket.awbErrorCode = null;
+      } else {
+        // AWB response didn't contain expected data
+        awbError = classifyAwbError({ message: "AWB response missing awb_code", details: awbResult });
+        order.shiprocket.awbError = awbError.message;
+        order.shiprocket.awbErrorCode = awbError.code;
+        console.warn(`[Shiprocket] AWB response unexpected:`, awbResult);
       }
     } catch (err) {
-      console.error("[Shiprocket] AWB assignment failed:", err.message);
-      // Continue without AWB - it can be assigned later
+      // Classify the error for admin visibility
+      awbError = classifyAwbError(err);
+      order.shiprocket.status = "pending_awb";
+      order.shiprocket.awbError = awbError.message;
+      order.shiprocket.awbErrorCode = awbError.code;
+      console.error(`[Shiprocket] AWB assignment failed (${awbError.code}):`, err.message);
+      // DO NOT throw - continue with partial success
     }
 
     // Step 3: Generate label (only if AWB was assigned)
@@ -259,27 +343,31 @@ exports.shipOrder = async (req, res) => {
         console.error("[Shiprocket] Label generation failed:", err.message);
         // Continue without label - it can be generated later
       }
-    }
 
-    // Update order status
-    if (order.shiprocket.awb) {
-      order.status = "processing";
-      order.shiprocket.shipmentStatus = "PICKUP SCHEDULED";
-    }
-
-    // Build tracking URL
-    if (order.shiprocket.awb) {
+      // Build tracking URL
       order.shiprocket.trackingUrl = `https://shiprocket.co/tracking/${order.shiprocket.awb}`;
+      order.shiprocket.shipmentStatus = "PICKUP SCHEDULED";
+      order.status = "processing";
     }
 
+    // Save final state
     await order.save();
+
+    // Determine response based on AWB status
+    const isPartialSuccess = !order.shiprocket.awb && order.shiprocket.shipmentId;
 
     res.json({
       success: true,
+      partialSuccess: isPartialSuccess,
       message: order.shiprocket.awb
         ? "Shipment created and AWB assigned successfully"
-        : "Shipment created (AWB pending)",
+        : `Shipment created but AWB pending: ${awbError?.message || "Unknown error"}`,
       shiprocket: order.shiprocket,
+      awbError: awbError ? {
+        code: awbError.code,
+        message: awbError.message,
+        isRetryable: awbError.isRetryable,
+      } : null,
     });
   } catch (error) {
     console.error("[Shiprocket] shipOrder error:", error);
@@ -305,6 +393,7 @@ exports.shipOrder = async (req, res) => {
 /**
  * POST /api/shiprocket/assign-awb/:id
  * Assign AWB to an existing shipment (retry)
+ * This endpoint is specifically for retrying AWB assignment when initial attempt failed
  */
 exports.assignAwbToOrder = async (req, res) => {
   try {
@@ -322,44 +411,89 @@ exports.assignAwbToOrder = async (req, res) => {
       });
     }
 
+    // Check if AWB is already assigned
     if (order.shiprocket.awb) {
       return res.json({
         success: true,
         message: "AWB already assigned",
         awb: order.shiprocket.awb,
+        courierName: order.shiprocket.courierName,
         alreadyExists: true,
       });
     }
 
-    const awbResult = await assignAwb(order.shiprocket.shipmentId);
+    // Update retry count and attempt time
+    order.shiprocket.awbRetryCount = (order.shiprocket.awbRetryCount || 0) + 1;
+    order.shiprocket.lastAwbAttempt = new Date();
 
-    if (awbResult.response?.data?.awb_code || awbResult.awb_code) {
-      order.shiprocket.awb = awbResult.response?.data?.awb_code || awbResult.awb_code;
-      order.shiprocket.courierName = awbResult.response?.data?.courier_name || awbResult.courier_name;
-      order.shiprocket.courierCompanyId = awbResult.response?.data?.courier_company_id || awbResult.courier_company_id;
-      order.shiprocket.trackingUrl = `https://shiprocket.co/tracking/${order.shiprocket.awb}`;
-      order.status = "processing";
+    let awbError = null;
 
-      await order.save();
+    try {
+      const awbResult = await assignAwb(order.shiprocket.shipmentId);
 
-      return res.json({
-        success: true,
-        message: "AWB assigned successfully",
-        shiprocket: order.shiprocket,
-      });
+      if (awbResult.response?.data?.awb_code || awbResult.awb_code) {
+        // SUCCESS: AWB assigned
+        order.shiprocket.awb = awbResult.response?.data?.awb_code || awbResult.awb_code;
+        order.shiprocket.courierName = awbResult.response?.data?.courier_name || awbResult.courier_name;
+        order.shiprocket.courierCompanyId = awbResult.response?.data?.courier_company_id || awbResult.courier_company_id;
+        order.shiprocket.trackingUrl = `https://shiprocket.co/tracking/${order.shiprocket.awb}`;
+        order.shiprocket.status = "ready";
+        order.shiprocket.shipmentStatus = "PICKUP SCHEDULED";
+        order.shiprocket.awbError = null;
+        order.shiprocket.awbErrorCode = null;
+        order.status = "processing";
+
+        // Try to generate label
+        try {
+          const labelResult = await generateLabel(order.shiprocket.shipmentId);
+          if (labelResult.label_url) {
+            order.shiprocket.labelUrl = labelResult.label_url;
+          }
+        } catch (labelErr) {
+          console.error("[Shiprocket] Label generation failed on retry:", labelErr.message);
+        }
+
+        await order.save();
+
+        console.log(`[Shiprocket] AWB assigned on retry #${order.shiprocket.awbRetryCount}: ${order.shiprocket.awb}`);
+
+        return res.json({
+          success: true,
+          message: "AWB assigned successfully",
+          shiprocket: order.shiprocket,
+        });
+      }
+
+      // No AWB in response - classify as error
+      awbError = classifyAwbError({ message: "AWB response missing awb_code", details: awbResult });
+
+    } catch (err) {
+      // Classify the error
+      awbError = classifyAwbError(err);
+      console.error(`[Shiprocket] AWB retry #${order.shiprocket.awbRetryCount} failed (${awbError.code}):`, err.message);
     }
 
-    res.status(500).json({
+    // Update error info and save
+    order.shiprocket.awbError = awbError.message;
+    order.shiprocket.awbErrorCode = awbError.code;
+    await order.save();
+
+    // Return error with classification info
+    res.status(400).json({
       success: false,
-      error: "Failed to assign AWB",
-      details: awbResult,
+      error: awbError.message,
+      errorCode: awbError.code,
+      isRetryable: awbError.isRetryable,
+      retryCount: order.shiprocket.awbRetryCount,
+      shiprocket: order.shiprocket,
     });
+
   } catch (error) {
-    console.error("[Shiprocket] assignAwbToOrder error:", error);
+    console.error("[Shiprocket] assignAwbToOrder unexpected error:", error);
     res.status(500).json({
       success: false,
-      error: error.message,
-      isTemporary: error.isTemporary || false,
+      error: "Unexpected error during AWB assignment",
+      details: error.message,
     });
   }
 };
