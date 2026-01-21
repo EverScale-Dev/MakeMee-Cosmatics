@@ -1,142 +1,88 @@
 import { useEffect, useState } from "react";
 import OrderDetailsModal from "../OrderDetailsModal";
-
-const ordersData = [
-  {
-    id: "ORD-1001",
-    customer: "John Doe",
-    product: "Skin Care Kit",
-    amount: 120,
-    status: "Completed",
-    date: "2024-01-05"
-  },
-  {
-    id: "ORD-1002",
-    customer: "Emma Stone",
-    product: "Face Serum",
-    amount: 80,
-    status: "Pending",
-    date: "2024-01-12"
-  },
-  {
-    id: "ORD-1003",
-    customer: "Michael Scott",
-    product: "Body Lotion",
-    amount: 60,
-    status: "Cancelled",
-    date: "2024-01-18"
-  },
-  {
-    id: "ORD-1004",
-    customer: "Sarah Lee",
-    product: "Hair Oil",
-    amount: 45,
-    status: "Completed",
-    date: "2024-01-22"
-  },
-  {
-    id: "ORD-1005",
-    customer: "John Doe",
-    product: "Skin Care Kit",
-    amount: 120,
-    status: "Completed",
-    date: "2024-01-05"
-  },
-  {
-    id: "ORD-1006",
-    customer: "Emma Stone",
-    product: "Face Serum",
-    amount: 80,
-    status: "Pending",
-    date: "2024-01-12"
-  },
-  {
-    id: "ORD-1007",
-    customer: "Michael Scott",
-    product: "Body Lotion",
-    amount: 60,
-    status: "Cancelled",
-    date: "2024-01-18"
-  },
-  {
-    id: "ORD-1008",
-    customer: "Sarah Lee",
-    product: "Hair Oil",
-    amount: 45,
-    status: "Completed",
-    date: "2024-01-22"
-  }
-  // assume many more orders
-];
+import { orderService, shiprocketService } from "../../services";
 
 const statusStyle = {
-  Completed: "bg-green-100 text-green-700",
-  Pending: "bg-yellow-100 text-yellow-700",
-  Cancelled: "bg-red-100 text-red-700"
+  "pending payment": "bg-yellow-100 text-yellow-700",
+  "processing": "bg-blue-100 text-blue-700",
+  "on hold": "bg-orange-100 text-orange-700",
+  "completed": "bg-green-100 text-green-700",
+  "refunded": "bg-purple-100 text-purple-700",
+  "cancelled": "bg-red-100 text-red-700",
+  "failed": "bg-red-100 text-red-700",
+  "shipped": "bg-indigo-100 text-indigo-700",
+  "delivered": "bg-green-100 text-green-700"
 };
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 10;
 
 export default function Orders() {
+  const [orders, setOrders] = useState([]);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [showFilter, setShowFilter] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null);
 
   const [filters, setFilters] = useState({
     name: "",
     minPrice: "",
     maxPrice: "",
     fromDate: "",
-    toDate: ""
+    toDate: "",
+    status: ""
   });
 
-  /* ---------------- RESET PAGE ON FILTER CHANGE ---------------- */
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const data = await orderService.getAll(currentPage, ITEMS_PER_PAGE);
+      setOrders(data.orders || []);
+      setTotalOrders(data.totalOrders || 0);
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, [currentPage]);
+
+  // Reset page on filter change
   useEffect(() => {
     setCurrentPage(1);
   }, [filters]);
 
-  /* ---------------- FILTERING ---------------- */
-  const filteredOrders = ordersData.filter((order) => {
-    const orderDate = new Date(order.date);
+  // Client-side filtering
+  const filteredOrders = orders.filter((order) => {
+    const orderDate = new Date(order.createdAt);
+    const customerName = order.customer?.fullName || "";
 
-    if (
-      filters.name &&
-      !order.customer.toLowerCase().includes(filters.name.toLowerCase())
-    ) {
+    if (filters.name && !customerName.toLowerCase().includes(filters.name.toLowerCase())) {
       return false;
     }
-
-    if (filters.minPrice && order.amount < Number(filters.minPrice)) {
+    if (filters.minPrice && order.totalAmount < Number(filters.minPrice)) {
       return false;
     }
-
-    if (filters.maxPrice && order.amount > Number(filters.maxPrice)) {
+    if (filters.maxPrice && order.totalAmount > Number(filters.maxPrice)) {
       return false;
     }
-
     if (filters.fromDate && orderDate < new Date(filters.fromDate)) {
       return false;
     }
-
     if (filters.toDate && orderDate > new Date(filters.toDate)) {
       return false;
     }
-
+    if (filters.status && order.status !== filters.status) {
+      return false;
+    }
     return true;
   });
 
-  /* ---------------- PAGINATION (FIXED) ---------------- */
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredOrders.length / ITEMS_PER_PAGE)
-  );
-
-  const safeCurrentPage = Math.min(currentPage, totalPages);
-
-  const paginatedOrders = filteredOrders.slice(
-    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
-    safeCurrentPage * ITEMS_PER_PAGE
-  );
+  const totalPages = Math.max(1, Math.ceil(totalOrders / ITEMS_PER_PAGE));
 
   const clearFilters = () => {
     setFilters({
@@ -144,16 +90,57 @@ export default function Orders() {
       minPrice: "",
       maxPrice: "",
       fromDate: "",
-      toDate: ""
+      toDate: "",
+      status: ""
     });
   };
+
+  const handleCreateShipment = async (orderId) => {
+    setActionLoading(orderId);
+    try {
+      const result = await shiprocketService.createShipment(orderId);
+      if (result.success || result.alreadyExists) {
+        alert(result.message || "Shipment created successfully");
+        fetchOrders();
+      } else {
+        alert(result.error || "Failed to create shipment");
+      }
+    } catch (error) {
+      alert(error.response?.data?.error || "Failed to create shipment");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 relative">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Orders</h1>
-
+        <h1 className="text-xl font-semibold">Orders ({totalOrders})</h1>
         <button
           onClick={() => setShowFilter(true)}
           className="px-4 py-2 text-sm bg-black text-white rounded-md"
@@ -177,11 +164,27 @@ export default function Orders() {
               <input
                 type="text"
                 value={filters.name}
-                onChange={(e) =>
-                  setFilters({ ...filters, name: e.target.value })
-                }
+                onChange={(e) => setFilters({ ...filters, name: e.target.value })}
                 className="w-full mt-1 border rounded-md px-3 py-2 text-sm"
               />
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="text-sm font-medium">Status</label>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                className="w-full mt-1 border rounded-md px-3 py-2 text-sm"
+              >
+                <option value="">All</option>
+                <option value="pending payment">Pending Payment</option>
+                <option value="processing">Processing</option>
+                <option value="on hold">On Hold</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="refunded">Refunded</option>
+              </select>
             </div>
 
             {/* Price */}
@@ -190,18 +193,14 @@ export default function Orders() {
                 type="number"
                 placeholder="Min Price"
                 value={filters.minPrice}
-                onChange={(e) =>
-                  setFilters({ ...filters, minPrice: e.target.value })
-                }
+                onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
                 className="border rounded-md px-3 py-2 text-sm"
               />
               <input
                 type="number"
                 placeholder="Max Price"
                 value={filters.maxPrice}
-                onChange={(e) =>
-                  setFilters({ ...filters, maxPrice: e.target.value })
-                }
+                onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
                 className="border rounded-md px-3 py-2 text-sm"
               />
             </div>
@@ -211,17 +210,13 @@ export default function Orders() {
               <input
                 type="date"
                 value={filters.fromDate}
-                onChange={(e) =>
-                  setFilters({ ...filters, fromDate: e.target.value })
-                }
+                onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })}
                 className="border rounded-md px-3 py-2 text-sm"
               />
               <input
                 type="date"
                 value={filters.toDate}
-                onChange={(e) =>
-                  setFilters({ ...filters, toDate: e.target.value })
-                }
+                onChange={(e) => setFilters({ ...filters, toDate: e.target.value })}
                 className="border rounded-md px-3 py-2 text-sm"
               />
             </div>
@@ -246,57 +241,133 @@ export default function Orders() {
       )}
 
       {/* Orders Table */}
+      <div className="bg-white rounded-xl shadow overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b text-gray-500">
             <tr>
               <th className="text-left p-4">Order ID</th>
               <th>Customer</th>
-              <th>Product</th>
+              <th>Products</th>
               <th className="text-center">Date</th>
               <th className="text-center">Amount</th>
+              <th className="text-center">Payment</th>
               <th className="text-center">Status</th>
+              <th className="text-center">Shipment</th>
               <th className="text-center">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {paginatedOrders.map((order) => (
-              <tr key={order.id} className="border-b hover:bg-gray-50">
-                <td className="p-4 font-medium">{order.id}</td>
-                <td>{order.customer}</td>
-                <td>{order.product}</td>
-                <td className="text-center">{order.date}</td>
-                <td className="text-center">₹ {order.amount}</td>
-                <td className="text-center">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle[order.status]}`}>
-                    {order.status}
-                  </span>
-                </td>
-                <td className="text-center space-x-3">
-                  <button
-                    onClick={() => setSelectedOrder(order)}
-                    className="text-lg"
-                    title="View Order"
-                  >
-                    👁️
-                  </button>
-                  <button
-                    onClick={() => alert("Create shipment")}
-                    className="text-lg"
-                    title="Create Shipment"
-                  >
-                    🚚
-                  </button>
+            {filteredOrders.length === 0 ? (
+              <tr>
+                <td colSpan="9" className="p-8 text-center text-gray-400">
+                  No orders found
                 </td>
               </tr>
-            ))}
+            ) : (
+              filteredOrders.map((order) => (
+                <tr key={order._id} className="border-b hover:bg-gray-50">
+                  <td className="p-4 font-medium">#{order.orderId}</td>
+                  <td className="text-center">{order.customer?.fullName || "N/A"}</td>
+                  <td className="text-center max-w-[150px] truncate">
+                    {order.products?.map(p => p.name).join(", ") || "N/A"}
+                  </td>
+                  <td className="text-center">{formatDate(order.createdAt)}</td>
+                  <td className="text-center">{formatCurrency(order.totalAmount)}</td>
+                  <td className="text-center">
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      order.paymentMethod === "cashOnDelivery"
+                        ? "bg-orange-100 text-orange-700"
+                        : "bg-green-100 text-green-700"
+                    }`}>
+                      {order.paymentMethod === "cashOnDelivery" ? "COD" : "Paid"}
+                    </span>
+                  </td>
+                  <td className="text-center">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
+                      statusStyle[order.status] || "bg-gray-100 text-gray-700"
+                    }`}>
+                      {order.status}
+                    </span>
+                  </td>
+                  <td className="text-center">
+                    {order.shiprocket?.shipmentId ? (
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        order.shiprocket.awb
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}>
+                        {order.shiprocket.awb ? "Ready" : "Pending AWB"}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 text-xs">Not created</span>
+                    )}
+                  </td>
+                  <td className="text-center space-x-2">
+                    <button
+                      onClick={() => setSelectedOrder(order)}
+                      className="text-blue-600 hover:text-blue-800 text-lg"
+                      title="View Order"
+                    >
+                      👁️
+                    </button>
+                    {!order.shiprocket?.shipmentId && (
+                      <button
+                        onClick={() => handleCreateShipment(order._id)}
+                        disabled={actionLoading === order._id || order.status === "pending payment"}
+                        className="text-lg disabled:opacity-50"
+                        title={order.status === "pending payment" ? "Payment pending" : "Create Shipment"}
+                      >
+                        {actionLoading === order._id ? "⏳" : "🚚"}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
+      </div>
 
-        {selectedOrder && (
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-end gap-2">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => p - 1)}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+          {[...Array(Math.min(5, totalPages))].map((_, index) => {
+            const page = index + 1;
+            return (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-3 py-1 border rounded ${
+                  currentPage === page ? "bg-black text-white" : ""
+                }`}
+              >
+                {page}
+              </button>
+            );
+          })}
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(p => p + 1)}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      {selectedOrder && (
         <OrderDetailsModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
+          onRefresh={fetchOrders}
         />
       )}
     </div>

@@ -3,88 +3,215 @@ import { CgClose } from "react-icons/cg";
 import { FaCloudUploadAlt, FaPlus } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import DisplayImage from "./DisplayImage";
-import productCategory from "../utils/product";
-import uploadimage from "../utils/uploadimage";
 
 const emptyProduct = {
-  productName: "",
-  brandName: "",
+  name: "",
+  brand: "",
   badge: "",
-  category: "",
-  productImage: [],
   shortDescription: "",
   description: "",
   sourcingInfo: "",
-  price: 0,
-  salePrice: 0,
+  regularPrice: "",
+  salePrice: "",
   weight: "",
-  rating: 0,
-  reviews: 0,
   features: [],
-  ingredients: []
+  ingredients: [],
+  sizes: [],
+  existingImages: [],
+  newImages: []
 };
+
+const BADGE_OPTIONS = ["", "NEW LAUNCH", "BEST SELLER", "DISCOUNT", "LIMITED", "HOT"];
 
 const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
   const [data, setData] = useState(emptyProduct);
-
   const [openFullScreenImage, setOpenFullScreenImage] = useState(false);
   const [fullScreenImage, setFullScreenImage] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  /* ======================= EFFECT ======================= */
   useEffect(() => {
     if (initialData) {
-      setData({ ...emptyProduct, ...initialData });
+      setData({
+        name: initialData.name || "",
+        brand: initialData.brand || "",
+        badge: initialData.badge || "",
+        shortDescription: initialData.shortDescription || "",
+        description: initialData.description || "",
+        sourcingInfo: initialData.sourcingInfo || "",
+        regularPrice: initialData.regularPrice || "",
+        salePrice: initialData.salePrice || "",
+        weight: initialData.weight || "",
+        features: initialData.features?.map(f => f.text || f) || [],
+        ingredients: initialData.ingredients?.map(i => ({
+          name: i.name || "",
+          benefit: i.benefit || ""
+        })) || [],
+        sizes: initialData.sizes || [],
+        existingImages: initialData.images || [],
+        newImages: []
+      });
     } else {
       setData(emptyProduct);
     }
   }, [initialData]);
 
-  /* ======================= HANDLERS ======================= */
   const handleOnChange = (e) => {
     const { name, value } = e.target;
     setData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleUploadProduct = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const res = await uploadimage(file);
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const totalImages = data.existingImages.length + data.newImages.length + files.length;
+    if (totalImages > 5) {
+      alert("Maximum 5 images allowed");
+      return;
+    }
+
     setData((prev) => ({
       ...prev,
-      productImage: [...prev.productImage, res.url]
+      newImages: [...prev.newImages, ...files]
     }));
   };
 
-  const handleDeleteProductImage = (index) => {
+  const handleDeleteExistingImage = (index) => {
     setData((prev) => ({
       ...prev,
-      productImage: prev.productImage.filter((_, i) => i !== index)
+      existingImages: prev.existingImages.filter((_, i) => i !== index)
     }));
   };
 
-  const addListItem = (key) => {
-    setData((prev) => ({ ...prev, [key]: [...prev[key], ""] }));
+  const handleDeleteNewImage = (index) => {
+    setData((prev) => ({
+      ...prev,
+      newImages: prev.newImages.filter((_, i) => i !== index)
+    }));
   };
 
-  const updateListItem = (key, index, value) => {
-    const updated = [...data[key]];
+  // Features (simple array of text strings for backend)
+  const addFeature = () => {
+    setData((prev) => ({ ...prev, features: [...prev.features, ""] }));
+  };
+
+  const updateFeature = (index, value) => {
+    const updated = [...data.features];
     updated[index] = value;
-    setData((prev) => ({ ...prev, [key]: updated }));
+    setData((prev) => ({ ...prev, features: updated }));
   };
 
-  const handleSubmit = (e) => {
+  const removeFeature = (index) => {
+    setData((prev) => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Ingredients (array with name & benefit)
+  const addIngredient = () => {
+    setData((prev) => ({
+      ...prev,
+      ingredients: [...prev.ingredients, { name: "", benefit: "" }]
+    }));
+  };
+
+  const updateIngredient = (index, field, value) => {
+    const updated = [...data.ingredients];
+    updated[index] = { ...updated[index], [field]: value };
+    setData((prev) => ({ ...prev, ingredients: updated }));
+  };
+
+  const removeIngredient = (index) => {
+    setData((prev) => ({
+      ...prev,
+      ingredients: prev.ingredients.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Sizes (array with ml, originalPrice, sellingPrice)
+  const addSize = () => {
+    setData((prev) => ({
+      ...prev,
+      sizes: [...prev.sizes, { ml: "", originalPrice: "", sellingPrice: "", inStock: true }]
+    }));
+  };
+
+  const updateSize = (index, field, value) => {
+    const updated = [...data.sizes];
+    updated[index] = { ...updated[index], [field]: value };
+    setData((prev) => ({ ...prev, sizes: updated }));
+  };
+
+  const removeSize = (index) => {
+    setData((prev) => ({
+      ...prev,
+      sizes: prev.sizes.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!data.productImage.length) {
+    const totalImages = data.existingImages.length + data.newImages.length;
+    if (totalImages === 0) {
       alert("Upload at least one image");
       return;
     }
 
-    onAdd(data);
-    onClose();
+    setSaving(true);
+
+    try {
+      // Build FormData for multipart upload
+      const formData = new FormData();
+      formData.append("name", data.name);
+      formData.append("brand", data.brand);
+      formData.append("badge", data.badge);
+      formData.append("shortDescription", data.shortDescription);
+      formData.append("description", data.description);
+      formData.append("sourcingInfo", data.sourcingInfo);
+      formData.append("regularPrice", data.regularPrice || 0);
+      formData.append("salePrice", data.salePrice || 0);
+      formData.append("weight", data.weight);
+
+      // Features - convert to array of objects with text field
+      const featuresArray = data.features
+        .filter(f => f.trim())
+        .map(f => ({ text: f }));
+      formData.append("features", JSON.stringify(featuresArray));
+
+      // Ingredients - already in correct format
+      const ingredientsArray = data.ingredients.filter(i => i.name.trim());
+      formData.append("ingredients", JSON.stringify(ingredientsArray));
+
+      // Sizes - convert values to numbers
+      const sizesArray = data.sizes
+        .filter(s => s.ml)
+        .map(s => ({
+          ml: Number(s.ml),
+          originalPrice: Number(s.originalPrice) || 0,
+          sellingPrice: Number(s.sellingPrice) || 0,
+          inStock: s.inStock !== false
+        }));
+      formData.append("sizes", JSON.stringify(sizesArray));
+
+      // Existing images (for update)
+      formData.append("existingImages", JSON.stringify(data.existingImages));
+
+      // New image files
+      data.newImages.forEach((file) => {
+        formData.append("images", file);
+      });
+
+      await onAdd(formData);
+    } catch (error) {
+      console.error("Error saving product:", error);
+      alert(error.message || "Failed to save product");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  /* ======================= UI ======================= */
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-center items-center">
       <div className="bg-white w-full max-w-5xl h-[85vh] rounded-xl shadow-lg flex flex-col">
@@ -110,8 +237,8 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
             <h3 className="text-blue-600 font-semibold mb-4">Core Information</h3>
             <div className="grid grid-cols-2 gap-4">
               <input
-                name="productName"
-                value={data.productName}
+                name="name"
+                value={data.name}
                 onChange={handleOnChange}
                 placeholder="Product Name"
                 className="input"
@@ -119,8 +246,8 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
               />
 
               <input
-                name="brandName"
-                value={data.brandName}
+                name="brand"
+                value={data.brand}
                 onChange={handleOnChange}
                 placeholder="Brand Name"
                 className="input"
@@ -133,22 +260,10 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
                 onChange={handleOnChange}
                 className="input col-span-2"
               >
-                <option value="">Badge</option>
-                <option value="Best Seller">Best Seller</option>
-                <option value="New">New</option>
-              </select>
-
-              <select
-                name="category"
-                value={data.category}
-                onChange={handleOnChange}
-                className="input col-span-2"
-                required
-              >
-                <option value="">Select Category</option>
-                {productCategory.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
+                <option value="">No Badge</option>
+                {BADGE_OPTIONS.filter(b => b).map((badge) => (
+                  <option key={badge} value={badge}>
+                    {badge}
                   </option>
                 ))}
               </select>
@@ -157,8 +272,9 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
                 name="shortDescription"
                 value={data.shortDescription}
                 onChange={handleOnChange}
-                placeholder="Short Description"
+                placeholder="Short Description (max 250 chars)"
                 className="input col-span-2"
+                maxLength={250}
               />
 
               <textarea
@@ -167,6 +283,7 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
                 onChange={handleOnChange}
                 placeholder="Detailed Description"
                 className="input col-span-2 h-28"
+                required
               />
 
               <textarea
@@ -181,29 +298,103 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
 
           {/* Pricing */}
           <section>
-            <h3 className="text-blue-600 font-semibold mb-4">Pricing & Metrics</h3>
+            <h3 className="text-blue-600 font-semibold mb-4">Pricing & Weight</h3>
             <div className="grid grid-cols-3 gap-4">
-              <input type="number" name="price" value={data.price} onChange={handleOnChange} className="input" placeholder="Regular Price" />
-              <input type="number" name="salePrice" value={data.salePrice} onChange={handleOnChange} className="input" placeholder="Sale Price" />
-              <input name="weight" value={data.weight} onChange={handleOnChange} className="input" placeholder="Weight" />
-              <input type="number" name="rating" value={data.rating} onChange={handleOnChange} className="input" placeholder="Rating" />
-              <input type="number" name="reviews" value={data.reviews} onChange={handleOnChange} className="input" placeholder="Reviews Count" />
+              <input
+                type="number"
+                name="regularPrice"
+                value={data.regularPrice}
+                onChange={handleOnChange}
+                className="input"
+                placeholder="Regular Price"
+              />
+              <input
+                type="number"
+                name="salePrice"
+                value={data.salePrice}
+                onChange={handleOnChange}
+                className="input"
+                placeholder="Sale Price"
+              />
+              <input
+                name="weight"
+                value={data.weight}
+                onChange={handleOnChange}
+                className="input"
+                placeholder="Weight (e.g., 30ml)"
+              />
             </div>
+          </section>
+
+          {/* Size Variants */}
+          <section>
+            <h3 className="text-blue-600 font-semibold mb-3">Size Variants</h3>
+            {data.sizes.map((size, i) => (
+              <div key={i} className="flex gap-2 mb-2 items-center">
+                <input
+                  type="number"
+                  value={size.ml}
+                  onChange={(e) => updateSize(i, "ml", e.target.value)}
+                  className="input w-24"
+                  placeholder="ml"
+                />
+                <input
+                  type="number"
+                  value={size.originalPrice}
+                  onChange={(e) => updateSize(i, "originalPrice", e.target.value)}
+                  className="input w-32"
+                  placeholder="Original Price"
+                />
+                <input
+                  type="number"
+                  value={size.sellingPrice}
+                  onChange={(e) => updateSize(i, "sellingPrice", e.target.value)}
+                  className="input w-32"
+                  placeholder="Selling Price"
+                />
+                <label className="flex items-center gap-1 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={size.inStock !== false}
+                    onChange={(e) => updateSize(i, "inStock", e.target.checked)}
+                  />
+                  In Stock
+                </label>
+                <button
+                  type="button"
+                  onClick={() => removeSize(i)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <MdDelete size={18} />
+                </button>
+              </div>
+            ))}
+            <button type="button" onClick={addSize} className="btn-outline">
+              <FaPlus /> Add Size
+            </button>
           </section>
 
           {/* Features */}
           <section>
             <h3 className="text-blue-600 font-semibold mb-3">Key Features</h3>
             {data.features.map((f, i) => (
-              <input
-                key={i}
-                value={f}
-                onChange={(e) => updateListItem("features", i, e.target.value)}
-                className="input mb-2"
-                placeholder={`Feature ${i + 1}`}
-              />
+              <div key={i} className="flex gap-2 mb-2">
+                <input
+                  value={f}
+                  onChange={(e) => updateFeature(i, e.target.value)}
+                  className="input flex-1"
+                  placeholder={`Feature ${i + 1}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeFeature(i)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <MdDelete size={18} />
+                </button>
+              </div>
             ))}
-            <button type="button" onClick={() => addListItem("features")} className="btn-outline">
+            <button type="button" onClick={addFeature} className="btn-outline">
               <FaPlus /> Add Feature
             </button>
           </section>
@@ -212,31 +403,54 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
           <section>
             <h3 className="text-blue-600 font-semibold mb-3">Key Ingredients</h3>
             {data.ingredients.map((ing, i) => (
-              <input
-                key={i}
-                value={ing}
-                onChange={(e) => updateListItem("ingredients", i, e.target.value)}
-                className="input mb-2"
-                placeholder={`Ingredient ${i + 1}`}
-              />
+              <div key={i} className="flex gap-2 mb-2">
+                <input
+                  value={ing.name}
+                  onChange={(e) => updateIngredient(i, "name", e.target.value)}
+                  className="input w-1/3"
+                  placeholder="Ingredient Name"
+                />
+                <input
+                  value={ing.benefit}
+                  onChange={(e) => updateIngredient(i, "benefit", e.target.value)}
+                  className="input flex-1"
+                  placeholder="Benefit"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeIngredient(i)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <MdDelete size={18} />
+                </button>
+              </div>
             ))}
-            <button type="button" onClick={() => addListItem("ingredients")} className="btn-outline">
+            <button type="button" onClick={addIngredient} className="btn-outline">
               <FaPlus /> Add Ingredient
             </button>
           </section>
 
           {/* Images */}
           <section>
-            <h3 className="text-blue-600 font-semibold mb-3">Product Images</h3>
-            <label className="upload-box">
+            <h3 className="text-blue-600 font-semibold mb-3">
+              Product Images (Max 5, &lt;1MB each)
+            </h3>
+            <label className="upload-box cursor-pointer">
               <FaCloudUploadAlt className="text-4xl" />
               <p>Upload Images</p>
-              <input type="file" hidden onChange={handleUploadProduct} />
+              <input
+                type="file"
+                hidden
+                multiple
+                accept="image/*"
+                onChange={handleImageUpload}
+              />
             </label>
 
             <div className="flex gap-3 mt-3 flex-wrap">
-              {data.productImage.map((img, i) => (
-                <div key={i} className="relative">
+              {/* Existing images */}
+              {data.existingImages.map((img, i) => (
+                <div key={`existing-${i}`} className="relative">
                   <img
                     src={img}
                     className="w-20 h-20 object-cover border rounded cursor-pointer"
@@ -244,13 +458,36 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
                       setFullScreenImage(img);
                       setOpenFullScreenImage(true);
                     }}
+                    alt={`Product ${i + 1}`}
                   />
                   <button
                     type="button"
-                    onClick={() => handleDeleteProductImage(i)}
+                    onClick={() => handleDeleteExistingImage(i)}
                     className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1"
                   >
-                    <MdDelete />
+                    <MdDelete size={14} />
+                  </button>
+                </div>
+              ))}
+
+              {/* New images (preview) */}
+              {data.newImages.map((file, i) => (
+                <div key={`new-${i}`} className="relative">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    className="w-20 h-20 object-cover border rounded cursor-pointer"
+                    onClick={() => {
+                      setFullScreenImage(URL.createObjectURL(file));
+                      setOpenFullScreenImage(true);
+                    }}
+                    alt={`New ${i + 1}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteNewImage(i)}
+                    className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1"
+                  >
+                    <MdDelete size={14} />
                   </button>
                 </div>
               ))}
@@ -262,8 +499,8 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
             <button type="button" onClick={onClose} className="btn-outline text-pink-600">
               Cancel
             </button>
-            <button type="submit" className="btn-primary">
-              {isEdit ? "Update Product" : "Add Product"}
+            <button type="submit" disabled={saving} className="btn-primary disabled:opacity-50">
+              {saving ? "Saving..." : isEdit ? "Update Product" : "Add Product"}
             </button>
           </div>
         </form>

@@ -1,49 +1,74 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import AddProductModal from "../AddProductModal";
+import { productService } from "../../services";
 
 export default function Products() {
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: "Face Serum",
-      price: 40,
-      stock: 120,
-      category: "Skin Care",
-      badge: "Best Seller"
-    },
-    {
-      id: 2,
-      name: "Body Lotion",
-      price: 25,
-      stock: 80,
-      category: "Body Care",
-      badge: "New"
-    }
-  ]);
-
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(null);
 
-  const addOrUpdateProduct = (product) => {
-    if (editProduct) {
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === editProduct.id ? { ...product, id: editProduct.id } : p
-        )
-      );
-    } else {
-      setProducts((prev) => [...prev, { ...product, id: Date.now() }]);
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const data = await productService.getAll();
+      setProducts(data || []);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+    } finally {
+      setLoading(false);
     }
-
-    setEditProduct(null);
-    setShowModal(false);
   };
 
-  const deleteProduct = (id) => {
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const handleAddOrUpdateProduct = async (productData) => {
+    try {
+      if (editProduct) {
+        await productService.update(editProduct._id, productData);
+      } else {
+        await productService.create(productData);
+      }
+      fetchProducts();
+      setEditProduct(null);
+      setShowModal(false);
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to save product");
+    }
+  };
+
+  const deleteProduct = async (id) => {
     if (!window.confirm("Delete this product?")) return;
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setDeleteLoading(id);
+    try {
+      await productService.delete(id);
+      fetchProducts();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to delete product");
+    } finally {
+      setDeleteLoading(null);
+    }
   };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0
+    }).format(amount || 0);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -52,7 +77,7 @@ export default function Products() {
         <div className="space-y-6">
           {/* Header */}
           <div className="flex justify-between items-center">
-            <h1 className="text-xl font-semibold">Products</h1>
+            <h1 className="text-xl font-semibold">Products ({products.length})</h1>
             <button
               onClick={() => setShowModal(true)}
               className="bg-black text-white px-4 py-2 rounded-md text-sm"
@@ -66,55 +91,82 @@ export default function Products() {
             <table className="w-full text-sm">
               <thead className="border-b text-gray-500">
                 <tr>
-                  <th className="text-left p-4">Name</th>
+                  <th className="text-left p-4">Product</th>
+                  <th>Brand</th>
                   <th>Category</th>
-                  <th>Price</th>
-                  <th>Stock</th>
+                  <th>Regular Price</th>
+                  <th>Sale Price</th>
                   <th>Badge</th>
                   <th className="text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {products.map((product) => (
-                  <tr
-                    key={product.id}
-                    className="border-b last:border-none hover:bg-gray-50"
-                  >
-                    <td className="p-4 font-medium">{product.name}</td>
-                    <td className="text-center">{product.category}</td>
-                    <td className="text-center">${product.price}</td>
-                    <td className="text-center">{product.stock}</td>
-
-                    {/* Badge */}
-                    <td className="text-center">
-                      <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-600">
-                        {product.badge || "—"}
-                      </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="text-center">
-                      <div className="flex justify-center gap-3">
-                        <button
-                          onClick={() => {
-                            setEditProduct(product);
-                            setShowModal(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <FiEdit size={16} />
-                        </button>
-
-                        <button
-                          onClick={() => deleteProduct(product.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <FiTrash2 size={16} />
-                        </button>
-                      </div>
+                {products.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="p-8 text-center text-gray-400">
+                      No products found
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  products.map((product) => (
+                    <tr
+                      key={product._id}
+                      className="border-b last:border-none hover:bg-gray-50"
+                    >
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          {product.images?.[0] && (
+                            <img
+                              src={product.images[0]}
+                              alt={product.name}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                          )}
+                          <span className="font-medium">{product.name}</span>
+                        </div>
+                      </td>
+                      <td className="text-center">{product.brand || "—"}</td>
+                      <td className="text-center">{product.category || "—"}</td>
+                      <td className="text-center">{formatCurrency(product.regularPrice)}</td>
+                      <td className="text-center text-green-600 font-medium">
+                        {formatCurrency(product.salePrice)}
+                      </td>
+                      <td className="text-center">
+                        {product.badge ? (
+                          <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-600">
+                            {product.badge}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="text-center">
+                        <div className="flex justify-center gap-3">
+                          <button
+                            onClick={() => {
+                              setEditProduct(product);
+                              setShowModal(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            <FiEdit size={16} />
+                          </button>
+                          <button
+                            onClick={() => deleteProduct(product._id)}
+                            disabled={deleteLoading === product._id}
+                            className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                          >
+                            {deleteLoading === product._id ? (
+                              <span className="animate-spin">⏳</span>
+                            ) : (
+                              <FiTrash2 size={16} />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -128,8 +180,8 @@ export default function Products() {
             setShowModal(false);
             setEditProduct(null);
           }}
-          onAdd={addOrUpdateProduct}
-          initialData={editProduct}   // 👈 edit support
+          onAdd={handleAddOrUpdateProduct}
+          initialData={editProduct}
           isEdit={Boolean(editProduct)}
         />
       )}

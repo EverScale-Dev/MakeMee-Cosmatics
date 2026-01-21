@@ -1,105 +1,88 @@
-import { useState } from "react";
-import { Search, Star } from "lucide-react";
-
-const reviewsData = [
-  {
-    id: 1,
-    customer: "John Doe",
-    email: "john@example.com",
-    product: "Skin Care Kit",
-    rating: 5,
-    comment:
-      "Amazing quality, visible results within a week. Highly recommended!",
-    date: "2024-01-12",
-    status: "Approved"
-  },
-  {
-    id: 2,
-    customer: "Emma Stone",
-    email: "emma@example.com",
-    product: "Face Serum",
-    rating: 4,
-    comment:
-      "Very good product, but the fragrance could be improved.",
-    date: "2024-01-18",
-    status: "Pending"
-  },
-  {
-    id: 3,
-    customer: "Michael Scott",
-    email: "michael@dundermifflin.com",
-    product: "Body Lotion",
-    rating: 2,
-    comment:
-      "Did not suit my skin type. Caused irritation after two uses.",
-    date: "2024-01-20",
-    status: "Approved"
-  },
-  {
-    id: 4,
-    customer: "Sarah Lee",
-    email: "sarah@example.com",
-    product: "Hair Oil",
-    rating: 5,
-    comment:
-      "Excellent oil. Hair feels healthier and shinier.",
-    date: "2024-01-24",
-    status: "Approved"
-  }
-];
+import { useState, useEffect } from "react";
+import { Search, Star, Check, Trash2 } from "lucide-react";
+import { reviewService } from "../../services";
 
 const statusBadge = {
-  Approved: "bg-green-100 text-green-700",
-  Pending: "bg-yellow-100 text-yellow-700",
-  Rejected: "bg-red-100 text-red-700"
+  true: "bg-green-100 text-green-700",
+  false: "bg-yellow-100 text-yellow-700"
 };
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 10;
 
 export default function Reviews() {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null);
   const [search, setSearch] = useState("");
   const [ratingFilter, setRatingFilter] = useState("All");
-  const [reviewKeyword, setReviewKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const fetchReviews = async () => {
+    setLoading(true);
+    try {
+      const data = await reviewService.getAll();
+      setReviews(data.data || []);
+    } catch (error) {
+      console.error("Failed to fetch reviews:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
+
+  const handleApprove = async (id) => {
+    setActionLoading(id);
+    try {
+      await reviewService.approve(id);
+      fetchReviews();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to approve review");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this review?")) return;
+    setActionLoading(id);
+    try {
+      await reviewService.delete(id);
+      fetchReviews();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to delete review");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // FILTERING
-  const filteredReviews = reviewsData.filter((review) => {
+  const filteredReviews = reviews.filter((review) => {
     const matchesSearch =
-      review.customer.toLowerCase().includes(search.toLowerCase()) ||
-      review.product.toLowerCase().includes(search.toLowerCase());
+      review.name?.toLowerCase().includes(search.toLowerCase()) ||
+      review.productId?.toLowerCase().includes(search.toLowerCase());
 
     const matchesRating =
-      ratingFilter === "All" ||
-      review.rating === Number(ratingFilter);
+      ratingFilter === "All" || review.rating === Number(ratingFilter);
 
-    const matchesReviewText =
-      !reviewKeyword ||
-      review.comment
-        .toLowerCase()
-        .includes(reviewKeyword.toLowerCase());
+    const matchesStatus =
+      statusFilter === "All" ||
+      (statusFilter === "Approved" && review.isApproved) ||
+      (statusFilter === "Pending" && !review.isApproved);
 
-    return matchesSearch && matchesRating && matchesReviewText;
+    return matchesSearch && matchesRating && matchesStatus;
   });
 
   // PAGINATION
-  const totalPages = Math.ceil(
-    filteredReviews.length / ITEMS_PER_PAGE
-  );
-
+  const totalPages = Math.max(1, Math.ceil(filteredReviews.length / ITEMS_PER_PAGE));
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedReviews = filteredReviews.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE
-  );
+  const paginatedReviews = filteredReviews.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  // Reset page on filter change
   const handleSearch = (e) => {
     setSearch(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handleKeyword = (e) => {
-    setReviewKeyword(e.target.value);
     setCurrentPage(1);
   };
 
@@ -108,11 +91,33 @@ export default function Reviews() {
     setCurrentPage(1);
   };
 
+  const handleStatus = (e) => {
+    setStatusFilter(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-xl font-semibold">Reviews</h1>
+        <h1 className="text-xl font-semibold">Reviews ({reviews.length})</h1>
 
         <div className="flex gap-3 flex-wrap">
           {/* Search */}
@@ -120,21 +125,12 @@ export default function Reviews() {
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search customer or product..."
+              placeholder="Search by name..."
               value={search}
               onChange={handleSearch}
-              className="pl-9 pr-4 py-2 text-sm border rounded-md w-56"
+              className="pl-9 pr-4 py-2 text-sm border rounded-md w-48"
             />
           </div>
-
-          {/* Review keyword */}
-          <input
-            type="text"
-            placeholder="Search inside reviews..."
-            value={reviewKeyword}
-            onChange={handleKeyword}
-            className="px-4 py-2 text-sm border rounded-md w-56"
-          />
 
           {/* Rating filter */}
           <select
@@ -149,6 +145,17 @@ export default function Reviews() {
             <option value="2">2 Stars</option>
             <option value="1">1 Star</option>
           </select>
+
+          {/* Status filter */}
+          <select
+            value={statusFilter}
+            onChange={handleStatus}
+            className="border rounded-md px-3 py-2 text-sm"
+          >
+            <option value="All">All Status</option>
+            <option value="Approved">Approved</option>
+            <option value="Pending">Pending</option>
+          </select>
         </div>
       </div>
 
@@ -158,80 +165,99 @@ export default function Reviews() {
           <thead className="border-b text-gray-500">
             <tr>
               <th className="text-left p-4">Customer</th>
-              <th>Product</th>
               <th>Rating</th>
-              <th>Review</th>
+              <th className="text-left">Review</th>
               <th>Date</th>
               <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {paginatedReviews.map((review) => (
-              <tr
-                key={review.id}
-                className="border-b last:border-none hover:bg-gray-50"
-              >
-                <td className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center font-medium">
-                      {review.customer.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-medium">{review.customer}</p>
-                      <p className="text-xs text-gray-500">
-                        {review.email}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-
-                <td className="text-center font-medium">
-                  {review.product}
-                </td>
-
-                <td className="text-center">
-                  <div className="flex justify-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`h-4 w-4 ${
-                          star <= review.rating
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </td>
-
-                <td className="max-w-xs px-4 text-gray-600">
-                  <p className="line-clamp-2">{review.comment}</p>
-                </td>
-
-                <td className="text-center text-gray-500">
-                  {review.date}
-                </td>
-
-                <td className="text-center">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${statusBadge[review.status]}`}
-                  >
-                    {review.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-
-            {paginatedReviews.length === 0 && (
+            {paginatedReviews.length === 0 ? (
               <tr>
-                <td
-                  colSpan="6"
-                  className="p-6 text-center text-gray-400"
-                >
+                <td colSpan="6" className="p-8 text-center text-gray-400">
                   No reviews found
                 </td>
               </tr>
+            ) : (
+              paginatedReviews.map((review) => (
+                <tr
+                  key={review._id}
+                  className="border-b last:border-none hover:bg-gray-50"
+                >
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center font-medium">
+                        {review.name?.charAt(0)?.toUpperCase() || "?"}
+                      </div>
+                      <div>
+                        <p className="font-medium">{review.name}</p>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="text-center">
+                    <div className="flex justify-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-4 w-4 ${
+                            star <= review.rating
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </td>
+
+                  <td className="max-w-xs px-4 text-gray-600">
+                    <p className="line-clamp-2">{review.message}</p>
+                  </td>
+
+                  <td className="text-center text-gray-500">
+                    {formatDate(review.createdAt)}
+                  </td>
+
+                  <td className="text-center">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        statusBadge[review.isApproved]
+                      }`}
+                    >
+                      {review.isApproved ? "Approved" : "Pending"}
+                    </span>
+                  </td>
+
+                  <td className="text-center">
+                    <div className="flex justify-center gap-2">
+                      {!review.isApproved && (
+                        <button
+                          onClick={() => handleApprove(review._id)}
+                          disabled={actionLoading === review._id}
+                          className="text-green-600 hover:text-green-800 disabled:opacity-50"
+                          title="Approve"
+                        >
+                          {actionLoading === review._id ? (
+                            <span className="animate-spin">⏳</span>
+                          ) : (
+                            <Check size={18} />
+                          )}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(review._id)}
+                        disabled={actionLoading === review._id}
+                        className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -248,16 +274,14 @@ export default function Reviews() {
             Prev
           </button>
 
-          {[...Array(totalPages)].map((_, index) => {
+          {[...Array(Math.min(5, totalPages))].map((_, index) => {
             const page = index + 1;
             return (
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
                 className={`px-3 py-1 border rounded ${
-                  currentPage === page
-                    ? "bg-black text-white"
-                    : ""
+                  currentPage === page ? "bg-black text-white" : ""
                 }`}
               >
                 {page}

@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { authService } from "../services";
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [form, setForm] = useState({
     email: "",
@@ -13,20 +16,22 @@ export default function Login() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    // TEMP AUTH
-    if (
-      form.email === "admin@gmail.com" &&
-      form.password === "admin123"
-    ) {
-      login({ email: form.email, role: "admin" });
+    try {
+      const data = await authService.login(form.email, form.password);
+      login(data);
       navigate("/admin");
-    } else {
-      alert("Invalid email or password");
+    } catch (err) {
+      setError(err.response?.data?.message || "Invalid email or password");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -37,6 +42,10 @@ export default function Login() {
         className="bg-white p-6 rounded-xl shadow-md w-full max-w-sm space-y-4"
       >
         <h2 className="text-xl font-semibold text-center">Admin Login</h2>
+
+        {error && (
+          <p className="text-red-500 text-sm text-center">{error}</p>
+        )}
 
         <input
           type="email"
@@ -60,9 +69,10 @@ export default function Login() {
 
         <button
           type="submit"
-          className="w-full bg-black text-white py-2 rounded-md"
+          disabled={loading}
+          className="w-full bg-black text-white py-2 rounded-md disabled:opacity-50"
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>
