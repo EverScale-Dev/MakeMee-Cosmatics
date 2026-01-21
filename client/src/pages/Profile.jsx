@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   User,
   Mail,
@@ -17,20 +17,93 @@ import {
   CreditCard,
   Wallet,
   HelpCircle,
+  LogOut,
 } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { authService } from "@/services";
+import { toast } from "sonner";
 
 import AddressSection from "@/components/AdressUserProfile/AddressSection";
 import OrdersSection from "@/components/OrderUserProfile/OrdersSection";
 
 export default function Profile() {
+  const navigate = useNavigate();
+  const { user: authUser, logout, updateUser } = useAuth();
   const [user, setUser] = useState({
-    name: "Vallabh Sathe",
-    email: "vallabh@email.com",
-    phone: "+91 9876543210",
+    name: "",
+    email: "",
+    phone: "",
+    avatar: "",
   });
-
+  const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
+
+  useEffect(() => {
+    if (!authUser) {
+      navigate("/signup");
+      return;
+    }
+
+    // Fetch fresh profile data
+    const fetchProfile = async () => {
+      try {
+        const data = await authService.getProfile();
+        setUser({
+          name: data.fullName || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          avatar: data.avatar || "",
+        });
+      } catch (error) {
+        // Use auth context data as fallback
+        setUser({
+          name: authUser.fullName || "",
+          email: authUser.email || "",
+          phone: authUser.phone || "",
+          avatar: authUser.avatar || "",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [authUser, navigate]);
+
+  const handleSaveProfile = async (updated) => {
+    try {
+      const data = await authService.updateProfile({
+        fullName: updated.name,
+        phone: updated.phone,
+      });
+      setUser({
+        name: data.fullName || "",
+        email: data.email || "",
+        phone: data.phone || "",
+        avatar: data.avatar || "",
+      });
+      updateUser(data);
+      toast.success("Profile updated successfully");
+      setEditOpen(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+    toast.success("Logged out successfully");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-base flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#731162]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-base">
@@ -40,7 +113,7 @@ export default function Profile() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* LEFT COLUMN */}
           <div className="lg:col-span-1 space-y-6">
-            <ProfileCard user={user} onEdit={() => setEditOpen(true)} />
+            <ProfileCard user={user} onEdit={() => setEditOpen(true)} onLogout={handleLogout} />
             <NotificationCard />
             <LegalCard />
           </div>
@@ -59,10 +132,7 @@ export default function Profile() {
         <EditProfileModal
           user={user}
           onClose={() => setEditOpen(false)}
-          onSave={(updated) => {
-            setUser(updated);
-            setEditOpen(false);
-          }}
+          onSave={handleSaveProfile}
         />
       )}
     </div>
@@ -74,30 +144,35 @@ export default function Profile() {
    LEFT SIDE COMPONENTS
 ====================== */
 
-function ProfileCard({ user, onEdit }) {
+function ProfileCard({ user, onEdit, onLogout }) {
   return (
     <Card>
       <div className="flex items-center gap-4">
         <img
-          src="https://via.placeholder.com/96"
+          src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=731162&color=fff`}
           className="w-24 h-24 rounded-full object-cover"
           alt="profile"
         />
         <div className="flex-1">
-          <h2 className="font-medium text-lg">{user.name}</h2>
+          <h2 className="font-medium text-lg">{user.name || "User"}</h2>
           <p className="text-sm text-gray-500">Customer Account</p>
         </div>
       </div>
 
       <div className="mt-6 space-y-4">
-        <InfoRow icon={User} label="Name" value={user.name} />
-        <InfoRow icon={Mail} label="Email" value={user.email} />
-        <InfoRow icon={Phone} label="Mobile" value={user.phone} />
+        <InfoRow icon={User} label="Name" value={user.name || "-"} />
+        <InfoRow icon={Mail} label="Email" value={user.email || "-"} />
+        <InfoRow icon={Phone} label="Mobile" value={user.phone || "-"} />
       </div>
 
-      <Button className="mt-6 cursor-pointer" icon={Pencil} onClick={onEdit}>
-        Edit Profile
-      </Button>
+      <div className="mt-6 flex gap-3">
+        <Button className="cursor-pointer" icon={Pencil} onClick={onEdit}>
+          Edit Profile
+        </Button>
+        <Button className="cursor-pointer" variant="danger" icon={LogOut} onClick={onLogout}>
+          Logout
+        </Button>
+      </div>
     </Card>
   );
 }
