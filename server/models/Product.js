@@ -95,24 +95,26 @@ const productSchema = new mongoose.Schema({
   },
 
   // --- PRICING & INVENTORY ---
-  regularPrice: { 
-    type: Number, 
-    required: true,
-    min: 0
+  // Single price fields (for backward compatibility or single-size products)
+  regularPrice: {
+    type: Number,
+    min: 0,
+    default: 0
   },
 
-  salePrice: { 
-    type: Number, 
-    required: true,
+  salePrice: {
+    type: Number,
     min: 0,
-    // Custom validation to ensure salePrice is not greater than regularPrice
-    validate: {
-      validator: function(v) {
-        return v <= this.regularPrice;
-      },
-      message: props => `Sale price (${props.value}) must be less than or equal to the regular price.`
-    }
+    default: 0
   },
+
+  // Multiple size variants with individual pricing
+  sizes: [{
+    ml: { type: Number, required: true },
+    originalPrice: { type: Number, required: true, min: 0 },
+    sellingPrice: { type: Number, required: true, min: 0 },
+    inStock: { type: Boolean, default: true }
+  }],
   
   // --- MEDIA ---
   images: { 

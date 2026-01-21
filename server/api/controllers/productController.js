@@ -22,11 +22,12 @@ const parseArrayField = (data, defaultValue = []) => {
 // @route   POST /api/products
 exports.createProduct = async (req, res) => {
     try {
-        const { 
-            name, brand, regularPrice, salePrice, description, // Removed 'category'
+        const {
+            name, brand, regularPrice, salePrice, description,
             shortDescription, badge, weight,
             rating, reviews,
-            features: featuresStr, ingredients: ingredientsStr, sourcingInfo 
+            features: featuresStr, ingredients: ingredientsStr, sourcingInfo,
+            sizes: sizesStr
         } = req.body;
 
         // 1. Generate Slug
@@ -35,6 +36,7 @@ exports.createProduct = async (req, res) => {
         // 2. Process Complex Array Fields
         const features = parseArrayField(featuresStr);
         const ingredients = parseArrayField(ingredientsStr);
+        const sizes = parseArrayField(sizesStr);
         
         // 3. Collect Image URLs
         let imagePaths = [];
@@ -57,10 +59,10 @@ exports.createProduct = async (req, res) => {
         const newProduct = new Product({
             name,
             brand,
-            // Removed category field
             slug,
             regularPrice,
-            salePrice, 
+            salePrice,
+            sizes,
             description,
             shortDescription,
             badge,
@@ -71,7 +73,6 @@ exports.createProduct = async (req, res) => {
             features,
             ingredients,
             sourcingInfo,
-            // rating and reviews fields default in the model and are updated separately
         });
 
         await newProduct.save();
@@ -153,12 +154,11 @@ exports.getProductById = async (req, res) => {
 exports.updateProduct = async (req, res) => {
     try {
         const productId = req.params.id;
-        const { 
-            name, brand, description, shortDescription, regularPrice, salePrice, // Removed 'category'
+        const {
+            name, brand, description, shortDescription, regularPrice, salePrice,
             badge, weight, sourcingInfo, rating, reviews,
-            // Note: Mongoose fields are generally not updated through PUT/PATCH, but via a separate API
-            // rating, reviews, 
-            features: featuresStr, ingredients: ingredientsStr, existingImages 
+            features: featuresStr, ingredients: ingredientsStr, existingImages,
+            sizes: sizesStr
         } = req.body;
     
         let product = await Product.findById(productId);
@@ -235,6 +235,11 @@ exports.updateProduct = async (req, res) => {
         product.features = parseArrayField(featuresStr, product.features);
         product.ingredients = parseArrayField(ingredientsStr, product.ingredients);
         product.images = updatedImages; // Final image list
+
+        // Update sizes if provided
+        if (sizesStr) {
+            product.sizes = parseArrayField(sizesStr, product.sizes);
+        }
         
         // Check for empty image array validation from the model
         if (product.images.length === 0) {
