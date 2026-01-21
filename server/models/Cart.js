@@ -11,6 +11,11 @@ const cartItemSchema = new mongoose.Schema({
   quantity: { type: Number, required: true, min: 1 },
   image: { type: String },
   weight: { type: String },
+  selectedSize: {
+    ml: { type: Number },
+    originalPrice: { type: Number },
+    sellingPrice: { type: Number }
+  }
 });
 
 const cartSchema = new mongoose.Schema({

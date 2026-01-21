@@ -19,6 +19,7 @@ exports.getCart = async (req, res) => {
         quantity: item.quantity,
         image: item.image,
         weight: item.weight,
+        selectedSize: item.selectedSize || null,
       })),
       totalQuantity,
     });
@@ -30,7 +31,7 @@ exports.getCart = async (req, res) => {
 
 // Merge guest cart with user cart on login
 exports.mergeCart = async (req, res) => {
-  const { guestCart } = req.body; // Array of { id, name, price, quantity, image, weight }
+  const { guestCart } = req.body; // Array of { id, name, price, quantity, image, weight, selectedSize }
 
   if (!guestCart || !Array.isArray(guestCart)) {
     return res.status(400).json({ message: 'Invalid guest cart data' });
@@ -45,15 +46,17 @@ exports.mergeCart = async (req, res) => {
 
     // Merge guest cart items
     for (const guestItem of guestCart) {
-      const existingItemIndex = cart.items.findIndex(
-        (item) => item.productId.toString() === guestItem.id
-      );
+      // Match by productId AND selectedSize.ml (if sizes exist)
+      const existingItemIndex = cart.items.findIndex((item) => {
+        const sameProduct = item.productId.toString() === guestItem.id;
+        const sameSize = (!item.selectedSize && !guestItem.selectedSize) ||
+          (item.selectedSize?.ml === guestItem.selectedSize?.ml);
+        return sameProduct && sameSize;
+      });
 
       if (existingItemIndex > -1) {
-        // Add quantities if product exists
         cart.items[existingItemIndex].quantity += guestItem.quantity;
       } else {
-        // Insert new item
         cart.items.push({
           productId: guestItem.id,
           name: guestItem.name,
@@ -61,6 +64,7 @@ exports.mergeCart = async (req, res) => {
           quantity: guestItem.quantity,
           image: guestItem.image,
           weight: guestItem.weight,
+          selectedSize: guestItem.selectedSize || null,
         });
       }
     }
@@ -78,6 +82,7 @@ exports.mergeCart = async (req, res) => {
         quantity: item.quantity,
         image: item.image,
         weight: item.weight,
+        selectedSize: item.selectedSize || null,
       })),
       totalQuantity,
     });
@@ -91,7 +96,7 @@ exports.mergeCart = async (req, res) => {
 exports.updateCart = async (req, res) => {
   const { action, item } = req.body;
   // action: 'add', 'remove', 'update', 'clear'
-  // item: { id, name, price, quantity, image, weight }
+  // item: { id, name, price, quantity, image, weight, selectedSize }
 
   try {
     let cart = await Cart.findOne({ user: req.User._id });
@@ -100,15 +105,23 @@ exports.updateCart = async (req, res) => {
       cart = new Cart({ user: req.User._id, items: [] });
     }
 
+    // Helper to find item by productId AND selectedSize
+    const findItemIndex = (items, itemId, selectedSize) => {
+      return items.findIndex((i) => {
+        const sameProduct = i.productId.toString() === itemId;
+        const sameSize = (!i.selectedSize && !selectedSize) ||
+          (i.selectedSize?.ml === selectedSize?.ml);
+        return sameProduct && sameSize;
+      });
+    };
+
     switch (action) {
       case 'add': {
         if (!item || !item.id) {
           return res.status(400).json({ message: 'Item data required' });
         }
 
-        const existingIndex = cart.items.findIndex(
-          (i) => i.productId.toString() === item.id
-        );
+        const existingIndex = findItemIndex(cart.items, item.id, item.selectedSize);
 
         if (existingIndex > -1) {
           cart.items[existingIndex].quantity = item.quantity;
@@ -120,6 +133,7 @@ exports.updateCart = async (req, res) => {
             quantity: item.quantity,
             image: item.image,
             weight: item.weight,
+            selectedSize: item.selectedSize || null,
           });
         }
         break;
@@ -129,7 +143,10 @@ exports.updateCart = async (req, res) => {
         if (!item || !item.id) {
           return res.status(400).json({ message: 'Item ID required' });
         }
-        cart.items = cart.items.filter((i) => i.productId.toString() !== item.id);
+        const removeIndex = findItemIndex(cart.items, item.id, item.selectedSize);
+        if (removeIndex > -1) {
+          cart.items.splice(removeIndex, 1);
+        }
         break;
       }
 
@@ -138,9 +155,7 @@ exports.updateCart = async (req, res) => {
           return res.status(400).json({ message: 'Item data required' });
         }
 
-        const itemIndex = cart.items.findIndex(
-          (i) => i.productId.toString() === item.id
-        );
+        const itemIndex = findItemIndex(cart.items, item.id, item.selectedSize);
 
         if (itemIndex > -1) {
           cart.items[itemIndex].quantity = item.quantity;
@@ -172,6 +187,7 @@ exports.updateCart = async (req, res) => {
         quantity: i.quantity,
         image: i.image,
         weight: i.weight,
+        selectedSize: i.selectedSize || null,
       })),
       totalQuantity,
     });
