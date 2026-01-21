@@ -1,10 +1,11 @@
+import { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
 // Context Providers
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import { CartProvider } from "./context/CartContext";
+import { AuthProvider, useAuth, setCartSyncCallback } from "./context/AuthContext";
+import { CartProvider, useCart } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 
 // Pages
@@ -26,6 +27,12 @@ import OrderSuccess from "./pages/OrderSuccess";
 function AppLayout() {
   const location = useLocation();
   const { isLoggedIn } = useAuth();
+  const { syncWithBackend } = useCart();
+
+  // Set up cart sync callback for auth
+  useEffect(() => {
+    setCartSyncCallback(syncWithBackend);
+  }, [syncWithBackend]);
 
   const hideNavbarRoutes = [
     "/account",
