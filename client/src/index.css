@@ -1,0 +1,61 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+.perspective-\[1200px\] {
+  perspective: 1200px;
+}
+
+.transform-style-preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* Hide scrollbar but allow scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE & Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+
+@layer base {
+  :root {
+    /* ===== Brand Colors ===== */
+    --color-primary: 252 108 180;   /* #FC6CB4 */
+    --color-text: 115 17 98;        /* #731162 */
+    --color-accent: 240 164 0;      /* #F0A400 */
+
+    /* ===== Background ===== */
+    --color-bg: 252, 108, 180, 0.05;        /* #FDEBF3 */
+  }
+}
+
+@layer utilities {
+  /* Backgrounds */
+  .bg-base {
+    background-color: rgb(var(--color-bg));
+  }
+
+  .bg-primary {
+    background-color: rgb(var(--color-primary));
+  }
+
+  .bg-accent {
+    background-color: rgb(var(--color-accent));
+  }
+
+  /* Text */
+  .text-main {
+    color: rgb(var(--color-text));
+  }
+
+  .text-brand {
+    color: rgb(var(--color-primary));
+  }
+}
