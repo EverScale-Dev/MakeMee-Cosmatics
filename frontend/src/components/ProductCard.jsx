@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, ShoppingCart } from "lucide-react";
 import { gsap } from "gsap";
+import { toast } from "sonner";
 
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
@@ -10,7 +11,7 @@ const ProductCard = ({ product }) => {
   const cardRef = useRef(null);
   const imageRef = useRef(null);
 
-  // ✅ default selected size (first size)
+  // ✅ Default selected size (first size)
   const [selectedSize] = useState(product.sizes?.[0]);
 
   const { addToCart, isInCart } = useCart();
@@ -31,7 +32,7 @@ const ProductCard = ({ product }) => {
         ease: "power2.out",
       });
 
-      gsap.to(image, { scale: 1.05, duration: 0.4 });
+      gsap.to(image, { scale: 1.19, duration: 1 });
 
       if (hasHoverImage) {
         gsap.to(image, {
@@ -75,6 +76,7 @@ const ProductCard = ({ product }) => {
     };
   }, [product.images]);
 
+  // ✅ Check if default size already in cart
   const inCart = isInCart(product.id, selectedSize?.ml);
 
   return (
@@ -95,6 +97,7 @@ const ProductCard = ({ product }) => {
 
         {/* ACTION BUTTONS */}
         <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+
           {/* WISHLIST */}
           <button
             onClick={() => toggleWishlist(product)}
@@ -114,10 +117,14 @@ const ProductCard = ({ product }) => {
           {/* CART */}
           <button
             onClick={() =>
+            {
               addToCart({
                 ...product,
                 selectedSize,
-              })
+                quantity: 1, // ✅ default quantity
+              });
+              toast.success("Added to cart!");
+            }
             }
             disabled={inCart}
             className={`p-2 rounded-full shadow-lg

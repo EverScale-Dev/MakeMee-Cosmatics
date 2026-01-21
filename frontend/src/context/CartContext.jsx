@@ -1,65 +1,106 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const CartContext = createContext(undefined);
 
 export const CartProvider = ({ children }) => {
   const [items, setItems] = useState(() => {
-    const saved = localStorage.getItem('cart');
+    const saved = localStorage.getItem("cart");
     return saved ? JSON.parse(saved) : [];
   });
 
+  /* Persist cart */
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(items));
+    localStorage.setItem("cart", JSON.stringify(items));
   }, [items]);
 
-  const addToCart = (product, quantity = 1) => {
-    setItems(prev => {
-      const existing = prev.find(item => item.product.id === product.id);
+  /* =========================
+     ADD TO CART
+     ========================= */
+  const addToCart = (product) => {
+    const { id, selectedSize, quantity } = product;
+
+    setItems((prev) => {
+      const existing = prev.find(
+        (item) =>
+          item.id === id &&
+          item.selectedSize.ml === selectedSize.ml
+      );
 
       if (existing) {
-        return prev.map(item =>
-          item.product.id === product.id
+        return prev.map((item) =>
+          item.id === id &&
+          item.selectedSize.ml === selectedSize.ml
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
 
-      return [...prev, { product, quantity }];
+      return [...prev, product];
     });
   };
 
-  const removeFromCart = productId => {
-    setItems(prev => prev.filter(item => item.product.id !== productId));
+  /* =========================
+     REMOVE FROM CART
+     ========================= */
+  const removeFromCart = (productId, ml) => {
+    setItems((prev) =>
+      prev.filter(
+        (item) =>
+          !(item.id === productId && item.selectedSize.ml === ml)
+      )
+    );
   };
 
-  const updateQuantity = (productId, quantity) => {
+  /* =========================
+     UPDATE QUANTITY
+     ========================= */
+  const updateQuantity = (productId, ml, quantity) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(productId, ml);
       return;
     }
 
-    setItems(prev =>
-      prev.map(item =>
-        item.product.id === productId
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === productId &&
+        item.selectedSize.ml === ml
           ? { ...item, quantity }
           : item
       )
     );
   };
 
+  /* =========================
+     CLEAR CART
+     ========================= */
   const clearCart = () => setItems([]);
 
+  /* =========================
+     TOTAL PRICE (SELLING)
+     ========================= */
   const getTotal = () =>
     items.reduce(
-      (total, item) => total + item.product.price * item.quantity,
+      (total, item) =>
+        total +
+        item.selectedSize.sellingPrice * item.quantity,
       0
     );
 
+  /* =========================
+     TOTAL ITEMS
+     ========================= */
   const getItemCount = () =>
     items.reduce((count, item) => count + item.quantity, 0);
 
-  const isInCart = productId =>
-    items.some(item => item.product.id === productId);
+  /* =========================
+     CHECK IF IN CART
+     ========================= */
+  const isInCart = (productId, ml) =>
+    items.some(
+      (item) =>
+        item.id === productId &&
+        item.selectedSize.ml === ml
+    );
 
   return (
     <CartContext.Provider
@@ -83,7 +124,7 @@ export const useCart = () => {
   const context = useContext(CartContext);
 
   if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
+    throw new Error("useCart must be used within a CartProvider");
   }
 
   return context;

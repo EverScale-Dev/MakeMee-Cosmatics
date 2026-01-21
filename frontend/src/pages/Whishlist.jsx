@@ -14,7 +14,8 @@ export default function Wishlist() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 rounded-lg border border-[#731162] bg-white text-[#731162] hover:bg-[#731162] hover:text-white transition"
+            className="p-2 rounded-lg border border-[#731162] bg-white text-[#731162]
+            hover:bg-[#731162] hover:text-white transition"
           >
             <ArrowLeft size={18} />
           </button>
@@ -40,7 +41,8 @@ export default function Wishlist() {
 
             <button
               onClick={() => navigate("/")}
-              className="mt-4 bg-[#F0A400] text-black px-6 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition"
+              className="mt-4 bg-[#F0A400] text-black px-6 py-2 rounded-lg
+              text-sm font-medium hover:opacity-90 transition"
             >
               Continue Shopping
             </button>
@@ -70,16 +72,28 @@ export default function Wishlist() {
 ========================= */
 
 function WishlistCard({ product, onRemove, onView }) {
+  // ✅ Default size (first size)
+  const defaultSize = product.sizes?.[0];
+
+  if (!defaultSize) return null;
+
+  const discountPercent = Math.round(
+    ((defaultSize.originalPrice - defaultSize.sellingPrice) /
+      defaultSize.originalPrice) *
+      100
+  );
+
   return (
-    <div className="bg-white rounded-2xl border border-[#731162]/20 hover:shadow-lg transition overflow-hidden flex flex-col">
+    <div className="bg-white rounded-2xl border border-[#731162]/20
+    hover:shadow-lg transition overflow-hidden flex flex-col">
 
       {/* IMAGE */}
       <div
-        className="h-48 bg-[#FC6CB4]/10 cursor-pointer"
+        className="h-68 bg-[#FC6CB4]/10 cursor-pointer"
         onClick={onView}
       >
         <img
-          src={product.image}
+          src={product.images[0]}
           alt={product.name}
           className="w-full h-full object-cover"
         />
@@ -91,21 +105,40 @@ function WishlistCard({ product, onRemove, onView }) {
           {product.name}
         </h3>
 
-        <p className="text-lg font-semibold mt-2 text-[#731162]">
-          ₹{product.price}
-        </p>
+        {/* PRICE */}
+        <div className="mt-2">
+          <span className="text-lg font-semibold text-[#731162]">
+            ₹{defaultSize.sellingPrice}
+          </span>
 
+          <span className="ml-2 text-sm text-gray-400 line-through">
+            ₹{defaultSize.originalPrice}
+          </span>
+
+          <span className="ml-2 text-xs bg-[#F0A400]/20 text-black px-2 py-0.5 rounded">
+            {discountPercent}% OFF
+          </span>
+
+          <p className="text-xs text-gray-500 mt-1">
+            {defaultSize.ml} ml
+          </p>
+        </div>
+
+        {/* ACTIONS */}
         <div className="mt-auto flex gap-3 pt-4">
           <button
             onClick={onView}
-            className="flex-1 bg-[#731162] text-white py-2 rounded-lg text-sm hover:opacity-90 transition"
+            className="flex-1 bg-[#731162] text-white py-2
+            rounded-lg text-sm hover:opacity-90 transition"
           >
             View Product
           </button>
 
           <button
             onClick={onRemove}
-            className="p-2 rounded-lg border border-[#FC6CB4] text-[#FC6CB4] hover:bg-[#FC6CB4] hover:text-white transition"
+            className="p-2 rounded-lg border border-[#FC6CB4]
+            text-[#FC6CB4] hover:bg-[#FC6CB4]
+            hover:text-white transition"
             title="Remove from wishlist"
           >
             <Trash2 size={16} />

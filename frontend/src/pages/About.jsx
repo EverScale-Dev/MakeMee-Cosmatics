@@ -3,6 +3,8 @@ import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { ArrowLeft } from "lucide-react";
 import productImg from "../assets/fasewash.png";
+import ShowStory from "@/components/ShowStory";
+
 
 import herobg from "../assets/about/hero.png";
 import aftervsbefore from "../assets/about/aftervsbefore.png";
@@ -18,6 +20,7 @@ export default function About() {
   const storyRef = useRef(null);
   const imageRef = useRef(null);
   const storyTextRef = useRef(null);
+  
 
   const [showStory, setShowStory] = useState(false);
 
@@ -63,7 +66,7 @@ export default function About() {
             end: "bottom top",
             scrub: true,
           },
-        }
+        },
       );
     });
   }, []);
@@ -74,19 +77,19 @@ export default function About() {
       gsap.fromTo(
         storyRef.current,
         { y: "100%" },
-        { y: 0, duration: 1, ease: "power4.out" }
+        { y: 0, duration: 1, ease: "power4.out" },
       );
 
       gsap.fromTo(
         imageRef.current,
         { x: 80, opacity: 0 },
-        { x: 0, opacity: 1, delay: 0.6, duration: 1.2 }
+        { x: 0, opacity: 1, delay: 0.6, duration: 1.2 },
       );
 
       gsap.fromTo(
         storyTextRef.current,
         { x: -60, opacity: 0 },
-        { x: 0, opacity: 1, delay: 0.4, duration: 1.2 }
+        { x: 0, opacity: 1, delay: 0.4, duration: 1.2 },
       );
     }
   }, [showStory]);
@@ -119,7 +122,7 @@ export default function About() {
             end: "bottom 40%",
             once: true,
           },
-        }
+        },
       );
     });
 
@@ -141,11 +144,10 @@ export default function About() {
             start: "top 75%",
             once: true,
           },
-        }
+        },
       );
     });
   }, []);
-
 
   return (
     <>
@@ -155,8 +157,7 @@ export default function About() {
           ref={bgRef}
           className="absolute inset-0"
           style={{
-            backgroundImage:
-              `url(${herobg})`,
+            backgroundImage: `url(${herobg})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
@@ -211,7 +212,7 @@ export default function About() {
       {showStory && (
         <section
           ref={storyRef}
-          className="fixed inset-0 z-50 bg-[#FDEBF3] overflow-y-auto pt-20 sm:pt-0 no-scrollbar"
+          className="fixed inset-0 z-50 bg-primary overflow-y-auto pt-20 sm:pt-0 no-scrollbar"
         >
           {/* BACK BUTTON */}
           <button
@@ -221,98 +222,107 @@ export default function About() {
             <ArrowLeft size={22} />
             Back
           </button>
+          
+          {/* GLASS + CONTENT WRAPPER */}
+         
+          <div className="relative w-full min-h-screen p-10 mt-10">
+            <div className="w-full min-h-full bg-white/30 rounded-xl backdrop-blur-3xl shadow-[inset_0_0_150px_rgba(255,255,255,1.5)]">
+              {/* STORY HERO */}
+              <div className="min-h-screen flex items-center ml-10 mr-10">
+                <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-24 items-center">
+                  {/* TEXT */}
+                  <div ref={storyTextRef}>
+                    <h2 className="font-serif text-main text-6xl lg:text-7xl leading-tight mb-8">
+                      How MakeMee
+                      <br />
+                      Began
+                    </h2>
 
-          {/* STORY HERO */}
-          <div className="min-h-screen flex items-center">
-            <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-24 items-center">
-              {/* TEXT */}
-              <div ref={storyTextRef}>
-                <h2 className="font-serif text-main text-6xl lg:text-7xl leading-tight mb-8">
-                  How MakeMee
-                  <br />
-                  Began
-                </h2>
+                    <p className="text-[#444] text-lg leading-relaxed max-w-xl">
+                      MakeMee was founded with a clear purpose — to create
+                      skincare that feels balanced, reliable, and easy to trust.
+                      <br />
+                      <br />
+                      We focus on skin comfort, consistency, and everyday
+                      usability rather than unnecessary complexity.
+                    </p>
+                  </div>
 
-                <p className="text-[#444] text-lg leading-relaxed max-w-xl">
-                  MakeMee was founded with a clear purpose — to create skincare
-                  that feels balanced, reliable, and easy to trust.
-                  <br />
-                  <br />
-                  We focus on skin comfort, consistency, and everyday usability
-                  rather than unnecessary complexity.
-                </p>
+                  {/* PRODUCT IMAGE */}
+                  <div ref={imageRef} className="flex justify-center">
+                    <img
+                      src={productImg}
+                      alt="product"
+                      className="w-[420px] lg:w-[520px]"
+                      style={{
+                        filter:
+                          "drop-shadow(0 35px 50px rgba(115, 17, 98, 0.8))",
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* PRODUCT IMAGE */}
-              <div ref={imageRef} className="flex justify-center">
-                <img
-                  src={productImg}
-                  alt="product"
-                  className="w-[420px] lg:w-[520px]"
-                  style={{
-                    filter: "drop-shadow(0 35px 50px rgba(115, 17, 98, 0.8))",
-                  }}
-                />
-              </div>
+              {/* STORY PARALLAX SECTIONS */}
+              <section className="py-40">
+                <div className="max-w-7xl mx-auto px-6 space-y-40">
+                  {/* SECTION 1 — TEXT LEFT / IMAGE RIGHT */}
+                  <div className="story-section grid lg:grid-cols-2 gap-20 items-center parallax">
+                    <div className="slide-text" data-direction="left">
+                      <h3 className="font-serif text-5xl text-main mb-6">
+                        A Thoughtful
+                        <br />
+                        Approach to Skincare
+                      </h3>
+                      <p className="text-[#444] text-lg max-w-xl leading-relaxed">
+                        From the outset, MakeMee has followed a considered
+                        approach to product development. Each formulation is
+                        designed with intention, focusing on performance,
+                        texture, and skin compatibility.
+                      </p>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-2xl shadow-xl fade-image">
+                      <img
+                        src={aftervsbefore}
+                        alt="formulation"
+                        className="rounded-xl w-full object-cover"
+                      />
+                    </div>
+                  </div>
+
+                  {/* SECTION 2 — IMAGE LEFT / TEXT RIGHT */}
+                  <div className="story-section grid lg:grid-cols-2 gap-20 items-center parallax">
+                    <div className="order-2 lg:order-1 bg-white p-6 rounded-2xl shadow-xl fade-image">
+                      <img
+                        src={guidebynature}
+                        alt="nature"
+                        className="rounded-xl w-full h-[420px] object-cover"
+                      />
+                    </div>
+
+                    <div
+                      className="order-1 lg:order-2 slide-text"
+                      data-direction="right"
+                    >
+                      <h3 className="font-serif text-5xl text-main mb-6">
+                        Guided by Nature,
+                        <br />
+                        Refined by Care
+                      </h3>
+                      <p className="text-[#444] text-lg max-w-xl leading-relaxed">
+                        We draw inspiration from nature while applying a modern,
+                        disciplined approach to formulation. Ingredients are
+                        chosen for their effectiveness, safety, and long-term
+                        skin health.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
             </div>
           </div>
-
-          {/* STORY PARALLAX SECTIONS */}
-          <section className="py-40">
-            <div className="max-w-7xl mx-auto px-6 space-y-40">
-              {/* SECTION 1 — TEXT LEFT / IMAGE RIGHT */}
-              <div className="story-section grid lg:grid-cols-2 gap-20 items-center parallax">
-                <div className="slide-text" data-direction="left">
-                  <h3 className="font-serif text-5xl text-main mb-6">
-                    A Thoughtful
-                    <br />
-                    Approach to Skincare
-                  </h3>
-                  <p className="text-[#444] text-lg max-w-xl leading-relaxed">
-                    From the outset, MakeMee has followed a considered approach
-                    to product development. Each formulation is designed with
-                    intention, focusing on performance, texture, and skin
-                    compatibility.
-                  </p>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl shadow-xl fade-image">
-                  <img
-                    src={aftervsbefore}
-                    alt="formulation"
-                    className="rounded-xl w-full object-cover"
-                  />
-                </div>
-              </div>
-
-              {/* SECTION 2 — IMAGE LEFT / TEXT RIGHT */}
-              <div className="story-section grid lg:grid-cols-2 gap-20 items-center parallax">
-                <div className="order-2 lg:order-1 bg-white p-6 rounded-2xl shadow-xl fade-image">
-                  <img
-                    src={guidebynature}
-                    alt="nature"
-                    className="rounded-xl w-full h-[420px] object-cover"
-                  />
-                </div>
-
-                <div
-                  className="order-1 lg:order-2 slide-text"
-                  data-direction="right"
-                >
-                  <h3 className="font-serif text-5xl text-main mb-6">
-                    Guided by Nature,
-                    <br />
-                    Refined by Care
-                  </h3>
-                  <p className="text-[#444] text-lg max-w-xl leading-relaxed">
-                    We draw inspiration from nature while applying a modern,
-                    disciplined approach to formulation. Ingredients are chosen
-                    for their effectiveness, safety, and long-term skin health.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
+        
         </section>
       )}
     </>

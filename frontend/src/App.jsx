@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import { Toaster } from "sonner";
 
 // Context Providers
 import { CartProvider } from "./context/CartContext";
@@ -36,6 +37,13 @@ function AppLayout() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <Toaster
+        position="bottom-right"
+        richColors
+        closeButton
+        duration={3000}
+      />
+      
       {!shouldHideNavbar && (
         <Navbar
           isAuthenticated={true}
