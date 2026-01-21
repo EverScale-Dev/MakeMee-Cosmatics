@@ -9,7 +9,7 @@ import makemee from "../assets/makemee.png";
 
 const Navbar = ({ isAuthenticated = false }) => {
   const { getItemCount } = useCart();
-  const { wishlist } = useWishlist();
+  const { items: wishlist } = useWishlist();
   const cartCount = getItemCount();
   const wishlistCount = wishlist.length;
   const [isScrolled, setIsScrolled] = useState(false);

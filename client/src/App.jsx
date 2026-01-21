@@ -65,6 +65,7 @@ function AppLayout() {
           <Route path="/orders" element={<Orders />} />
           <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<SignUp />} />
         </Routes>
       </main>
 
