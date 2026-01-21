@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { GoogleLogin } from "@react-oauth/google";
 import UnderlineInput from "../components/UnderlineInput";
 import { toast } from "sonner";
 
@@ -44,11 +45,21 @@ export default function SignUp() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    // Google OAuth implementation
-    // This requires setting up Google OAuth in the frontend
-    // For now, we'll show a message
-    toast.info("Google login - Configure VITE_GOOGLE_CLIENT_ID in .env");
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    try {
+      await googleLogin(credentialResponse.credential);
+      toast.success("Login successful!");
+      navigate("/");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Google login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    toast.error("Google login failed. Please try again.");
   };
 
   return (
@@ -109,24 +120,17 @@ export default function SignUp() {
             <div className="flex-1 h-px bg-black/20" />
           </div>
 
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            className="
-              w-full flex items-center justify-center gap-3
-              border border-black/20 py-3 rounded-full
-              hover:bg-black/5 transition-all duration-300
-            "
-          >
-            <img
-              src="https://www.svgrepo.com/show/475656/google-color.svg"
-              alt="Google"
-              className="w-5 h-5"
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              useOneTap
+              theme="outline"
+              size="large"
+              width="100%"
+              text={isLogin ? "signin_with" : "signup_with"}
             />
-            <span className="text-sm font-medium text-black">
-              Continue with Google
-            </span>
-          </button>
+          </div>
         </form>
 
         <p className="text-center text-sm text-black/60 mt-6">
