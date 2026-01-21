@@ -4,6 +4,11 @@ import ScrollTrigger from "gsap/ScrollTrigger";
 import { ArrowLeft } from "lucide-react";
 import productImg from "../assets/fasewash.png";
 
+import herobg from "../assets/about/hero.png";
+import aftervsbefore from "../assets/about/aftervsbefore.png";
+import guidebynature from "../assets/about/guidebynature.png";
+import aboutside from "../assets/about/about-side.png";
+
 gsap.registerPlugin(ScrollTrigger);
 
 export default function About() {
@@ -95,51 +100,51 @@ export default function About() {
     });
   };
 
-useEffect(() => {
-  // IMAGE FADE-IN
-  gsap.utils.toArray(".fade-image").forEach((img) => {
-    const section = img.closest(".story-section");
+  useEffect(() => {
+    // IMAGE FADE-IN
+    gsap.utils.toArray(".fade-image").forEach((img) => {
+      const section = img.closest(".story-section");
 
-    gsap.fromTo(
-      img,
-      { opacity: 0, scale: 0.96 },
-      {
-        opacity: 1,
-        scale: 1,
-        duration: 1.3,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: section,
-          start: "top 0%",
-          end: "bottom 40%",
-          once: true,
-        },
-      }
-    );
-  });
+      gsap.fromTo(
+        img,
+        { opacity: 0, scale: 0.96 },
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 1.3,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: section,
+            start: "top 0%",
+            end: "bottom 40%",
+            once: true,
+          },
+        }
+      );
+    });
 
-  // TEXT SLIDE-IN
-  gsap.utils.toArray(".slide-text").forEach((text) => {
-    const section = text.closest(".story-section");
-    const direction = text.dataset.direction === "right" ? 80 : -80;
+    // TEXT SLIDE-IN
+    gsap.utils.toArray(".slide-text").forEach((text) => {
+      const section = text.closest(".story-section");
+      const direction = text.dataset.direction === "right" ? 80 : -80;
 
-    gsap.fromTo(
-      text,
-      { x: direction, opacity: 0 },
-      {
-        x: 0,
-        opacity: 1,
-        duration: 1.2,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: section,
-          start: "top 75%",
-          once: true,
-        },
-      }
-    );
-  });
-}, []);
+      gsap.fromTo(
+        text,
+        { x: direction, opacity: 0 },
+        {
+          x: 0,
+          opacity: 1,
+          duration: 1.2,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: section,
+            start: "top 75%",
+            once: true,
+          },
+        }
+      );
+    });
+  }, []);
 
 
   return (
@@ -151,7 +156,7 @@ useEffect(() => {
           className="absolute inset-0"
           style={{
             backgroundImage:
-              "url(https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9)",
+              `url(${herobg})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
@@ -189,7 +194,7 @@ useEffect(() => {
               WHEN CARE MEETS SCIENCE
             </h3>
             <img
-              src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c"
+              src={aboutside}
               alt="art"
               className="w-40 h-52 object-cover rounded-md shadow-md"
             />
@@ -273,9 +278,9 @@ useEffect(() => {
 
                 <div className="bg-white p-6 rounded-2xl shadow-xl fade-image">
                   <img
-                    src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80"
+                    src={aftervsbefore}
                     alt="formulation"
-                    className="rounded-xl w-full h-[420px] object-cover"
+                    className="rounded-xl w-full object-cover"
                   />
                 </div>
               </div>
@@ -284,7 +289,7 @@ useEffect(() => {
               <div className="story-section grid lg:grid-cols-2 gap-20 items-center parallax">
                 <div className="order-2 lg:order-1 bg-white p-6 rounded-2xl shadow-xl fade-image">
                   <img
-                    src="https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd"
+                    src={guidebynature}
                     alt="nature"
                     className="rounded-xl w-full h-[420px] object-cover"
                   />

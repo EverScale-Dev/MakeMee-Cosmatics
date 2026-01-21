@@ -13,6 +13,11 @@ import { useHeroAnimation } from "../animations/useHeroAnimation";
 import pcbanner from "../assets/banner-desktop.gif";
 import pcbannerMobile from "../assets/banner-mobile.gif";
 
+import Hero1 from "../assets/hero/HERO1.png"
+import Hero2 from "../assets/hero/HERO2.png"
+import Hero3 from "../assets/hero/HERO3.png"
+import Hero4 from "../assets/hero/HERO4.png"
+
 gsap.registerPlugin(ScrollTrigger);
 
 const Home = ({ onAddToCart, onAddToWishlist }) => {
@@ -24,11 +29,9 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
 
   const featuredProducts = getFeaturedProducts();
 
-  const heroImages = [
-    "https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg?auto=compress&cs=tinysrgb&w=1200",
-    "https://images.pexels.com/photos/3685523/pexels-photo-3685523.jpeg?auto=compress&cs=tinysrgb&w=1200",
-    "https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg?auto=compress&cs=tinysrgb&w=1200",
-  ];
+
+
+  const heroImages = [Hero1, Hero2, Hero3, Hero4];
 
   useHeroAnimation({ titleRef, subtitleRef, ctaRef, imageRef });
 
@@ -80,6 +83,7 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
             backgroundImage: `url(${heroImages[currentSlide]})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
+            filter: "blur(2px)"
           }}
         />
 
