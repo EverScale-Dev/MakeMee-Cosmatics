@@ -1,70 +1,125 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import AnimatedSection from "@/components/AnimatedSection";
-import { products, categories } from "@/data/products";
 import { usePageTransition } from "@/hooks/useGSAP";
 import BannerCarousel from "@/components/BannerCarousel";
+import { productService } from "@/services";
+import Loader from "@/components/Loader";
+
+const categories = ["All", "Serums", "Moisturizers", "Cleansers", "Face Care"];
 
 const Shop = () => {
   usePageTransition();
 
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await productService.getAll();
+        setProducts(data);
+      } catch (err) {
+        setError(err.message || "Failed to load products");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
   const filteredProducts = useMemo(() => {
     let filtered = products;
 
     if (selectedCategory !== "All") {
-      filtered = filtered.filter((p) => p.category === selectedCategory);
+      filtered = filtered.filter((p) =>
+        p.name?.toLowerCase().includes(selectedCategory.toLowerCase()) ||
+        p.shortDescription?.toLowerCase().includes(selectedCategory.toLowerCase())
+      );
     }
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (p) =>
-          p.name.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query) ||
-          p.tags.some((tag) => tag.toLowerCase().includes(query)),
+          p.name?.toLowerCase().includes(query) ||
+          p.description?.toLowerCase().includes(query) ||
+          p.shortDescription?.toLowerCase().includes(query)
       );
     }
 
     switch (sortBy) {
       case "price-low":
-        filtered = [...filtered].sort((a, b) => a.price - b.price);
+        filtered = [...filtered].sort((a, b) => {
+          const priceA = a.sizes?.[0]?.sellingPrice || a.salePrice || 0;
+          const priceB = b.sizes?.[0]?.sellingPrice || b.salePrice || 0;
+          return priceA - priceB;
+        });
         break;
       case "price-high":
-        filtered = [...filtered].sort((a, b) => b.price - a.price);
+        filtered = [...filtered].sort((a, b) => {
+          const priceA = a.sizes?.[0]?.sellingPrice || a.salePrice || 0;
+          const priceB = b.sizes?.[0]?.sellingPrice || b.salePrice || 0;
+          return priceB - priceA;
+        });
         break;
       case "rating":
-        filtered = [...filtered].sort((a, b) => b.rating - a.rating);
+        filtered = [...filtered].sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
       case "newest":
-        filtered = filtered.filter((p) => p.tags.includes("new"));
+        filtered = [...filtered].sort((a, b) =>
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
         break;
       default:
         break;
     }
 
     return filtered;
-  }, [selectedCategory, sortBy, searchQuery]);
+  }, [products, selectedCategory, sortBy, searchQuery]);
+
+  if (loading) {
+    return (
+      <main className="pt-28 pb-20 bg-base min-h-screen flex items-center justify-center">
+        <Loader />
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="pt-28 pb-20 bg-base min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-red-500 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-[#FC6CB4] text-white rounded-full"
+          >
+            Retry
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="pt-28 pb-20 bg-base">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-16">
-        {/* ================= HEADER ================= */}
         <AnimatedSection className="text-center mb-16">
           <div className="mb-12 rounded-3xl overflow-hidden">
             <BannerCarousel />
           </div>
         </AnimatedSection>
 
-        {/* ================= FILTER BAR ================= */}
         <AnimatedSection className="mb-10">
           <div className="flex flex-col lg:flex-row lg:items-center gap-4 p-5 bg-white rounded-3xl shadow-lg">
-            {/* SEARCH */}
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#731162]" />
               <input
@@ -77,7 +132,6 @@ const Shop = () => {
               />
             </div>
 
-            {/* CATEGORY FILTER – DESKTOP */}
             <div className="hidden lg:flex items-center gap-2">
               {categories.slice(0, 5).map((category) => (
                 <button
@@ -94,7 +148,6 @@ const Shop = () => {
               ))}
             </div>
 
-            {/* MOBILE FILTER BUTTON */}
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="lg:hidden inline-flex items-center justify-center gap-2
@@ -105,7 +158,6 @@ const Shop = () => {
               Filters
             </button>
 
-            {/* SORT */}
             <div className="relative">
               <select
                 value={sortBy}
@@ -124,7 +176,6 @@ const Shop = () => {
             </div>
           </div>
 
-          {/* ================= MOBILE FILTERS ================= */}
           {showFilters && (
             <div className="lg:hidden mt-4 p-5 bg-white rounded-3xl shadow-lg">
               <h4 className="font-medium text-[#731162] mb-4">Categories</h4>
@@ -150,21 +201,19 @@ const Shop = () => {
           )}
         </AnimatedSection>
 
-        {/* ================= RESULTS COUNT ================= */}
         <p className="text-sm text-black/60 mb-8">
           Showing {filteredProducts.length}{" "}
           {filteredProducts.length === 1 ? "product" : "products"}
           {selectedCategory !== "All" && ` in ${selectedCategory}`}
         </p>
 
-        {/* ================= PRODUCTS GRID ================= */}
         {filteredProducts.length > 0 ? (
           <AnimatedSection
             stagger
             className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
           >
             {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product._id} product={product} />
             ))}
           </AnimatedSection>
         ) : (

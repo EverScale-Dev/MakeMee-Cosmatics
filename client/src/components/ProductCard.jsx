@@ -10,8 +10,20 @@ const ProductCard = ({ product }) => {
   const cardRef = useRef(null);
   const imageRef = useRef(null);
 
-  // ✅ default selected size (first size)
-  const [selectedSize] = useState(product.sizes?.[0]);
+  // Get product ID (support both _id from backend and id from mock)
+  const productId = product._id || product.id;
+
+  // Handle both sizes array and single price (backward compatibility)
+  const hasSizes = product.sizes && product.sizes.length > 0;
+  const [selectedSize] = useState(
+    hasSizes
+      ? product.sizes[0]
+      : {
+          ml: null,
+          originalPrice: product.regularPrice,
+          sellingPrice: product.salePrice,
+        }
+  );
 
   const { addToCart, isInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
@@ -21,7 +33,7 @@ const ProductCard = ({ product }) => {
     const image = imageRef.current;
     if (!card || !image) return;
 
-    const hasHoverImage = product.images.length > 1;
+    const hasHoverImage = product.images && product.images.length > 1;
 
     const handleMouseEnter = () => {
       gsap.to(card, {
@@ -75,7 +87,15 @@ const ProductCard = ({ product }) => {
     };
   }, [product.images]);
 
-  const inCart = isInCart(product.id, selectedSize?.ml);
+  const inCart = isInCart(productId, selectedSize?.ml);
+
+  const handleAddToCart = () => {
+    addToCart({
+      ...product,
+      id: productId,
+      selectedSize,
+    });
+  };
 
   return (
     <div
@@ -84,41 +104,41 @@ const ProductCard = ({ product }) => {
     >
       {/* IMAGE */}
       <div className="relative overflow-hidden aspect-square">
-        <Link to={`/product/${product.id}`}>
+        <Link to={`/product/${productId}`}>
           <img
             ref={imageRef}
-            src={product.images[0]}
+            src={product.images?.[0] || "/placeholder.png"}
             alt={product.name}
             className="w-full h-full object-cover"
           />
         </Link>
 
+        {/* BADGE */}
+        {product.badge && (
+          <span className="absolute top-4 left-4 px-3 py-1 bg-[#FC6CB4] text-white text-xs font-medium rounded-full">
+            {product.badge}
+          </span>
+        )}
+
         {/* ACTION BUTTONS */}
         <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          {/* WISHLIST */}
           <button
-            onClick={() => toggleWishlist(product)}
+            onClick={() => toggleWishlist({ ...product, id: productId })}
             className={`p-2 rounded-full shadow-lg
               ${
-                isInWishlist(product.id)
+                isInWishlist(productId)
                   ? "bg-red-500 text-white"
                   : "bg-white hover:bg-gray-100"
               }`}
           >
             <Heart
               size={18}
-              fill={isInWishlist(product.id) ? "white" : "none"}
+              fill={isInWishlist(productId) ? "white" : "none"}
             />
           </button>
 
-          {/* CART */}
           <button
-            onClick={() =>
-              addToCart({
-                ...product,
-                selectedSize,
-              })
-            }
+            onClick={handleAddToCart}
             disabled={inCart}
             className={`p-2 rounded-full shadow-lg
               ${
@@ -134,11 +154,11 @@ const ProductCard = ({ product }) => {
 
       {/* CONTENT */}
       <div className="p-4">
-        <Link to={`/product/${product.id}`}>
+        <Link to={`/product/${productId}`}>
           <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">
-            {product.category}
+            {product.brand || product.category || "MakeMee"}
           </p>
-          <h3 className="font-semibold text-gray-900 mb-2 hover:text-gray-600">
+          <h3 className="font-semibold text-gray-900 mb-2 hover:text-gray-600 line-clamp-2">
             {product.name}
           </h3>
         </Link>
@@ -146,18 +166,23 @@ const ProductCard = ({ product }) => {
         {/* PRICE */}
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-sm text-gray-400 line-through mr-2">
-              ₹{selectedSize.originalPrice}
-            </span>
+            {selectedSize.originalPrice > selectedSize.sellingPrice && (
+              <span className="text-sm text-gray-400 line-through mr-2">
+                ₹{selectedSize.originalPrice}
+              </span>
+            )}
             <span className="text-lg font-bold text-gray-900">
               ₹{selectedSize.sellingPrice}
             </span>
-            <p className="text-xs text-gray-500">
-              {selectedSize.ml} ml
-            </p>
+            {selectedSize.ml && (
+              <p className="text-xs text-gray-500">{selectedSize.ml} ml</p>
+            )}
+            {!selectedSize.ml && product.weight && (
+              <p className="text-xs text-gray-500">{product.weight}</p>
+            )}
           </div>
 
-          {product.rating && (
+          {product.rating > 0 && (
             <div className="flex items-center text-sm text-gray-600">
               <span className="text-yellow-500 mr-1">★</span>
               {product.rating}
