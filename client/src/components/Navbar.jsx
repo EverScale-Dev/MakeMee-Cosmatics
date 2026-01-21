@@ -2,14 +2,16 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ShoppingCart, Heart, User, Menu, X, Search } from "lucide-react";
 import { gsap } from "gsap";
+import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 
 import makemee from "../assets/makemee.png";
 
-const Navbar = ({
-  cartCount = 0,
-  wishlistCount = 0,
-  isAuthenticated = false, // 👈 NEW PROP
-}) => {
+const Navbar = ({ isAuthenticated = false }) => {
+  const { getItemCount } = useCart();
+  const { wishlist } = useWishlist();
+  const cartCount = getItemCount();
+  const wishlistCount = wishlist.length;
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navRef = useRef(null);

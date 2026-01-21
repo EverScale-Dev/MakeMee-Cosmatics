@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
 // Context Providers
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 
@@ -24,10 +25,10 @@ import OrderSuccess from "./pages/OrderSuccess";
 
 function AppLayout() {
   const location = useLocation();
+  const { isLoggedIn } = useAuth();
 
   const hideNavbarRoutes = [
     "/account",
-   // covers /orders/:id
   ];
 
   const shouldHideNavbar = hideNavbarRoutes.some(route =>
@@ -38,9 +39,7 @@ function AppLayout() {
     <div className="flex flex-col min-h-screen">
       {!shouldHideNavbar && (
         <Navbar
-          isAuthenticated={true}
-          cartCount={3}
-          wishlistCount={1}
+          isAuthenticated={isLoggedIn}
         />
       )}
 
@@ -70,11 +69,13 @@ function AppLayout() {
 
 function App() {
   return (
-    <CartProvider>
-      <WishlistProvider>
-        <AppLayout />
-      </WishlistProvider>
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <WishlistProvider>
+          <AppLayout />
+        </WishlistProvider>
+      </CartProvider>
+    </AuthProvider>
   );
 }
 

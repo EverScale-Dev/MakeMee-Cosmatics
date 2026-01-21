@@ -1,74 +1,117 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import UnderlineInput from "../components/UnderlineInput";
+import { toast } from "sonner";
 
-export default function Signup() {
-  const [phone, setPhone] = useState("");
-  const [showOtp, setShowOtp] = useState(false);
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const inputsRef = useRef([]);
+export default function SignUp() {
+  const navigate = useNavigate();
+  const { login, register, googleLogin } = useAuth();
+  const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+  });
 
-  const handleOtpChange = (value, index) => {
-    if (!/^\d?$/.test(value)) return;
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-    const updated = [...otp];
-    updated[index] = value;
-    setOtp(updated);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-    if (value && index < 5) {
-      inputsRef.current[index + 1].focus();
+    try {
+      if (isLogin) {
+        await login(form.email, form.password);
+        toast.success("Login successful!");
+      } else {
+        if (!form.fullName.trim()) {
+          toast.error("Please enter your name");
+          setLoading(false);
+          return;
+        }
+        await register(form.fullName, form.email, form.password);
+        toast.success("Account created successfully!");
+      }
+      navigate("/");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputsRef.current[index - 1].focus();
-    }
+  const handleGoogleLogin = async () => {
+    // Google OAuth implementation
+    // This requires setting up Google OAuth in the frontend
+    // For now, we'll show a message
+    toast.info("Google login - Configure VITE_GOOGLE_CLIENT_ID in .env");
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-base px-4">
-      {/* Signup Card */}
       <div className="bg-white rounded-2xl shadow-xl p-10 w-[400px] max-w-lg">
         <h2 className="text-2xl font-semibold text-black mb-1">
-          Create Account
+          {isLogin ? "Welcome Back" : "Create Account"}
         </h2>
         <p className="text-black text-sm mb-8">
-          Sign up using your phone number
+          {isLogin ? "Sign in to your account" : "Sign up with your email"}
         </p>
 
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          {!isLogin && (
+            <UnderlineInput
+              placeholder="Full Name"
+              type="text"
+              name="fullName"
+              value={form.fullName}
+              onChange={handleChange}
+            />
+          )}
+
           <UnderlineInput
-            placeholder="+91 Phone number"
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Email"
+            type="email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            required
           />
 
-          {/* Phone Signup */}
+          <UnderlineInput
+            placeholder="Password"
+            type="password"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
+
           <button
-            type="button"
-            onClick={() => setShowOtp(true)}
+            type="submit"
+            disabled={loading}
             className="
               w-full bg-[#FC6CB4] text-black py-3 rounded-full
               hover:bg-[#F0A400]
               transition-all duration-300 font-medium
+              disabled:opacity-50 disabled:cursor-not-allowed
             "
           >
-            Send OTP
+            {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
           </button>
 
-          {/* Divider */}
           <div className="flex items-center gap-4">
             <div className="flex-1 h-px bg-black/20" />
-            <span className="text-xs text-black/50 uppercase">
-              or
-            </span>
+            <span className="text-xs text-black/50 uppercase">or</span>
             <div className="flex-1 h-px bg-black/20" />
           </div>
 
-          {/* Google Signup */}
           <button
             type="button"
+            onClick={handleGoogleLogin}
             className="
               w-full flex items-center justify-center gap-3
               border border-black/20 py-3 rounded-full
@@ -85,61 +128,18 @@ export default function Signup() {
             </span>
           </button>
         </form>
+
+        <p className="text-center text-sm text-black/60 mt-6">
+          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+          <button
+            type="button"
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-[#FC6CB4] hover:underline font-medium"
+          >
+            {isLogin ? "Sign Up" : "Sign In"}
+          </button>
+        </p>
       </div>
-
-      {/* OTP MODAL */}
-      {showOtp && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm relative">
-            <h3 className="text-xl font-semibold text-black text-center mb-1">
-              Verify OTP
-            </h3>
-            <p className="text-sm text-black/60 text-center mb-6">
-              Enter the 6-digit code sent to your phone
-            </p>
-
-            <div className="flex justify-between gap-2 mb-8">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  ref={(el) => (inputsRef.current[index] = el)}
-                  type="text"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) =>
-                    handleOtpChange(e.target.value, index)
-                  }
-                  onKeyDown={(e) => handleKeyDown(e, index)}
-                  className="
-                    w-12 h-12 text-center text-lg
-                    border-b border-black/30
-                    focus:outline-none
-                    focus:border-[#FC6CB4]
-                    transition-all
-                  "
-                />
-              ))}
-            </div>
-
-            <button
-              className="
-                w-full bg-[#FC6CB4] text-black py-3 rounded-full
-                hover:bg-[#F0A400]
-                transition-all duration-300 font-medium
-              "
-            >
-              Verify
-            </button>
-
-            <button
-              onClick={() => setShowOtp(false)}
-              className="absolute top-3 right-4 text-black/40 hover:text-black"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
