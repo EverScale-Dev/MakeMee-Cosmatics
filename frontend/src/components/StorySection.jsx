@@ -4,8 +4,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import AnimatedSection from "./AnimatedSection";
 
 import heroImg from "../assets/img1.jpg";
-import serumImg from "../assets/img2.jpg";
-import lifestyleImg from "../assets/img3.jpg";
+import slide1 from "../assets/slide/slide1.png";
+import slide2 from "../assets/slide/slide2.png";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -50,7 +50,7 @@ const StorySection = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative bg-white overflow-hidden px-6 lg:px-24 py-24 lg:py-32
+      className="relative bg-base overflow-hidden px-6 lg:px-24 py-24 lg:py-32
                  min-h-auto lg:h-[800px]"
     >
       {/* ================= TEXT ================= */}
@@ -81,12 +81,12 @@ const StorySection = () => {
           className="w-full rounded-3xl shadow-xl"
         />
         <img
-          src={serumImg}
+          src={slide1}
           alt="Serum"
           className="w-full rounded-3xl shadow-xl"
         />
         <img
-          src={lifestyleImg}
+          src={slide2}
           alt="Lifestyle"
           className="w-full rounded-3xl shadow-xl"
         />
@@ -107,7 +107,7 @@ const StorySection = () => {
           {/* LEFT IMAGE */}
           <div className="parallax-img absolute -left-10 top-42 w-[40%] rounded-3xl overflow-hidden shadow-xl">
             <img
-              src={serumImg}
+              src={slide1}
               className="w-full h-full object-cover"
               alt="Serum"
             />
@@ -116,7 +116,7 @@ const StorySection = () => {
           {/* RIGHT IMAGE */}
           <div className="parallax-img absolute -right-10 top-62 w-[40%] rounded-3xl overflow-hidden shadow-xl">
             <img
-              src={lifestyleImg}
+              src={slide2}
               className="w-full h-full object-cover"
               alt="Lifestyle"
             />
