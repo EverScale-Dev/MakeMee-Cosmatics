@@ -60,6 +60,13 @@ const ProductDetails = () => {
   const [activeTab, setActiveTab] = useState("description");
   const [selectedSize, setSelectedSize] = useState(null);
 
+  // Reviews state
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewForm, setReviewForm] = useState({ name: '', rating: 5, message: '' });
+  const [submittingReview, setSubmittingReview] = useState(false);
+
   // Fetch product on mount
   useEffect(() => {
     const fetchProduct = async () => {
@@ -93,6 +100,55 @@ const ProductDetails = () => {
 
     fetchProduct();
   }, [id]);
+
+  // Fetch reviews when product is loaded
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!product?.id && !product?._id) return;
+      const productId = product._id || product.id;
+
+      setReviewsLoading(true);
+      try {
+        const data = await productService.getReviews(productId);
+        setReviews(data.reviews || data || []);
+      } catch (err) {
+        console.error("Failed to fetch reviews:", err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
+    if (product) {
+      fetchReviews();
+    }
+  }, [product]);
+
+  // Submit review handler
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!reviewForm.name.trim() || !reviewForm.message.trim()) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      const productId = product._id || product.id;
+      await productService.submitReview({
+        productId,
+        name: reviewForm.name,
+        rating: reviewForm.rating,
+        message: reviewForm.message,
+      });
+      toast.success("Review submitted! It will appear after admin approval.");
+      setReviewForm({ name: '', rating: 5, message: '' });
+      setShowReviewForm(false);
+    } catch (err) {
+      toast.error("Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -337,6 +393,114 @@ const ProductDetails = () => {
             </AnimatedSection>
           </div>
         </div>
+
+        {/* Reviews Section */}
+        <section className="mt-16 bg-white rounded-3xl p-8 shadow-xl">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-semibold">Customer Reviews</h2>
+            <button
+              onClick={() => setShowReviewForm(!showReviewForm)}
+              className="px-6 py-2 bg-[#FC6CB4] text-white rounded-full hover:bg-[#F0A400] transition"
+            >
+              {showReviewForm ? "Cancel" : "Write a Review"}
+            </button>
+          </div>
+
+          {/* Review Form */}
+          {showReviewForm && (
+            <form onSubmit={handleSubmitReview} className="mb-8 p-6 bg-gray-50 rounded-xl">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Your Name</label>
+                  <input
+                    type="text"
+                    value={reviewForm.name}
+                    onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FC6CB4] outline-none"
+                    placeholder="Enter your name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Rating</label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                        className="text-2xl"
+                      >
+                        <Star
+                          className={`w-6 h-6 ${
+                            star <= reviewForm.rating
+                              ? "fill-[#F0A400] text-[#F0A400]"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Your Review</label>
+                  <textarea
+                    value={reviewForm.message}
+                    onChange={(e) => setReviewForm({ ...reviewForm, message: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FC6CB4] outline-none resize-none"
+                    rows={4}
+                    placeholder="Share your experience with this product..."
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={submittingReview}
+                  className="px-6 py-2 bg-[#731162] text-white rounded-full hover:bg-[#FC6CB4] transition disabled:opacity-50"
+                >
+                  {submittingReview ? "Submitting..." : "Submit Review"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Reviews List */}
+          {reviewsLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#731162] mx-auto"></div>
+            </div>
+          ) : reviews.length > 0 ? (
+            <div className="space-y-6">
+              {reviews.map((review, idx) => (
+                <div key={review._id || idx} className="border-b pb-6 last:border-0">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="font-semibold">{review.name}</span>
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${
+                            i < review.rating
+                              ? "fill-[#F0A400] text-[#F0A400]"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="text-gray-700">{review.message}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-500 py-8">
+              No reviews yet. Be the first to review this product!
+            </p>
+          )}
+        </section>
 
         {/* Related */}
         {relatedProducts.length > 0 && (

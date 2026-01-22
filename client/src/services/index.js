@@ -7,3 +7,4 @@ export { default as customerService } from './customerService';
 export { default as paymentService } from './paymentService';
 export { default as deliveryService } from './deliveryService';
 export { default as contactService } from './contactService';
+export { default as couponService } from './couponService';

@@ -8,6 +8,7 @@ import ProductCard from "../components/ProductCard";
 import AnimatedSection from "../components/AnimatedSection";
 import StorySection from "../components/StorySection";
 import { getFeaturedProducts } from "../data/products";
+import { productService } from "../services";
 import { useHeroAnimation } from "../animations/useHeroAnimation";
 
 import pcbanner from "../assets/banner-desktop.gif";
@@ -20,14 +21,56 @@ import Hero4 from "../assets/hero/HERO4.png"
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Transform backend product to frontend format
+const transformProduct = (p) => {
+  if (p.sizes && p.sizes.length > 0) {
+    return { ...p, id: p._id || p.id };
+  }
+  return {
+    ...p,
+    id: p._id || p.id,
+    sizes: [{
+      ml: parseInt(p.weight) || 30,
+      originalPrice: p.regularPrice || p.salePrice || 0,
+      sellingPrice: p.salePrice || p.regularPrice || 0,
+      inStock: true,
+    }],
+    images: p.images || ['/placeholder.png'],
+    rating: p.rating || 4.5,
+  };
+};
+
 const Home = ({ onAddToCart, onAddToWishlist }) => {
   const titleRef = useRef(null);
   const subtitleRef = useRef(null);
   const ctaRef = useRef(null);
   const imageRef = useRef(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
-  const featuredProducts = getFeaturedProducts();
+  // Fetch featured products from API
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        // Try fetching bestsellers from API first
+        const products = await productService.getFeatured(4);
+        if (products && products.length > 0) {
+          setFeaturedProducts(products.map(transformProduct));
+        } else {
+          // Fallback to mock data if no products in DB
+          setFeaturedProducts(getFeaturedProducts());
+        }
+      } catch (error) {
+        console.error("Failed to fetch featured products:", error);
+        // Fallback to mock data on error
+        setFeaturedProducts(getFeaturedProducts());
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+    fetchFeatured();
+  }, []);
 
 
 

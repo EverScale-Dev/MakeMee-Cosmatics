@@ -91,9 +91,13 @@ exports.createProduct = async (req, res) => {
 // --- GET ALL PRODUCTS ---
 // @desc    Get all products
 // @route   GET /api/products
+// @query   search - search by name/description
+// @query   badge - filter by badge (e.g., "BEST SELLER", "NEW LAUNCH")
+// @query   featured - if "true", returns products with any badge
+// @query   limit - max number of products to return
 exports.getProducts = async (req, res) => {
     try {
-        const { search } = req.query; // Removed 'category' from destructuring
+        const { search, badge, featured, limit } = req.query;
         let filter = {};
 
         // Search Filter (by name or description)
@@ -104,12 +108,25 @@ exports.getProducts = async (req, res) => {
                 { description: { $regex: search, $options: 'i' } },
             ];
         }
-        
-        // Removed Category Filter
 
-        const products = await Product.find(filter)
-            // Removed .populate('category', 'name')
-            .sort({ createdAt: -1 }); // Sort newest first
+        // Badge Filter (exact match, case-insensitive)
+        if (badge) {
+            filter.badge = { $regex: new RegExp(`^${badge}$`, 'i') };
+        }
+
+        // Featured products (any product with a badge)
+        if (featured === 'true') {
+            filter.badge = { $exists: true, $ne: null, $ne: '' };
+        }
+
+        let query = Product.find(filter).sort({ createdAt: -1 });
+
+        // Limit results if specified
+        if (limit) {
+            query = query.limit(parseInt(limit, 10));
+        }
+
+        const products = await query;
 
         // Disable caching to prevent 304 Not Modified responses
         res.set({

@@ -16,6 +16,7 @@ const contactRoutes = require('./routes/contactRoutes');
 const reviewRoutes = require("./routes/reviewRoutes");
 const deliveryRoutes = require("./routes/deliveryRoutes");
 const cartRoutes = require("./routes/cart");
+const couponRoutes = require("./routes/couponRoutes");
 
 dotenv.config();
 connectDB();
@@ -63,6 +64,7 @@ app.use('/api/contact', contactRoutes);
 app.use("/api/review", reviewRoutes);
 app.use("/api/delivery", deliveryRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/coupons", couponRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello, MakeMeeCosmetics Server!');

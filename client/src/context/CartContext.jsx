@@ -116,6 +116,8 @@ export const CartProvider = ({ children }) => {
   const addToCart = useCallback((product, quantity = 1) => {
     const productId = getProductId(product);
     const sizeML = product.selectedSize?.ml;
+    // Use quantity from product object if provided, else use parameter
+    const qty = product.quantity || quantity;
 
     setItems(prev => {
       const existingIndex = prev.findIndex(item =>
@@ -127,13 +129,13 @@ export const CartProvider = ({ children }) => {
         newItems = [...prev];
         newItems[existingIndex] = {
           ...newItems[existingIndex],
-          quantity: newItems[existingIndex].quantity + quantity,
+          quantity: newItems[existingIndex].quantity + qty,
         };
       } else {
         newItems = [...prev, {
           product: { ...product, id: productId, _id: productId },
           selectedSize: product.selectedSize,
-          quantity,
+          quantity: qty,
         }];
       }
 

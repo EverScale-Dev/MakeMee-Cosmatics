@@ -3,6 +3,7 @@ const Product = require("../../models/Product");
 const Customer = require("../../models/Customer");
 const createInvoice = require("../../utils/createInvoice");
 const sendEmail = require("../../utils/sendMail");
+const { incrementCouponUsage } = require("./couponController");
 
 // =========================================================
 // @desc    Create a new order
@@ -10,7 +11,7 @@ const sendEmail = require("../../utils/sendMail");
 // =========================================================
 
 exports.createOrder = async (req, res) => {
-  const { customer, products, totalAmount, paymentMethod, note } = req.body;
+  const { customer, products, totalAmount, paymentMethod, note, couponCode, couponDiscount } = req.body;
 
   try {
     // ✅ Check if the customer exists
@@ -45,7 +46,8 @@ exports.createOrder = async (req, res) => {
       0
     );
     const deliveryCharge = Number(req.body.deliveryCharge) || 0;
-    const finalTotal = subtotal + deliveryCharge;
+    const discount = Number(couponDiscount) || 0;
+    const finalTotal = subtotal + deliveryCharge - discount;
 
     // ✅ Create new order (link to logged-in user if available)
     const order = await Order.create({
@@ -54,10 +56,17 @@ exports.createOrder = async (req, res) => {
       products: validatedProducts,
       subtotal,
       deliveryCharge,
+      couponCode: couponCode || null,
+      couponDiscount: discount,
       totalAmount: finalTotal,
       paymentMethod,
       note,
     });
+
+    // ✅ Increment coupon usage if a coupon was applied
+    if (couponCode) {
+      await incrementCouponUsage(couponCode);
+    }
 
     // ✅ Populate for email & invoice
     const populatedOrder = await Order.findById(order._id)

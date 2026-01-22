@@ -168,29 +168,42 @@ function generateTotals(doc, order, y) {
   const labelX = boxX + 15;
   const valueX = boxX + boxWidth - 15;
 
+  let currentY = y;
+
   // Subtotal row
   doc.fontSize(10).fillColor(COLORS.muted).font("Helvetica")
-    .text("Subtotal:", labelX, y);
+    .text("Subtotal:", labelX, currentY);
   doc.fontSize(10).fillColor(COLORS.text).font("Helvetica")
-    .text(`₹${(order.subtotal || 0).toFixed(2)}`, valueX - 80, y, { width: 80, align: "right" });
+    .text(`₹${(order.subtotal || 0).toFixed(2)}`, valueX - 80, currentY, { width: 80, align: "right" });
+  currentY += 18;
 
   // Delivery row
   doc.fontSize(10).fillColor(COLORS.muted).font("Helvetica")
-    .text("Delivery:", labelX, y + 18);
+    .text("Delivery:", labelX, currentY);
   doc.fontSize(10).fillColor(COLORS.text).font("Helvetica")
-    .text(`₹${(order.deliveryCharge || 0).toFixed(2)}`, valueX - 80, y + 18, { width: 80, align: "right" });
+    .text(`₹${(order.deliveryCharge || 0).toFixed(2)}`, valueX - 80, currentY, { width: 80, align: "right" });
+  currentY += 18;
+
+  // Coupon discount row (if applied)
+  if (order.couponCode && order.couponDiscount > 0) {
+    doc.fontSize(10).fillColor("#2E7D32").font("Helvetica")
+      .text(`Discount (${order.couponCode}):`, labelX, currentY);
+    doc.fontSize(10).fillColor("#2E7D32").font("Helvetica")
+      .text(`-₹${(order.couponDiscount).toFixed(2)}`, valueX - 80, currentY, { width: 80, align: "right" });
+    currentY += 18;
+  }
 
   // Divider line
-  doc.moveTo(boxX, y + 38).lineTo(boxX + boxWidth, y + 38).strokeColor(COLORS.border).lineWidth(1).stroke();
+  doc.moveTo(boxX, currentY + 2).lineTo(boxX + boxWidth, currentY + 2).strokeColor(COLORS.border).lineWidth(1).stroke();
 
   // Grand Total row (highlighted)
-  doc.rect(boxX, y + 45, boxWidth, 30).fill(COLORS.accent);
+  doc.rect(boxX, currentY + 9, boxWidth, 30).fill(COLORS.accent);
   doc.fontSize(11).fillColor(COLORS.white).font("Helvetica-Bold")
-    .text("Grand Total:", labelX, y + 54);
+    .text("Grand Total:", labelX, currentY + 18);
   doc.fontSize(14).fillColor(COLORS.white).font("Helvetica-Bold")
-    .text(`₹${(order.totalAmount || 0).toFixed(2)}`, valueX - 90, y + 52, { width: 90, align: "right" });
+    .text(`₹${(order.totalAmount || 0).toFixed(2)}`, valueX - 90, currentY + 16, { width: 90, align: "right" });
 
-  return y + 90;
+  return currentY + 54;
 }
 
 // === THANK YOU MESSAGE ===
