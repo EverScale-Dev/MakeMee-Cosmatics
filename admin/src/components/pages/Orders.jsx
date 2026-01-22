@@ -339,9 +339,23 @@ export default function Orders() {
           >
             Prev
           </button>
-          {[...Array(Math.min(5, totalPages))].map((_, index) => {
-            const page = index + 1;
-            return (
+          {(() => {
+            // Show pages around current page
+            const pages = [];
+            let start = Math.max(1, currentPage - 2);
+            let end = Math.min(totalPages, currentPage + 2);
+
+            // Adjust if near start or end
+            if (currentPage <= 3) {
+              end = Math.min(5, totalPages);
+            } else if (currentPage >= totalPages - 2) {
+              start = Math.max(1, totalPages - 4);
+            }
+
+            for (let p = start; p <= end; p++) {
+              pages.push(p);
+            }
+            return pages.map(page => (
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
@@ -351,8 +365,8 @@ export default function Orders() {
               >
                 {page}
               </button>
-            );
-          })}
+            ));
+          })()}
           <button
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(p => p + 1)}

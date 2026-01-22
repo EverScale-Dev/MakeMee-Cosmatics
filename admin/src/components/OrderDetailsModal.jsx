@@ -70,8 +70,10 @@ export default function OrderDetailsModal({ order, onClose, onRefresh }) {
 
   const handleDownloadInvoice = async () => {
     try {
-      await orderService.downloadInvoice(order._id);
+      // Use numeric orderId, not MongoDB _id
+      await orderService.downloadInvoice(order.orderId);
     } catch (error) {
+      console.error("Download invoice error:", error);
       alert("Failed to download invoice");
     }
   };

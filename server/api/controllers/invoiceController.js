@@ -15,8 +15,11 @@ exports.downloadInvoice = async (req, res) => {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    // Verify the order belongs to the logged-in user
-    if (order.user && order.user.toString() !== req.User._id.toString()) {
+    // Admins can download any invoice; regular users can only download their own
+    const isAdmin = req.User?.role === "admin";
+    const isOwner = order.user && order.user.toString() === req.User._id.toString();
+
+    if (!isAdmin && order.user && !isOwner) {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 

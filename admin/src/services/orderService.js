@@ -17,6 +17,12 @@ export const orderService = {
     return response.data;
   },
 
+  // Update order status only
+  async updateStatus(id, status) {
+    const response = await api.put(`/orders/${id}`, { status });
+    return response.data;
+  },
+
   async delete(id) {
     const response = await api.delete(`/orders/${id}`);
     return response.data;
@@ -31,7 +37,17 @@ export const orderService = {
     const response = await api.get(`/orders/${orderId}/download-invoice`, {
       responseType: 'blob',
     });
-    return response.data;
+    // Trigger file download
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `invoice-${orderId}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+    return true;
   },
 };
 
