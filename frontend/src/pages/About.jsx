@@ -3,8 +3,7 @@ import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { ArrowLeft } from "lucide-react";
 import productImg from "../assets/fasewash.png";
-import ShowStory from "@/components/ShowStory";
-
+import { LiquidGlass } from "@/components/liquid-glass";
 
 import herobg from "../assets/about/hero.png";
 import aftervsbefore from "../assets/about/aftervsbefore.png";
@@ -20,7 +19,6 @@ export default function About() {
   const storyRef = useRef(null);
   const imageRef = useRef(null);
   const storyTextRef = useRef(null);
-  
 
   const [showStory, setShowStory] = useState(false);
 
@@ -222,11 +220,24 @@ export default function About() {
             <ArrowLeft size={22} />
             Back
           </button>
-          
-          {/* GLASS + CONTENT WRAPPER */}
-         
-          <div className="relative w-full min-h-screen p-10 mt-10">
-            <div className="w-full min-h-full bg-white/30 rounded-xl backdrop-blur-3xl shadow-[inset_0_0_150px_rgba(255,255,255,1.5)]">
+
+          {/* LIQUID GLASS WRAPPER */}
+          <div className="relative w-full min-h-screen p-10 mt-10 cursor-none overflow-hidden">
+            {/* MAIN GLASS CARD */}
+            <div
+              className="relative w-full min-h-ful rounded-xl bg-white/20
+                    backdrop-blur-[28px]
+                    border border-white
+                    rounded-2xl
+                    shadow-[inset_0_1px_150px_rgba(255,255,255,1.5),inset_0_-20px_40px_rgba(252,108,180,0.15),0_20px_50px_rgba(252,108,180,0.25)]"
+              style={{  
+                backgroundImage:
+                  "linear-gradient(180deg, rgba(255,255,255,0.3), rgba(255,255,255,0.3))",
+              }}
+            >
+              {/* LIQUID GLASS EFFECT */}
+              <LiquidGlass borderRadius={60}  />
+
               {/* STORY HERO */}
               <div className="min-h-screen flex items-center ml-10 mr-10">
                 <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-24 items-center">
@@ -266,7 +277,7 @@ export default function About() {
               {/* STORY PARALLAX SECTIONS */}
               <section className="py-40">
                 <div className="max-w-7xl mx-auto px-6 space-y-40">
-                  {/* SECTION 1 — TEXT LEFT / IMAGE RIGHT */}
+                  {/* SECTION 1 */}
                   <div className="story-section grid lg:grid-cols-2 gap-20 items-center parallax">
                     <div className="slide-text" data-direction="left">
                       <h3 className="font-serif text-5xl text-main mb-6">
@@ -276,9 +287,7 @@ export default function About() {
                       </h3>
                       <p className="text-[#444] text-lg max-w-xl leading-relaxed">
                         From the outset, MakeMee has followed a considered
-                        approach to product development. Each formulation is
-                        designed with intention, focusing on performance,
-                        texture, and skin compatibility.
+                        approach to product development.
                       </p>
                     </div>
 
@@ -291,7 +300,7 @@ export default function About() {
                     </div>
                   </div>
 
-                  {/* SECTION 2 — IMAGE LEFT / TEXT RIGHT */}
+                  {/* SECTION 2 */}
                   <div className="story-section grid lg:grid-cols-2 gap-20 items-center parallax">
                     <div className="order-2 lg:order-1 bg-white p-6 rounded-2xl shadow-xl fade-image">
                       <img
@@ -311,10 +320,8 @@ export default function About() {
                         Refined by Care
                       </h3>
                       <p className="text-[#444] text-lg max-w-xl leading-relaxed">
-                        We draw inspiration from nature while applying a modern,
-                        disciplined approach to formulation. Ingredients are
-                        chosen for their effectiveness, safety, and long-term
-                        skin health.
+                        Ingredients are chosen for effectiveness, safety, and
+                        long-term skin health.
                       </p>
                     </div>
                   </div>
@@ -322,7 +329,6 @@ export default function About() {
               </section>
             </div>
           </div>
-        
         </section>
       )}
     </>
