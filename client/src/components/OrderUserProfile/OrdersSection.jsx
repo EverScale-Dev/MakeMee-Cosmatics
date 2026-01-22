@@ -14,10 +14,13 @@ export default function OrdersSection() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const data = await orderService.getMyOrders();
-        // Transform to expected format and take only recent 5
+        const response = await orderService.getMyOrders();
+        const data = response.orders || response;
+        // Transform for display and keep full data for modal
         const transformed = data.slice(0, 5).map(order => ({
+          // For OrderCard display
           id: order.orderId || order._id,
+          orderId: order.orderId,
           _id: order._id,
           product: order.products?.[0]?.name || "Order",
           amount: order.totalAmount || 0,
@@ -29,7 +32,15 @@ export default function OrdersSection() {
             year: 'numeric'
           }),
           payment: order.paymentMethod === 'cashOnDelivery' ? 'COD' : 'Online',
+          // Full data for modal
           products: order.products,
+          paymentMethod: order.paymentMethod,
+          totalAmount: order.totalAmount,
+          subtotal: order.subtotal,
+          deliveryCharge: order.deliveryCharge,
+          shiprocket: order.shiprocket,
+          customer: order.customer,
+          createdAt: order.createdAt,
         }));
         setOrders(transformed);
       } catch (error) {

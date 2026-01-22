@@ -68,65 +68,75 @@ const Cart = () => {
 
         {/* CART ITEMS */}
         <div className="space-y-8">
-          {items.map(({ product, quantity }) => (
-            <div
-              key={product.id}
-              className="flex gap-6 pb-8 border-b border-black/10"
-            >
-              <div className="w-28 h-28 bg-black/5 rounded-xl overflow-hidden">
-                <img
-                  src={product.images[0]}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+          {items.map(({ product, selectedSize, quantity }) => {
+            // Get price with fallbacks to avoid NaN
+            const unitPrice = selectedSize?.sellingPrice ||
+              product.salePrice ||
+              product.price ||
+              0;
+            const totalPrice = unitPrice * (quantity || 1);
+            const sizeLabel = selectedSize?.ml ? ` (${selectedSize.ml}ml)` : '';
 
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-black">
-                  {product.name}
-                </h3>
-                <p className="text-sm text-black/60">
-                  {product.shortDescription}
-                </p>
+            return (
+              <div
+                key={`${product.id}-${selectedSize?.ml || ''}`}
+                className="flex gap-6 pb-8 border-b border-black/10"
+              >
+                <div className="w-28 h-28 bg-black/5 rounded-xl overflow-hidden">
+                  <img
+                    src={product.images?.[0] || '/placeholder.png'}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
 
-                <div className="flex justify-between items-center mt-6">
-                  <div className="flex items-center bg-black/5 rounded-full">
-                    <button
-                      onClick={() =>
-                        updateQuantity(product.id, quantity - 1)
-                      }
-                      className="p-3"
-                    >
-                      <Minus size={16} />
-                    </button>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-black">
+                    {product.name}{sizeLabel}
+                  </h3>
+                  <p className="text-sm text-black/60">
+                    {product.shortDescription || `₹${unitPrice} each`}
+                  </p>
 
-                    <span className="w-10 text-center">{quantity}</span>
+                  <div className="flex justify-between items-center mt-6">
+                    <div className="flex items-center bg-black/5 rounded-full">
+                      <button
+                        onClick={() =>
+                          updateQuantity(product.id, quantity - 1, selectedSize?.ml)
+                        }
+                        className="p-3"
+                      >
+                        <Minus size={16} />
+                      </button>
 
-                    <button
-                      onClick={() =>
-                        updateQuantity(product.id, quantity + 1)
-                      }
-                      className="p-3"
-                    >
-                      <Plus size={16} />
-                    </button>
-                  </div>
+                      <span className="w-10 text-center">{quantity}</span>
 
-                  <div className="flex items-center gap-6">
-                    <span className="font-semibold">
-                      {formatPrice(product.price * quantity)}
-                    </span>
-                    <button
-                      onClick={() => removeFromCart(product.id)}
-                      className="text-black/50 hover:text-black"
-                    >
-                      <Trash size={18} />
-                    </button>
+                      <button
+                        onClick={() =>
+                          updateQuantity(product.id, quantity + 1, selectedSize?.ml)
+                        }
+                        className="p-3"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                      <span className="font-semibold">
+                        {formatPrice(totalPrice)}
+                      </span>
+                      <button
+                        onClick={() => removeFromCart(product.id, selectedSize?.ml)}
+                        className="text-black/50 hover:text-black"
+                      >
+                        <Trash size={18} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <button

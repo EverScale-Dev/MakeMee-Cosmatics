@@ -181,7 +181,8 @@ export default function OrderDetailsModal({ order, onClose, onRefresh }) {
             ) : (
               <div className="text-gray-400">
                 <p>No shipment created yet</p>
-                {order.status !== "pending payment" && (
+                {/* COD orders can ship anytime; Online orders need payment verified */}
+                {(order.paymentMethod === "cashOnDelivery" || order.status !== "pending payment") ? (
                   <button
                     onClick={handleCreateShipment}
                     disabled={shipmentLoading}
@@ -189,10 +190,9 @@ export default function OrderDetailsModal({ order, onClose, onRefresh }) {
                   >
                     {shipmentLoading ? "Creating..." : "Create Shipment"}
                   </button>
-                )}
-                {order.status === "pending payment" && (
+                ) : (
                   <p className="mt-2 text-sm text-orange-600">
-                    Cannot create shipment for unpaid orders
+                    Cannot create shipment - online payment pending
                   </p>
                 )}
               </div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -11,12 +11,38 @@ import {
 } from "lucide-react";
 
 import { getProductById, products } from "@/data/products";
+import { productService } from "@/services";
 import ProductCard from "@/components/ProductCard";
 import AnimatedSection from "@/components/AnimatedSection";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { usePageTransition } from "@/hooks/useGSAP";
 import { toast } from "sonner";
+
+// Transform backend product to expected format
+const transformBackendProduct = (p) => {
+  // If product already has sizes array, use it
+  if (p.sizes && p.sizes.length > 0) {
+    return {
+      ...p,
+      id: p._id || p.id,
+    };
+  }
+  // Otherwise, create sizes from regularPrice/salePrice
+  return {
+    ...p,
+    id: p._id || p.id,
+    sizes: [{
+      ml: parseInt(p.weight) || 30,
+      originalPrice: p.regularPrice || p.salePrice || 0,
+      sellingPrice: p.salePrice || p.regularPrice || 0,
+      inStock: true,
+    }],
+    images: p.images || ['/placeholder.png'],
+    rating: p.rating || 4.5,
+    shortDescription: p.description || p.shortDescription || '',
+  };
+};
 
 const ProductDetails = () => {
   usePageTransition();
@@ -26,18 +52,57 @@ const ProductDetails = () => {
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
-  const product = id ? getProductById(id) : null;
-
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeTab, setActiveTab] = useState("description");
+  const [selectedSize, setSelectedSize] = useState(null);
 
-  // ✅ default size
-  const [selectedSize, setSelectedSize] = useState(
-    product?.sizes?.[0]
-  );
+  // Fetch product on mount
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
 
-  if (!product || !selectedSize) {
+      // Try mock data first (for development with mock IDs like "1", "4")
+      const mockProduct = getProductById(id);
+      if (mockProduct) {
+        setProduct(mockProduct);
+        setSelectedSize(mockProduct.sizes?.[0]);
+        setLoading(false);
+        return;
+      }
+
+      // If not in mock, try API
+      try {
+        const data = await productService.getById(id);
+        const transformed = transformBackendProduct(data);
+        setProduct(transformed);
+        setSelectedSize(transformed.sizes?.[0]);
+      } catch (err) {
+        console.error("Failed to fetch product:", err);
+        setError("Product not found");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <main className="pt-28 pb-20 min-h-screen bg-white flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#731162]"></div>
+      </main>
+    );
+  }
+
+  if (!product || !selectedSize || error) {
     return (
       <main className="pt-28 pb-20 min-h-screen bg-white text-center">
         <h1 className="text-3xl font-semibold mb-6">Product Not Found</h1>
@@ -70,11 +135,12 @@ const ProductDetails = () => {
     navigate("/cart");
   };
 
+  // Related products from mock data (or could fetch from API)
   const relatedProducts = products
     .filter(
       (p) =>
         p.id !== product.id &&
-        p.tags?.some((tag) => product.tags.includes(tag))
+        p.tags?.some((tag) => product.tags?.includes(tag))
     )
     .slice(0, 4);
 

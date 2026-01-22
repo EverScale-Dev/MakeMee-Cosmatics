@@ -243,7 +243,7 @@ const Checkout = () => {
               clearCart();
               navigate(`/order-success?orderId=${order._id}`);
             } catch (err) {
-              toast.error("Payment verification failed");
+              toast.error("Payment verification failed. Please contact support.");
             }
           },
           prefill: {
@@ -254,9 +254,29 @@ const Checkout = () => {
           theme: {
             color: "#FC6CB4",
           },
+          modal: {
+            ondismiss: () => {
+              // User closed the payment modal without completing
+              toast.error(
+                "Payment cancelled. Your order is saved - you can retry payment from your orders.",
+                { duration: 5000 }
+              );
+              // Order stays as "pending payment" - this is correct
+              // User can retry later from order history
+            },
+          },
         };
 
         const razorpay = new window.Razorpay(options);
+
+        // Handle payment failures
+        razorpay.on("payment.failed", (response) => {
+          toast.error(
+            `Payment failed: ${response.error.description}. Please try again.`,
+            { duration: 5000 }
+          );
+        });
+
         razorpay.open();
       };
     } catch (error) {

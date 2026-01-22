@@ -181,11 +181,14 @@ export const CartProvider = ({ children }) => {
 
   const getTotal = useCallback(() => {
     return items.reduce((total, item) => {
-      const price = item.selectedSize?.sellingPrice ||
-        item.product.salePrice ||
-        item.product.price ||
-        0;
-      return total + price * item.quantity;
+      const price = Number(
+        item.selectedSize?.sellingPrice ||
+        item.product?.salePrice ||
+        item.product?.price ||
+        0
+      );
+      const qty = Number(item.quantity) || 1;
+      return total + (price * qty);
     }, 0);
   }, [items]);
 

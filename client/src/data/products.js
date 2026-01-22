@@ -127,11 +127,13 @@ export const getProductsByCategory = (category) => {
 };
 
 export const formatPrice = (price) => {
+  // Handle NaN, undefined, null
+  const safePrice = Number(price) || 0;
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(price);
+  }).format(safePrice);
 };
 
 export const getFeaturedProducts = () => {

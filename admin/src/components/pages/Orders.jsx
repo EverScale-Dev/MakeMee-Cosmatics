@@ -112,6 +112,34 @@ export default function Orders() {
     }
   };
 
+  // Sync shipment status from Shiprocket
+  const handleSyncStatus = async (orderId) => {
+    setActionLoading(orderId);
+    try {
+      const result = await shiprocketService.trackOrder(orderId);
+      if (result.success) {
+        alert(`Status synced: ${result.currentStatus || result.orderStatus}`);
+        fetchOrders();
+      } else {
+        alert("Failed to sync status");
+      }
+    } catch (error) {
+      alert(error.response?.data?.error || "Failed to sync status");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Check if shipment can be created for an order
+  const canCreateShipment = (order) => {
+    // COD orders can always be shipped (payment on delivery)
+    if (order.paymentMethod === "cashOnDelivery") {
+      return true;
+    }
+    // Online payment orders need payment verified (not pending payment)
+    return order.status !== "pending payment";
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -311,14 +339,23 @@ export default function Orders() {
                     >
                       👁️
                     </button>
-                    {!order.shiprocket?.shipmentId && (
+                    {!order.shiprocket?.shipmentId ? (
                       <button
                         onClick={() => handleCreateShipment(order._id)}
-                        disabled={actionLoading === order._id || order.status === "pending payment"}
+                        disabled={actionLoading === order._id || !canCreateShipment(order)}
                         className="text-lg disabled:opacity-50"
-                        title={order.status === "pending payment" ? "Payment pending" : "Create Shipment"}
+                        title={!canCreateShipment(order) ? "Online payment pending" : "Create Shipment"}
                       >
                         {actionLoading === order._id ? "⏳" : "🚚"}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleSyncStatus(order._id)}
+                        disabled={actionLoading === order._id}
+                        className="text-lg disabled:opacity-50"
+                        title="Sync Shiprocket Status"
+                      >
+                        {actionLoading === order._id ? "⏳" : "🔄"}
                       </button>
                     )}
                   </td>
