@@ -25,6 +25,18 @@ export const orderService = {
     const response = await api.get(`/shiprocket/status/${orderId}`);
     return response.data;
   },
+
+  async generateInvoice(orderId) {
+    const response = await api.post('/orders/generate-invoice', { orderId });
+    return response.data;
+  },
+
+  async downloadInvoice(orderId) {
+    const response = await api.get(`/orders/${orderId}/download-invoice`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
 };
 
 export default orderService;
