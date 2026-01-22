@@ -421,7 +421,9 @@ exports.getProfile = async (req, res) => {
       authProvider: user.authProvider,
       role: user.role,
       phone: user.phone,
-      address: user.address,
+      phoneVerified: user.phoneVerified || false,
+      addresses: user.addresses || [],
+      address: user.address, // Keep for backward compatibility
       createdAt: user.createdAt,
     });
   } catch (error) {
@@ -442,7 +444,14 @@ exports.updateProfile = async (req, res) => {
 
     // Update allowed fields
     if (fullName) user.fullName = fullName;
-    if (phone !== undefined) user.phone = phone;
+
+    // If phone changes, reset verification
+    if (phone !== undefined && phone !== user.phone) {
+      user.phone = phone;
+      user.phoneVerified = false;
+    }
+
+    // Keep backward compatibility with old address field
     if (address) {
       user.address = {
         street: address.street || user.address?.street,
@@ -462,11 +471,270 @@ exports.updateProfile = async (req, res) => {
       authProvider: user.authProvider,
       role: user.role,
       phone: user.phone,
+      phoneVerified: user.phoneVerified,
+      addresses: user.addresses || [],
       address: user.address,
     });
   } catch (error) {
     console.error('Error updating profile:', error.message);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// In-memory OTP store (for development - use Redis in production)
+const otpStore = {};
+
+// Send OTP (Mock implementation)
+exports.sendOtp = async (req, res) => {
+  const { phone } = req.body;
+
+  if (!phone || !/^\d{10}$/.test(phone)) {
+    return res.status(400).json({ message: 'Valid 10-digit phone number required' });
+  }
+
+  try {
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store OTP with expiry (5 minutes)
+    otpStore[phone] = {
+      otp,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+      userId: req.User._id,
+    };
+
+    // In production, send OTP via SMS (Twilio/MSG91)
+    // For now, log it for development
+    console.log(`[DEV] OTP for ${phone}: ${otp}`);
+
+    res.status(200).json({
+      message: 'OTP sent successfully',
+      // Only include OTP in development mode
+      ...(process.env.NODE_ENV !== 'production' && { otp }),
+    });
+  } catch (error) {
+    console.error('Error sending OTP:', error.message);
+    res.status(500).json({ message: 'Failed to send OTP' });
+  }
+};
+
+// Verify OTP
+exports.verifyOtp = async (req, res) => {
+  const { phone, otp } = req.body;
+
+  if (!phone || !otp) {
+    return res.status(400).json({ message: 'Phone and OTP required' });
+  }
+
+  try {
+    const storedData = otpStore[phone];
+
+    if (!storedData) {
+      return res.status(400).json({ message: 'OTP not found. Please request a new one.' });
+    }
+
+    if (Date.now() > storedData.expiresAt) {
+      delete otpStore[phone];
+      return res.status(400).json({ message: 'OTP expired. Please request a new one.' });
+    }
+
+    if (storedData.otp !== otp) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+
+    // OTP verified - update user
+    const user = await User.findById(req.User._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.phone = phone;
+    user.phoneVerified = true;
+    await user.save();
+
+    // Clear OTP
+    delete otpStore[phone];
+
+    res.status(200).json({
+      message: 'Phone verified successfully',
+      phone: user.phone,
+      phoneVerified: true,
+    });
+  } catch (error) {
+    console.error('Error verifying OTP:', error.message);
+    res.status(500).json({ message: 'Failed to verify OTP' });
+  }
+};
+
+// Add new address
+exports.addAddress = async (req, res) => {
+  const { label, apartment_address, street_address1, city, state, pincode, lat, lng, isDefault } = req.body;
+
+  // Validation
+  if (!street_address1 || !city || !state || !pincode) {
+    return res.status(400).json({ message: 'Street address, city, state, and pincode are required' });
+  }
+
+  if (!/^\d{6}$/.test(pincode)) {
+    return res.status(400).json({ message: 'Pincode must be 6 digits' });
+  }
+
+  try {
+    const user = await User.findById(req.User._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check max addresses limit
+    if (user.addresses && user.addresses.length >= 5) {
+      return res.status(400).json({ message: 'Maximum 5 addresses allowed. Please delete one to add a new address.' });
+    }
+
+    // If this is the first address or isDefault is true, set as default
+    const shouldBeDefault = isDefault || !user.addresses || user.addresses.length === 0;
+
+    // If setting as default, unset other defaults
+    if (shouldBeDefault && user.addresses) {
+      user.addresses.forEach(addr => addr.isDefault = false);
+    }
+
+    const newAddress = {
+      label: label || 'Home',
+      apartment_address: apartment_address || '',
+      street_address1,
+      city,
+      state,
+      pincode,
+      lat: lat || null,
+      lng: lng || null,
+      isDefault: shouldBeDefault,
+    };
+
+    user.addresses.push(newAddress);
+    await user.save();
+
+    res.status(201).json({
+      message: 'Address added successfully',
+      addresses: user.addresses,
+    });
+  } catch (error) {
+    console.error('Error adding address:', error.message);
+    res.status(500).json({ message: 'Failed to add address' });
+  }
+};
+
+// Update address
+exports.updateAddress = async (req, res) => {
+  const { addressId } = req.params;
+  const { label, apartment_address, street_address1, city, state, pincode, lat, lng, isDefault } = req.body;
+
+  try {
+    const user = await User.findById(req.User._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const address = user.addresses.id(addressId);
+    if (!address) {
+      return res.status(404).json({ message: 'Address not found' });
+    }
+
+    // Update fields
+    if (label) address.label = label;
+    if (apartment_address !== undefined) address.apartment_address = apartment_address;
+    if (street_address1) address.street_address1 = street_address1;
+    if (city) address.city = city;
+    if (state) address.state = state;
+    if (pincode) {
+      if (!/^\d{6}$/.test(pincode)) {
+        return res.status(400).json({ message: 'Pincode must be 6 digits' });
+      }
+      address.pincode = pincode;
+    }
+    if (lat !== undefined) address.lat = lat;
+    if (lng !== undefined) address.lng = lng;
+
+    // Handle default flag
+    if (isDefault) {
+      user.addresses.forEach(addr => addr.isDefault = false);
+      address.isDefault = true;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      message: 'Address updated successfully',
+      addresses: user.addresses,
+    });
+  } catch (error) {
+    console.error('Error updating address:', error.message);
+    res.status(500).json({ message: 'Failed to update address' });
+  }
+};
+
+// Delete address
+exports.deleteAddress = async (req, res) => {
+  const { addressId } = req.params;
+
+  try {
+    const user = await User.findById(req.User._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const address = user.addresses.id(addressId);
+    if (!address) {
+      return res.status(404).json({ message: 'Address not found' });
+    }
+
+    const wasDefault = address.isDefault;
+    address.deleteOne();
+
+    // If deleted address was default, set first remaining as default
+    if (wasDefault && user.addresses.length > 0) {
+      user.addresses[0].isDefault = true;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      message: 'Address deleted successfully',
+      addresses: user.addresses,
+    });
+  } catch (error) {
+    console.error('Error deleting address:', error.message);
+    res.status(500).json({ message: 'Failed to delete address' });
+  }
+};
+
+// Set default address
+exports.setDefaultAddress = async (req, res) => {
+  const { addressId } = req.params;
+
+  try {
+    const user = await User.findById(req.User._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const address = user.addresses.id(addressId);
+    if (!address) {
+      return res.status(404).json({ message: 'Address not found' });
+    }
+
+    // Unset all defaults, then set this one
+    user.addresses.forEach(addr => addr.isDefault = false);
+    address.isDefault = true;
+
+    await user.save();
+
+    res.status(200).json({
+      message: 'Default address updated',
+      addresses: user.addresses,
+    });
+  } catch (error) {
+    console.error('Error setting default address:', error.message);
+    res.status(500).json({ message: 'Failed to set default address' });
   }
 };
 

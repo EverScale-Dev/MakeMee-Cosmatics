@@ -23,20 +23,23 @@ exports.createCustomer = async (req, res) => {
         return res.status(400).json({ message: "Shipping address is required and must be an object." });
       }
   
-      const requiredFields = ["street_address1", "city", "state", "lat", "lng", "pincode"];
+      const requiredFields = ["street_address1", "city", "state", "pincode"];
       for (const field of requiredFields) {
         if (!shippingAddress[field]) {
           return res.status(400).json({ message: `Shipping address is missing field: ${field}` });
         }
       }
-  
+
       if (!/^\d{6}$/.test(shippingAddress.pincode)) {
         return res.status(400).json({ message: "Pincode must be a valid 6-digit number." });
       }
-  
-      // Validate latitude and longitude
-      if (isNaN(shippingAddress.lat) || isNaN(shippingAddress.lng)) {
-        return res.status(400).json({ message: "Latitude and Longitude must be valid numbers." });
+
+      // Validate latitude and longitude only if provided
+      if (shippingAddress.lat !== undefined && shippingAddress.lat !== null && isNaN(shippingAddress.lat)) {
+        return res.status(400).json({ message: "Latitude must be a valid number." });
+      }
+      if (shippingAddress.lng !== undefined && shippingAddress.lng !== null && isNaN(shippingAddress.lng)) {
+        return res.status(400).json({ message: "Longitude must be a valid number." });
       }
 
     // Create a new customer instance

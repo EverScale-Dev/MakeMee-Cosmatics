@@ -10,7 +10,13 @@ const {
   userLogin,
   adminLogin,
   getProfile,
-  updateProfile
+  updateProfile,
+  sendOtp,
+  verifyOtp,
+  addAddress,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress,
 } = require('../controllers/authController');
 const protect = require('../../middlewares/protect');
 
@@ -30,5 +36,15 @@ router.post('/google', googleAuth);                    // Google OAuth login
 // Protected user routes
 router.get('/me', protect, getProfile);                // Get user profile
 router.put('/me', protect, updateProfile);             // Update user profile
+
+// Phone verification (OTP)
+router.post('/send-otp', protect, sendOtp);            // Send OTP to phone
+router.post('/verify-otp', protect, verifyOtp);        // Verify OTP
+
+// Address management
+router.post('/addresses', protect, addAddress);                    // Add new address
+router.put('/addresses/:addressId', protect, updateAddress);       // Update address
+router.delete('/addresses/:addressId', protect, deleteAddress);    // Delete address
+router.put('/addresses/:addressId/default', protect, setDefaultAddress); // Set default
 
 module.exports = router;

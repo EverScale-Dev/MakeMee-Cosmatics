@@ -7,10 +7,10 @@ const customerSchema = new mongoose.Schema({
   shippingAddress: {
     apartment_address: String,
     street_address1: { type: String, required: true },
-    city: { type: String, required: true },    
+    city: { type: String, required: true },
     state: { type: String, required: true },
-    lat: { type: Number, required: true },
-    lng: { type: Number, required: true },
+    lat: { type: Number }, // Optional - not required by Shiprocket
+    lng: { type: Number }, // Optional - not required by Shiprocket
     pincode: { type: String, required: true },
   },
   createdAt: { type: Date, default: Date.now },

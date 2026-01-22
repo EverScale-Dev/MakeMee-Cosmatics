@@ -48,6 +48,38 @@ export const authService = {
     return response.data;
   },
 
+  // Phone verification
+  async sendOtp(phone) {
+    const response = await api.post('/auth/send-otp', { phone });
+    return response.data;
+  },
+
+  async verifyOtp(phone, otp) {
+    const response = await api.post('/auth/verify-otp', { phone, otp });
+    return response.data;
+  },
+
+  // Address management
+  async addAddress(addressData) {
+    const response = await api.post('/auth/addresses', addressData);
+    return response.data;
+  },
+
+  async updateAddress(addressId, addressData) {
+    const response = await api.put(`/auth/addresses/${addressId}`, addressData);
+    return response.data;
+  },
+
+  async deleteAddress(addressId) {
+    const response = await api.delete(`/auth/addresses/${addressId}`);
+    return response.data;
+  },
+
+  async setDefaultAddress(addressId) {
+    const response = await api.put(`/auth/addresses/${addressId}/default`);
+    return response.data;
+  },
+
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');

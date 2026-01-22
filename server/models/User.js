@@ -1,6 +1,19 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+// Address sub-schema for multiple addresses
+const addressSchema = new mongoose.Schema({
+  label: { type: String, default: 'Home' }, // Home, Work, Other
+  apartment_address: { type: String }, // Flat/House No
+  street_address1: { type: String, required: true }, // Building/Locality/Area
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  pincode: { type: String, required: true },
+  lat: { type: Number },
+  lng: { type: Number },
+  isDefault: { type: Boolean, default: false },
+}, { _id: true });
+
 const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -10,6 +23,12 @@ const userSchema = new mongoose.Schema({
   avatar: { type: String },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
   phone: { type: String },
+  phoneVerified: { type: Boolean, default: false },
+  addresses: {
+    type: [addressSchema],
+    validate: [arr => arr.length <= 5, 'Maximum 5 addresses allowed'],
+  },
+  // Keep old address field for backward compatibility
   address: {
     street: { type: String },
     city: { type: String },
