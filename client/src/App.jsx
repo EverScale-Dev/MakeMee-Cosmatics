@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
+import { Toaster } from "sonner";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -81,6 +82,7 @@ function App() {
       <CartProvider>
         <WishlistProvider>
           <AppLayout />
+          <Toaster position="top-right" richColors />
         </WishlistProvider>
       </CartProvider>
     </AuthProvider>
