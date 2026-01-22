@@ -1,8 +1,9 @@
 import api from './api';
 
 export const orderService = {
-  async getAll(limit = 10, skip = 0) {
-    const response = await api.get('/orders', { params: { limit, skip } });
+  async getAll(page = 1, itemsPerPage = 10) {
+    const skip = (page - 1) * itemsPerPage;
+    const response = await api.get('/orders', { params: { limit: itemsPerPage, skip } });
     return response.data;
   },
 
