@@ -6,3 +6,4 @@ export { default as shiprocketService } from './shiprocketService';
 export { default as customerService } from './customerService';
 export { default as reviewService } from './reviewService';
 export { default as metricsService } from './metricsService';
+export { default as couponService } from './couponService';
