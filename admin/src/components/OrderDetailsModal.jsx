@@ -239,7 +239,10 @@ export default function OrderDetailsModal({ order, onClose, onRefresh }) {
             <p><b>Payment Method:</b> {order.paymentMethod === "cashOnDelivery" ? "Cash on Delivery" : "Online Payment"}</p>
             <div className="mt-2 pt-2 border-t">
               <p>Subtotal: {formatCurrency(order.subtotal)}</p>
-              <p>Delivery: {formatCurrency(order.deliveryCharge)}</p>
+              <p>Delivery: {order.deliveryCharge === 0 ? <span className="text-green-600">FREE</span> : formatCurrency(order.deliveryCharge)}</p>
+              {order.couponCode && (
+                <p className="text-green-600">Coupon: {order.couponCode} {order.couponDiscount > 0 && `(-${formatCurrency(order.couponDiscount)})`}</p>
+              )}
               <p className="mt-2 font-semibold text-blue-600 text-lg">
                 Total: {formatCurrency(order.totalAmount)}
               </p>

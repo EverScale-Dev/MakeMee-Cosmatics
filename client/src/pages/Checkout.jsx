@@ -200,9 +200,11 @@ const Checkout = () => {
       subtotal,
       deliveryCharge,
       couponCode: appliedCoupon?.code || null,
+      // For free_delivery, discount is already applied via deliveryCharge=0
+      // Don't double-count by also sending couponDiscount
       couponDiscount: appliedCoupon
         ? appliedCoupon.discountType === "free_delivery"
-          ? baseDeliveryCharge
+          ? 0  // Delivery discount already reflected in deliveryCharge=0
           : appliedCoupon.discount
         : 0,
       totalAmount: total,

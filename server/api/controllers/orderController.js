@@ -47,8 +47,14 @@ exports.createOrder = async (req, res) => {
     );
     const deliveryCharge = Number(req.body.deliveryCharge) || 0;
     const discount = Number(couponDiscount) || 0;
-    // Ensure total is never negative
-    const finalTotal = Math.max(0, subtotal + deliveryCharge - discount);
+
+    // Calculate total: subtotal + delivery - discount
+    // Rules:
+    // 1. For free_delivery coupons: deliveryCharge=0, discount=0 → total=subtotal
+    // 2. For other coupons: discount applies but total >= subtotal always
+    // 3. Total can never go below subtotal (customer pays at least product cost)
+    const rawTotal = subtotal + deliveryCharge - discount;
+    const finalTotal = Math.max(subtotal, rawTotal);
 
     // ✅ Create new order (link to logged-in user if available)
     const order = await Order.create({
