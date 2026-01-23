@@ -1,9 +1,10 @@
 const cloudinary = require("cloudinary").v2;
 
+// Use environment variables - NEVER hardcode credentials
 cloudinary.config({
-  cloud_name: "dudxft40g",
-  api_key: "541555522679865",
-  api_secret: "aAX56U_W7NUx9mA04nImVeVMU6A",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 module.exports = cloudinary;

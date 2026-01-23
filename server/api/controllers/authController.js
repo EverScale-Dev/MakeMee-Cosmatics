@@ -504,8 +504,10 @@ exports.sendOtp = async (req, res) => {
     };
 
     // In production, send OTP via SMS (Twilio/MSG91)
-    // For now, log it for development
-    console.log(`[DEV] OTP for ${phone}: ${otp}`);
+    // For now, log it for development only
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[DEV] OTP for ${phone}: ${otp}`);
+    }
 
     res.status(200).json({
       message: 'OTP sent successfully',

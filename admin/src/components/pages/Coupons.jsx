@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, Pencil, Trash2, X, Percent, Truck, IndianRupee } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, X, Percent, Truck, IndianRupee, Gift } from "lucide-react";
 import couponService from "../../services/couponService";
 
 const ITEMS_PER_PAGE = 10;
@@ -8,12 +8,14 @@ const discountTypeLabels = {
   percentage: "Percentage",
   fixed: "Fixed Amount",
   free_delivery: "Free Delivery",
+  buy_x_get_y_free: "Buy X Get Y Free",
 };
 
 const discountTypeIcons = {
   percentage: Percent,
   fixed: IndianRupee,
   free_delivery: Truck,
+  buy_x_get_y_free: Gift,
 };
 
 export default function Coupons() {
@@ -118,6 +120,8 @@ export default function Coupons() {
         return `₹${coupon.discountValue}`;
       case "free_delivery":
         return "FREE";
+      case "buy_x_get_y_free":
+        return `B${coupon.buyQuantity || 3}G${coupon.freeQuantity || 1}`;
       default:
         return "-";
     }
@@ -160,6 +164,7 @@ export default function Coupons() {
             <option value="percentage">Percentage</option>
             <option value="fixed">Fixed Amount</option>
             <option value="free_delivery">Free Delivery</option>
+            <option value="buy_x_get_y_free">Buy X Get Y Free</option>
           </select>
 
           {/* Add button */}
@@ -297,20 +302,29 @@ export default function Coupons() {
             Prev
           </button>
 
-          {[...Array(Math.min(5, totalPages))].map((_, index) => {
-            const page = index + 1;
-            return (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`px-3 py-1 border rounded ${
-                  currentPage === page ? "bg-black text-white" : ""
-                }`}
-              >
-                {page}
-              </button>
-            );
-          })}
+          {(() => {
+            const maxButtons = 5;
+            let start = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            let end = Math.min(totalPages, start + maxButtons - 1);
+            if (end - start + 1 < maxButtons) {
+              start = Math.max(1, end - maxButtons + 1);
+            }
+            const pages = [];
+            for (let i = start; i <= end; i++) {
+              pages.push(
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i)}
+                  className={`px-3 py-1 border rounded ${
+                    currentPage === i ? "bg-black text-white" : ""
+                  }`}
+                >
+                  {i}
+                </button>
+              );
+            }
+            return pages;
+          })()}
 
           <button
             disabled={currentPage === totalPages}
@@ -345,6 +359,9 @@ function CouponModal({ coupon, onClose, onSave }) {
     maxUses: coupon?.maxUses || "",
     expiryDate: coupon?.expiryDate ? coupon.expiryDate.split("T")[0] : "",
     isActive: coupon?.isActive ?? true,
+    buyQuantity: coupon?.buyQuantity || 3,
+    freeQuantity: coupon?.freeQuantity || 1,
+    uniqueProducts: coupon?.uniqueProducts || false,
   });
   const [saving, setSaving] = useState(false);
 
@@ -365,6 +382,9 @@ function CouponModal({ coupon, onClose, onSave }) {
         maxDiscount: form.maxDiscount ? Number(form.maxDiscount) : null,
         maxUses: form.maxUses ? Number(form.maxUses) : null,
         expiryDate: form.expiryDate || null,
+        buyQuantity: Number(form.buyQuantity) || 3,
+        freeQuantity: Number(form.freeQuantity) || 1,
+        uniqueProducts: form.uniqueProducts,
       });
     } finally {
       setSaving(false);
@@ -420,11 +440,12 @@ function CouponModal({ coupon, onClose, onSave }) {
               <option value="percentage">Percentage (%)</option>
               <option value="fixed">Fixed Amount (₹)</option>
               <option value="free_delivery">Free Delivery</option>
+              <option value="buy_x_get_y_free">Buy X Get Y Free</option>
             </select>
           </div>
 
-          {/* Discount Value (hidden for free_delivery) */}
-          {form.discountType !== "free_delivery" && (
+          {/* Discount Value (hidden for free_delivery and buy_x_get_y_free) */}
+          {form.discountType !== "free_delivery" && form.discountType !== "buy_x_get_y_free" && (
             <div>
               <label className="block text-sm font-medium mb-1">
                 Discount Value {form.discountType === "percentage" ? "(%)" : "(₹)"} *
@@ -437,6 +458,51 @@ function CouponModal({ coupon, onClose, onSave }) {
                 className="w-full border rounded-md px-3 py-2 text-sm"
               />
             </div>
+          )}
+
+          {/* Buy X Get Y Free fields */}
+          {form.discountType === "buy_x_get_y_free" && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Buy Quantity *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.buyQuantity}
+                    onChange={(e) => setForm({ ...form, buyQuantity: e.target.value })}
+                    className="w-full border rounded-md px-3 py-2 text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Customer must buy this many items</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Free Quantity *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.freeQuantity}
+                    onChange={(e) => setForm({ ...form, freeQuantity: e.target.value })}
+                    className="w-full border rounded-md px-3 py-2 text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Cheapest items will be free</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <input
+                  type="checkbox"
+                  id="uniqueProducts"
+                  checked={form.uniqueProducts}
+                  onChange={(e) => setForm({ ...form, uniqueProducts: e.target.checked })}
+                  className="rounded"
+                />
+                <label htmlFor="uniqueProducts" className="text-sm">
+                  <span className="font-medium">Require unique products</span>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    If checked, customer must add {form.buyQuantity + form.freeQuantity} different products (not same product multiple times)
+                  </p>
+                </label>
+              </div>
+            </>
           )}
 
           {/* Min Order Amount */}

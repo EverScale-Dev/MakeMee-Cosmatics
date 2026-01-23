@@ -5,7 +5,7 @@ const Coupon = require("../../models/Coupon");
 // @access  Public
 exports.validateCoupon = async (req, res) => {
   try {
-    const { code, subtotal = 0, deliveryCharge = 0 } = req.body;
+    const { code, subtotal = 0, deliveryCharge = 0, cartItems = [] } = req.body;
 
     if (!code) {
       return res.status(400).json({ success: false, message: "Coupon code is required" });
@@ -17,14 +17,19 @@ exports.validateCoupon = async (req, res) => {
       return res.status(404).json({ success: false, message: "Invalid coupon code" });
     }
 
+    // Calculate total item count (considering quantities)
+    const itemCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+    // Unique item count = number of different products in cart
+    const uniqueItemCount = cartItems.length;
+
     // Check if coupon is valid for this order
-    const validCheck = coupon.isValid(subtotal);
+    const validCheck = coupon.isValid(subtotal, itemCount, uniqueItemCount);
     if (!validCheck.valid) {
       return res.status(400).json({ success: false, message: validCheck.reason });
     }
 
-    // Calculate discount
-    const discount = coupon.calculateDiscount(subtotal, deliveryCharge);
+    // Calculate discount (pass cartItems for buy_x_get_y_free)
+    const discount = coupon.calculateDiscount(subtotal, deliveryCharge, cartItems);
 
     res.status(200).json({
       success: true,
@@ -33,6 +38,9 @@ exports.validateCoupon = async (req, res) => {
         description: coupon.description,
         discountType: coupon.discountType,
         discountValue: coupon.discountValue,
+        buyQuantity: coupon.buyQuantity,
+        freeQuantity: coupon.freeQuantity,
+        uniqueProducts: coupon.uniqueProducts,
         discount, // Calculated discount for this order
       },
     });
@@ -70,6 +78,9 @@ exports.createCoupon = async (req, res) => {
       maxUses,
       expiryDate,
       isActive,
+      buyQuantity,
+      freeQuantity,
+      uniqueProducts,
     } = req.body;
 
     // Check if code already exists
@@ -88,6 +99,9 @@ exports.createCoupon = async (req, res) => {
       maxUses: maxUses || null,
       expiryDate: expiryDate || null,
       isActive: isActive !== false,
+      buyQuantity: buyQuantity || 3,
+      freeQuantity: freeQuantity || 1,
+      uniqueProducts: uniqueProducts || false,
     });
 
     res.status(201).json({ success: true, coupon });

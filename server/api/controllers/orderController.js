@@ -32,11 +32,21 @@ exports.createOrder = async (req, res) => {
         });
       }
 
+      // Determine price from product (not from client for security)
+      // If size is selected, use that price; otherwise fall back to salePrice/regularPrice
+      let productPrice = existingProduct.salePrice || existingProduct.regularPrice || 0;
+      if (item.selectedSize?.ml && existingProduct.sizes?.length > 0) {
+        const matchingSize = existingProduct.sizes.find(s => s.ml === item.selectedSize.ml);
+        if (matchingSize) {
+          productPrice = matchingSize.sellingPrice || matchingSize.originalPrice || productPrice;
+        }
+      }
+
       validatedProducts.push({
         product: productId,
         quantity: item.quantity,
         name: existingProduct.name,
-        price: item.price || existingProduct.salePrice,
+        price: productPrice,
       });
     }
 
@@ -45,7 +55,9 @@ exports.createOrder = async (req, res) => {
       (acc, item) => acc + item.price * item.quantity,
       0
     );
-    const deliveryCharge = Number(req.body.deliveryCharge) || 0;
+    // Validate delivery charge: must be non-negative and reasonable (max 500)
+    const rawDeliveryCharge = Number(req.body.deliveryCharge) || 0;
+    const deliveryCharge = Math.max(0, Math.min(rawDeliveryCharge, 500));
     const discount = Number(couponDiscount) || 0;
 
     // Calculate total: subtotal + delivery - discount

@@ -5,6 +5,11 @@ export const metricsService = {
     const response = await api.get('/metrics');
     return response.data;
   },
+
+  async getChartData() {
+    const response = await api.get('/metrics/charts');
+    return response.data;
+  },
 };
 
 export default metricsService;

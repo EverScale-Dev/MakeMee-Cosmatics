@@ -126,10 +126,17 @@ const Checkout = () => {
 
     setCouponLoading(true);
     try {
+      // Build cartItems for buy_x_get_y_free validation
+      const cartItems = items.map((item) => ({
+        price: item.selectedSize?.sellingPrice || item.product.salePrice || item.product.price,
+        quantity: item.quantity,
+      }));
+
       const response = await couponService.validate(
         couponCode.trim(),
         subtotal,
-        baseDeliveryCharge
+        baseDeliveryCharge,
+        cartItems
       );
 
       if (response.success) {
@@ -549,6 +556,8 @@ const Checkout = () => {
                   <p className="text-xs text-green-600 mt-0.5">
                     {appliedCoupon.discountType === "free_delivery"
                       ? "Free delivery applied!"
+                      : appliedCoupon.discountType === "buy_x_get_y_free"
+                      ? `Buy ${appliedCoupon.buyQuantity} Get ${appliedCoupon.freeQuantity} Free - You save ${formatPrice(appliedCoupon.discount)}`
                       : `You save ${formatPrice(appliedCoupon.discount)}`}
                   </p>
                 </div>

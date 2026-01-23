@@ -18,6 +18,7 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { usePageTransition } from "@/hooks/useGSAP";
 import { toast } from "sonner";
+import { optimizeImage, getThumbnail } from "@/utils/cloudinaryUrl";
 
 // Transform backend product to expected format
 const transformBackendProduct = (p) => {
@@ -228,7 +229,7 @@ const ProductDetails = () => {
             <AnimatedSection>
               <div className="aspect-square rounded-3xl overflow-hidden bg-black/5">
                 <img
-                  src={product.images[selectedImage]}
+                  src={optimizeImage(product.images[selectedImage], { width: 800 })}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
@@ -245,7 +246,12 @@ const ProductDetails = () => {
                         : "border-transparent opacity-60"
                     }`}
                   >
-                    <img src={img} className="w-full h-full object-cover" />
+                    <img
+                      src={getThumbnail(img, 80)}
+                      alt={`${product.name} thumbnail ${i + 1}`}
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
                   </button>
                 ))}
               </div>

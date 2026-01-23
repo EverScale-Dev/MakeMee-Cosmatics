@@ -157,20 +157,30 @@ export default function Customers() {
             Prev
           </button>
 
-          {[...Array(Math.min(5, totalPages))].map((_, index) => {
-            const page = index + 1;
-            return (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`px-3 py-1 border rounded ${
-                  currentPage === page ? "bg-black text-white" : ""
-                }`}
-              >
-                {page}
-              </button>
-            );
-          })}
+          {(() => {
+            // Show pages around current page
+            const maxButtons = 5;
+            let start = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            let end = Math.min(totalPages, start + maxButtons - 1);
+            if (end - start + 1 < maxButtons) {
+              start = Math.max(1, end - maxButtons + 1);
+            }
+            const pages = [];
+            for (let i = start; i <= end; i++) {
+              pages.push(
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i)}
+                  className={`px-3 py-1 border rounded ${
+                    currentPage === i ? "bg-black text-white" : ""
+                  }`}
+                >
+                  {i}
+                </button>
+              );
+            }
+            return pages;
+          })()}
 
           <button
             disabled={currentPage === totalPages}

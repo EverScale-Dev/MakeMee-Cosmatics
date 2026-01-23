@@ -3,7 +3,7 @@ import "../../lib/chart";
 import { Line, Doughnut } from "react-chartjs-2";
 import { lineOptions, doughnutOptions } from "../../lib/data";
 import RecentOrders from "../RecentOrder";
-import { metricsService, orderService } from "../../services";
+import { metricsService } from "../../services";
 
 export default function Dashboard() {
   const [metrics, setMetrics] = useState({
@@ -12,52 +12,60 @@ export default function Dashboard() {
     totalCustomers: 0,
     totalProducts: 0
   });
+  const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchMetrics = async () => {
+    const fetchData = async () => {
       try {
-        const data = await metricsService.getMetrics();
-        setMetrics(data);
+        const [metricsData, chartsData] = await Promise.all([
+          metricsService.getMetrics(),
+          metricsService.getChartData()
+        ]);
+        setMetrics(metricsData);
+        setChartData(chartsData);
       } catch (error) {
-        console.error("Failed to fetch metrics:", error);
+        console.error("Failed to fetch dashboard data:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchMetrics();
+    fetchData();
   }, []);
 
-  // Dynamic chart data based on metrics
-  const lineData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+  // Line chart data - Revenue & Orders by month
+  const lineData = chartData ? {
+    labels: chartData.monthlySales.labels,
     datasets: [
       {
-        label: "Sales",
-        data: [30, 40, 35, 50, 49, 60],
+        label: "Revenue (₹)",
+        data: chartData.monthlySales.revenue,
         borderColor: "#ec4899",
         tension: 0.4,
-        fill: false
+        fill: false,
+        yAxisID: 'y'
       },
       {
-        label: "Visits",
-        data: [50, 60, 55, 70, 65, 80],
+        label: "Orders",
+        data: chartData.monthlySales.orders,
         borderColor: "#3b82f6",
         tension: 0.4,
-        fill: false
+        fill: false,
+        yAxisID: 'y1'
       }
     ]
-  };
+  } : null;
 
-  const doughnutData = {
-    labels: ["Direct", "Social", "Referral"],
+  // Doughnut chart data - Orders by status
+  const doughnutData = chartData ? {
+    labels: Object.keys(chartData.ordersByStatus),
     datasets: [
       {
-        data: [55, 25, 20],
-        backgroundColor: ["#ec4899", "#3b82f6", "#10b981"]
+        data: Object.values(chartData.ordersByStatus),
+        backgroundColor: ["#10b981", "#3b82f6", "#f59e0b", "#ef4444"]
       }
     ]
-  };
+  } : null;
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-IN", {
@@ -103,12 +111,39 @@ export default function Dashboard() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <ChartBox title="Visit And Sales Statistics">
-          <Line data={lineData} options={lineOptions} />
+        <ChartBox title="Revenue & Orders (Last 6 Months)">
+          {lineData ? (
+            <Line data={lineData} options={{
+              ...lineOptions,
+              scales: {
+                y: {
+                  type: 'linear',
+                  position: 'left',
+                  title: { display: true, text: 'Revenue (₹)' }
+                },
+                y1: {
+                  type: 'linear',
+                  position: 'right',
+                  title: { display: true, text: 'Orders' },
+                  grid: { drawOnChartArea: false }
+                }
+              }
+            }} />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-400">
+              No data available
+            </div>
+          )}
         </ChartBox>
 
-        <ChartBox title="Traffic Sources">
-          <Doughnut data={doughnutData} options={doughnutOptions} />
+        <ChartBox title="Orders by Status">
+          {doughnutData && Object.values(chartData.ordersByStatus).some(v => v > 0) ? (
+            <Doughnut data={doughnutData} options={doughnutOptions} />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-400">
+              No orders yet
+            </div>
+          )}
         </ChartBox>
       </div>
 

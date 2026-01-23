@@ -1,8 +1,9 @@
 import { useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Context Providers
 import { AuthProvider, useAuth, setCartSyncCallback } from "./context/AuthContext";
@@ -23,6 +24,30 @@ import About from "./pages/About";
 import SignUp from "./pages/SignUp";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
+
+// Auth redirect wrapper - redirects logged-in users away from login/signup
+function AuthRoute({ children }) {
+  const { isLoggedIn } = useAuth();
+  if (isLoggedIn) {
+    return <Navigate to="/account" replace />;
+  }
+  return children;
+}
+
+// 404 Not Found page
+function NotFound() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <h1 className="text-6xl font-bold text-gray-300 mb-4">404</h1>
+        <p className="text-xl text-gray-600 mb-6">Page not found</p>
+        <a href="/" className="px-6 py-3 bg-[#FC6CB4] text-white rounded-full hover:bg-[#e55a9f]">
+          Go Home
+        </a>
+      </div>
+    </div>
+  );
+}
 
 
 function AppLayout() {
@@ -63,10 +88,12 @@ function AppLayout() {
           <Route path="/orders/:id" element={<TrackOrder />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/account" element={<Profile />} />
+          <Route path="/profile" element={<Navigate to="/account" replace />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/order-success" element={<OrderSuccess />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/login" element={<SignUp />} />
+          <Route path="/signup" element={<AuthRoute><SignUp /></AuthRoute>} />
+          <Route path="/login" element={<AuthRoute><SignUp /></AuthRoute>} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
 
@@ -78,14 +105,16 @@ function AppLayout() {
 
 function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <AppLayout />
-          <Toaster position="top-right" richColors />
-        </WishlistProvider>
-      </CartProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <AppLayout />
+            <Toaster position="top-right" richColors />
+          </WishlistProvider>
+        </CartProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

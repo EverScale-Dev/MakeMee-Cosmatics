@@ -1,18 +1,26 @@
 const express = require("express");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const rateLimit = require("express-rate-limit");
 const Order = require("../../models/Order");
 const dotenv = require("dotenv");
 
 const router = express.Router();
 dotenv.config();
 
+// Rate limiting for payment endpoints
+const paymentLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute
+  message: { success: false, message: 'Too many payment requests. Please try again later.' },
+});
+
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-router.post("/razorpay/order", async (req, res) => {
+router.post("/razorpay/order", paymentLimiter, async (req, res) => {
   try {
     const { amount, currency, receipt } = req.body;
 
@@ -38,7 +46,7 @@ router.post("/razorpay/order", async (req, res) => {
 });
 
 // Verify Razorpay payment
-router.post("/razorpay/verify", async (req, res) => {
+router.post("/razorpay/verify", paymentLimiter, async (req, res) => {
   try {
     const {
       razorpay_order_id,
@@ -48,13 +56,16 @@ router.post("/razorpay/verify", async (req, res) => {
     } = req.body;
 
     const generatedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET) // changed from RAZORPAY_KEY_SECRET
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest("hex");
 
     const isValid = generatedSignature === razorpay_signature;
 
-    console.log("🔍 Verifying payment:", generatedSignature, razorpay_signature);
+    // Log verification attempt (without exposing signatures)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("🔍 Payment verification attempt for order:", orderId);
+    }
 
     if (!isValid) {
       return res.status(400).json({ success: false, message: "Signature mismatch" });

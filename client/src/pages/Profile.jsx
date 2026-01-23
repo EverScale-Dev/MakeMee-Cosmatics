@@ -20,6 +20,8 @@ import {
   LogOut,
   ArrowLeft,
   Home,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -28,6 +30,7 @@ import { toast } from "sonner";
 
 import AddressSection from "@/components/AdressUserProfile/AddressSection";
 import OrdersSection from "@/components/OrderUserProfile/OrdersSection";
+import PhoneVerificationModal from "@/components/PhoneVerificationModal";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -36,10 +39,12 @@ export default function Profile() {
     name: "",
     email: "",
     phone: "",
+    phoneVerified: false,
     avatar: "",
   });
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
+  const [verifyPhoneOpen, setVerifyPhoneOpen] = useState(false);
 
   useEffect(() => {
     if (!authUser) {
@@ -55,6 +60,7 @@ export default function Profile() {
           name: data.fullName || "",
           email: data.email || "",
           phone: data.phone || "",
+          phoneVerified: data.phoneVerified || false,
           avatar: data.avatar || "",
         });
       } catch (error) {
@@ -63,6 +69,7 @@ export default function Profile() {
           name: authUser.fullName || "",
           email: authUser.email || "",
           phone: authUser.phone || "",
+          phoneVerified: authUser.phoneVerified || false,
           avatar: authUser.avatar || "",
         });
       } finally {
@@ -83,6 +90,7 @@ export default function Profile() {
         name: data.fullName || "",
         email: data.email || "",
         phone: data.phone || "",
+        phoneVerified: data.phoneVerified || false,
         avatar: data.avatar || "",
       });
       updateUser(data);
@@ -91,6 +99,16 @@ export default function Profile() {
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update profile");
     }
+  };
+
+  const handlePhoneVerified = (verifiedPhone) => {
+    setUser((prev) => ({
+      ...prev,
+      phone: verifiedPhone,
+      phoneVerified: true,
+    }));
+    // Update auth context too
+    updateUser({ phone: verifiedPhone, phoneVerified: true });
   };
 
   const handleLogout = () => {
@@ -134,7 +152,12 @@ export default function Profile() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* LEFT COLUMN */}
           <div className="lg:col-span-1 space-y-6">
-            <ProfileCard user={user} onEdit={() => setEditOpen(true)} onLogout={handleLogout} />
+            <ProfileCard
+              user={user}
+              onEdit={() => setEditOpen(true)}
+              onLogout={handleLogout}
+              onVerifyPhone={() => setVerifyPhoneOpen(true)}
+            />
             <NotificationCard />
             <LegalCard />
           </div>
@@ -156,6 +179,14 @@ export default function Profile() {
           onSave={handleSaveProfile}
         />
       )}
+
+      {verifyPhoneOpen && (
+        <PhoneVerificationModal
+          currentPhone={user.phone}
+          onClose={() => setVerifyPhoneOpen(false)}
+          onVerified={handlePhoneVerified}
+        />
+      )}
     </div>
   );
 }
@@ -165,7 +196,7 @@ export default function Profile() {
    LEFT SIDE COMPONENTS
 ====================== */
 
-function ProfileCard({ user, onEdit, onLogout }) {
+function ProfileCard({ user, onEdit, onLogout, onVerifyPhone }) {
   return (
     <Card>
       <div className="flex items-center gap-4">
@@ -183,7 +214,39 @@ function ProfileCard({ user, onEdit, onLogout }) {
       <div className="mt-6 space-y-4">
         <InfoRow icon={User} label="Name" value={user.name || "-"} />
         <InfoRow icon={Mail} label="Email" value={user.email || "-"} />
-        <InfoRow icon={Phone} label="Mobile" value={user.phone || "-"} />
+
+        {/* Phone with verification status */}
+        <div className="flex items-center gap-3 text-sm">
+          <Phone size={16} className="text-gray-500" />
+          <span className="w-20 text-gray-500">Mobile</span>
+          <div className="flex items-center gap-2 flex-1">
+            <span className="font-medium">{user.phone || "-"}</span>
+            {user.phone && (
+              user.phoneVerified ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
+                  <CheckCircle size={12} />
+                  Verified
+                </span>
+              ) : (
+                <button
+                  onClick={onVerifyPhone}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full hover:bg-amber-200 transition"
+                >
+                  <AlertCircle size={12} />
+                  Verify
+                </button>
+              )
+            )}
+            {!user.phone && (
+              <button
+                onClick={onVerifyPhone}
+                className="text-xs text-[#731162] hover:underline"
+              >
+                Add phone
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="mt-6 flex gap-3">

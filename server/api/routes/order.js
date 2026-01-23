@@ -21,7 +21,7 @@ router.get('/:orderId/download-invoice', protect, downloadInvoice); // Download 
 
 // Admin/general routes
 router.get('/', protect, getAllOrders);        // Get all orders
-router.get('/:id', getOrderById);              // Get order by ID
+router.get('/:id', protect, getOrderById);     // Get order by ID (auth required)
 router.put('/:id', protect, updateOrder);      // Update order by ID
 router.delete('/:id', protect, deleteOrder);   // Delete order by ID
 

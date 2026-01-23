@@ -5,6 +5,7 @@ import { gsap } from "gsap";
 
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { optimizeImage } from "@/utils/cloudinaryUrl";
 
 const ProductCard = ({ product }) => {
   const cardRef = useRef(null);
@@ -35,6 +36,10 @@ const ProductCard = ({ product }) => {
 
     const hasHoverImage = product.images && product.images.length > 1;
 
+    // Optimize images for card display (400px width)
+    const optimizedImage0 = optimizeImage(product.images?.[0], { width: 400 });
+    const optimizedImage1 = hasHoverImage ? optimizeImage(product.images[1], { width: 400 }) : null;
+
     const handleMouseEnter = () => {
       gsap.to(card, {
         y: -10,
@@ -50,7 +55,7 @@ const ProductCard = ({ product }) => {
           opacity: 0,
           duration: 0.2,
           onComplete: () => {
-            image.src = product.images[1];
+            image.src = optimizedImage1;
             gsap.to(image, { opacity: 1, duration: 0.2 });
           },
         });
@@ -71,7 +76,7 @@ const ProductCard = ({ product }) => {
           opacity: 0,
           duration: 0.2,
           onComplete: () => {
-            image.src = product.images[0];
+            image.src = optimizedImage0;
             gsap.to(image, { opacity: 1, duration: 0.2 });
           },
         });
@@ -107,8 +112,9 @@ const ProductCard = ({ product }) => {
         <Link to={`/product/${productId}`}>
           <img
             ref={imageRef}
-            src={product.images?.[0] || "/placeholder.png"}
+            src={optimizeImage(product.images?.[0], { width: 400 }) || "/placeholder.png"}
             alt={product.name}
+            loading="lazy"
             className="w-full h-full object-cover"
           />
         </Link>
