@@ -33,7 +33,7 @@ const banners = [
     mobile: mobile4,
     alt: "Banner 4"
   }
-    
+
 ];
 
 const BannerCarousel = () => {

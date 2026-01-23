@@ -423,7 +423,7 @@ export default function Banner() {
       >
         {slides.map((slide, index) => (
           <div key={index} className="w-full flex-shrink-0 px-2">  {/* rounded spacing */}
-            
+
             {/* Desktop */}
             <img
               src={slide.desktop}
