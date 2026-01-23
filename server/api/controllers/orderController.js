@@ -47,7 +47,8 @@ exports.createOrder = async (req, res) => {
     );
     const deliveryCharge = Number(req.body.deliveryCharge) || 0;
     const discount = Number(couponDiscount) || 0;
-    const finalTotal = subtotal + deliveryCharge - discount;
+    // Ensure total is never negative
+    const finalTotal = Math.max(0, subtotal + deliveryCharge - discount);
 
     // ✅ Create new order (link to logged-in user if available)
     const order = await Order.create({

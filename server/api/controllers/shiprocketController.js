@@ -176,7 +176,9 @@ function mapShipmentStatus(shiprocketStatus) {
     "RTO DELIVERED": "cancelled",
     "CANCELLED": "cancelled",
   };
-  return statusMap[shiprocketStatus?.toUpperCase()] || null;
+  // Ensure shiprocketStatus is a string before calling toUpperCase
+  const status = typeof shiprocketStatus === 'string' ? shiprocketStatus.toUpperCase() : null;
+  return status ? (statusMap[status] || null) : null;
 }
 
 /**
