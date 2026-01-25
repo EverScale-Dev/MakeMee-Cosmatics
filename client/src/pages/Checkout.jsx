@@ -367,12 +367,13 @@ const Checkout = () => {
   const handlePlaceOrder = () => {
     if (!validateForm()) return;
 
-    // Check if phone is verified
-    const isPhoneVerified = profile?.phoneVerified && form.phone === profile.phone;
-    if (!isPhoneVerified) {
-      setShowPhoneVerification(true);
-      return;
-    }
+    // Phone verification temporarily disabled
+    // To re-enable, uncomment:
+    // const isPhoneVerified = profile?.phoneVerified && form.phone === profile.phone;
+    // if (!isPhoneVerified) {
+    //   setShowPhoneVerification(true);
+    //   return;
+    // }
 
     if (paymentMethod === "cashOnDelivery") {
       handleCODOrder();
@@ -676,12 +677,7 @@ const Checkout = () => {
             </div>
           </div>
 
-          {/* Phone verification notice */}
-          {!(profile?.phoneVerified && form.phone === profile.phone) && form.phone.length === 10 && (
-            <p className="mt-6 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-              Phone verification required before placing order. Click "Verify" next to your phone number or proceed to verify when placing order.
-            </p>
-          )}
+          {/* Phone verification notice - temporarily disabled */}
 
           <button
             onClick={handlePlaceOrder}
