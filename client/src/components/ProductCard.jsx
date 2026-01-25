@@ -181,7 +181,7 @@ const ProductCard = ({ product }) => {
               ₹{selectedSize.sellingPrice}
             </span>
             {selectedSize.ml && (
-              <p className="text-xs text-gray-500">{selectedSize.ml} ml</p>
+              <p className="text-xs text-gray-500">{selectedSize.ml} {selectedSize.unit || 'ml'}</p>
             )}
             {!selectedSize.ml && product.weight && (
               <p className="text-xs text-gray-500">{product.weight}</p>

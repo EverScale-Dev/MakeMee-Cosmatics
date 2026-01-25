@@ -24,7 +24,7 @@ export const CartProvider = ({ children }) => {
     price: item.selectedSize?.sellingPrice || item.product.salePrice || item.product.price,
     quantity: item.quantity,
     image: item.product.images?.[0] || item.product.image || '',
-    weight: item.selectedSize?.ml ? `${item.selectedSize.ml}ml` : item.product.weight,
+    weight: item.selectedSize?.ml ? `${item.selectedSize.ml}${item.selectedSize.unit || 'ml'}` : item.product.weight,
     selectedSize: item.selectedSize || null,
   });
 

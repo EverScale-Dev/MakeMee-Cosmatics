@@ -110,7 +110,8 @@ const productSchema = new mongoose.Schema({
 
   // Multiple size variants with individual pricing and stock
   sizes: [{
-    ml: { type: Number, required: true },
+    ml: { type: Number, required: true }, // kept as 'ml' for backward compatibility, but represents value
+    unit: { type: String, enum: ['ml', 'g'], default: 'ml' }, // ml = milliliters, g = grams
     originalPrice: { type: Number, required: true, min: 0 },
     sellingPrice: { type: Number, required: true, min: 0 },
     stock: { type: Number, default: 0, min: 0 },

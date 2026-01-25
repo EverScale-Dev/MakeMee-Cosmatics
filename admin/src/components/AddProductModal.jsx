@@ -52,6 +52,7 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
         })) || [],
         sizes: initialData.sizes?.map(s => ({
           ...s,
+          unit: s.unit || 'ml',
           stock: s.stock || 0
         })) || [],
         existingImages: initialData.images || [],
@@ -136,11 +137,11 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
     }));
   };
 
-  // Sizes (array with ml, originalPrice, sellingPrice, stock)
+  // Sizes (array with ml, unit, originalPrice, sellingPrice, stock)
   const addSize = () => {
     setData((prev) => ({
       ...prev,
-      sizes: [...prev.sizes, { ml: "", originalPrice: "", sellingPrice: "", stock: "", inStock: true }]
+      sizes: [...prev.sizes, { ml: "", unit: "ml", originalPrice: "", sellingPrice: "", stock: "", inStock: true }]
     }));
   };
 
@@ -200,6 +201,7 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
         .filter(s => s.ml)
         .map(s => ({
           ml: Number(s.ml),
+          unit: s.unit || 'ml',
           originalPrice: Number(s.originalPrice) || 0,
           sellingPrice: Number(s.sellingPrice) || 0,
           stock: Number(s.stock) || 0,
@@ -342,9 +344,16 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
                   value={size.ml}
                   onChange={(e) => updateSize(i, "ml", e.target.value)}
                   className="input w-20"
-                  placeholder="ml"
+                  placeholder="Size"
                 />
-                <span className="text-gray-400">ml</span>
+                <select
+                  value={size.unit || "ml"}
+                  onChange={(e) => updateSize(i, "unit", e.target.value)}
+                  className="input w-16 text-sm"
+                >
+                  <option value="ml">ml</option>
+                  <option value="g">g</option>
+                </select>
                 <input
                   type="number"
                   value={size.originalPrice}

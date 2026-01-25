@@ -52,7 +52,7 @@ const Cart = () => {
               product.price ||
               0;
             const totalPrice = unitPrice * (quantity || 1);
-            const sizeLabel = selectedSize?.ml ? ` (${selectedSize.ml}ml)` : '';
+            const sizeLabel = selectedSize?.ml ? ` (${selectedSize.ml}${selectedSize.unit || 'ml'})` : '';
 
             return (
               <div

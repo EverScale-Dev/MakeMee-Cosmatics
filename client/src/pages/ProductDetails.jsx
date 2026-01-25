@@ -172,7 +172,7 @@ const ProductDetails = () => {
     });
 
     toast.success(
-      `${quantity} × ${product.name} (${selectedSize.ml} ml) added to cart`
+      `${quantity} × ${product.name} (${selectedSize.ml} ${selectedSize.unit || 'ml'}) added to cart`
     );
   };
 
@@ -273,7 +273,7 @@ const ProductDetails = () => {
                     const isOutOfStock = size.inStock === false || (size.stock !== undefined && size.stock <= 0);
                     return (
                       <button
-                        key={size.ml}
+                        key={`${size.ml}-${size.unit || 'ml'}`}
                         onClick={() => {
                           if (!isOutOfStock) {
                             setSelectedSize(size);
@@ -289,7 +289,7 @@ const ProductDetails = () => {
                             : "border-black/20"
                         }`}
                       >
-                        {size.ml} ml
+                        {size.ml} {size.unit || 'ml'}
                         {isOutOfStock && (
                           <span className="absolute -top-2 -right-2 text-[10px] bg-red-500 text-white px-1 rounded">
                             Out

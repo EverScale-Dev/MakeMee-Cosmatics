@@ -604,7 +604,7 @@ const Checkout = () => {
                     {product.name}
                   </p>
                   <p className="text-sm text-black/60">
-                    {selectedSize?.ml ? `${selectedSize.ml}ml` : product.weight} ×{" "}
+                    {selectedSize?.ml ? `${selectedSize.ml}${selectedSize.unit || 'ml'}` : product.weight} ×{" "}
                     {quantity}
                   </p>
                 </div>
