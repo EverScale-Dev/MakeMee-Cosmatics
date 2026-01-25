@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import gsap from "gsap";
-import UnderlineInput from "../components/UnderlineInput";
 
 const Contact = () => {
   useEffect(() => {
@@ -13,110 +12,146 @@ const Contact = () => {
         duration: 1,
         stagger: 0.15,
         ease: "power3.out",
-      }
+      },
     );
   }, []);
 
   return (
-    <section className="min-h-screen bg-base px-8 pt-24 pb-16">
-      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-        
-        {/* LEFT CONTENT — BOTTOM ALIGNED */}
-        <div className="animate flex flex-col justify-end">
-          <h1 className="text-4xl font-bold text-black mb-4 text-main">
-            Contact Us
+    <section className="min-h-screen bg-white flex items-center justify-center px-4 py-20">
+      {/* OUTER CONTAINER */}
+      <div className="animate w-full max-w-6xl bg-[#FDE6F1] rounded-3xl px-6 sm:px-10 md:px-14 py-14">
+        {/* HEADER */}
+        <div className="text-center mb-14">
+          <h1 className="text-3xl sm:text-4xl font-bold text-main mb-3">
+            Get In Touch
           </h1>
-
-          <p className="text-black max-w-md mb-6">
-            Email, call, or complete the form to learn how we can help
-            solve your messaging problems.
+          <p className="text-main/70 max-w-2xl mx-auto text-sm sm:text-base">
+            Lorem ipsum dolor sit amet. Ut omnis veritatis ut deserunt quia ut
+            reprehenderit quam rem omnis tempora. Non excepturi impedit est
+            ipsum blanditiis
           </p>
+        </div>
 
-          <p className="text-black font-medium">info@example.com</p>
-          <p className="text-black font-medium mb-10">
-            +91 98765 43210
-          </p>
-
-          <div className="grid grid-cols-3 gap-6 text-sm">
+        {/* CARD WITH GLOW */}
+        <div
+          className="
+            bg-white rounded-3xl
+            grid grid-cols-1 md:grid-cols-2
+            overflow-hidden
+            min-h-[560px]
+            shadow-[0_0_60px_rgba(252,108,180,0.25)]
+          "
+        >
+          {/* LEFT INFO PANEL */}
+          <div className="relative bg-[#FC6CB4] text-white p-10 flex flex-col justify-between">
             <div>
-              <p className="font-semibold text-black mb-1">
-                Customer Support
+              <h3 className="text-4xl font-semibold mb-3  text-main" >
+                Contact Information
+              </h3>
+              <p className="text-white/80 text-md mb-10">
+                Lorem ipsum dolor sit amet. Ut omnis veritatis ut deserunt quia
               </p>
-              <p className="text-black">
-                Our team is available 24/7
-              </p>
+
+              <div className="mt-10 space-y-5">
+                {/* Phone */}
+                <div
+                  className="
+                  bg-white/15 rounded-xl px-5 py-4
+                  text-lg sm:text-lg font-semibold
+                  backdrop-blur-sm
+                "
+                >
+                  📞 9075141925
+                </div>
+
+                {/* Email */}
+                <div
+                  className="
+                  bg-white/15 rounded-xl px-5 py-4
+                  text-lg sm:text-xl font-semibold
+                  break-all backdrop-blur-sm
+                "
+                >
+                  ✉️ makemeecosmetics@gmail.com
+                </div>
+
+                {/* Location */}
+                <div
+                  className="
+    bg-white/15 rounded-xl px-5 py-4
+    text-lg sm:text-xl font-semibold
+    backdrop-blur-sm
+  "
+                >
+                  📍 Mumbai, India
+                </div>
+              </div>
             </div>
 
-            <div>
-              <p className="font-semibold text-black mb-1">
-                Feedback
-              </p>
-              <p className="text-black">
-                We value your suggestions
-              </p>
-            </div>
+            {/* DECORATIVE CURVE */}
+            <div className="absolute -bottom-30 -right-20 w-60 h-60 bg-white/20 rounded-full" />
+            
+          </div>
 
-            <div>
-              <p className="font-semibold text-black mb-1">
-                Media
-              </p>
-              <p className="text-black">
-                For press inquiries
-              </p>
-            </div>
+          {/* RIGHT FORM (TALLER) */}
+          <div className="p-10 flex flex-col justify-center">
+            <form className="space-y-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <input
+                  type="text"
+                  placeholder="Name"
+                  className="
+                    border border-black/10 rounded-lg px-4 py-3
+                    focus:outline-none focus:border-[#FC6CB4]
+                    transition text-main
+                  "
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  className="
+                    border border-black/10 rounded-lg px-4 py-3
+                    focus:outline-none focus:border-[#FC6CB4]
+                    transition text-main
+                  "
+                />
+              </div>
+
+              <input
+                type="text"
+                placeholder="Subject"
+                className="
+                  w-full border border-black/10 rounded-lg px-4 py-3
+                  focus:outline-none focus:border-[#FC6CB4]
+                  transition text-main
+                "
+              />
+
+              <textarea
+                placeholder="Message"
+                rows="5"
+                className="
+                  w-full border border-black/10 rounded-lg px-4 py-3
+                  focus:outline-none focus:border-[#FC6CB4]
+                  resize-none transition text-main
+                "
+              />
+
+              <button
+                type="submit"
+                className="
+                  bg-[#FC6CB4] text-main font-medium
+                  px-10 py-3 rounded-lg
+                  hover:bg-[#F0A400]
+                  transition-all duration-300
+                  self-start
+                "
+              >
+                Submit
+              </button>
+            </form>
           </div>
         </div>
-
-        {/* RIGHT FORM */}
-        <div className="animate bg-white rounded-2xl shadow-xl p-10">
-          <h2 className="text-2xl font-semibold text-black mb-1">
-            Get in Touch
-          </h2>
-          <p className="text-black text-sm mb-8">
-            You can reach us anytime
-          </p>
-
-          <form className="space-y-6">
-            <div className="grid grid-cols-2 gap-6">
-              <UnderlineInput placeholder="First name" />
-              <UnderlineInput placeholder="Last name" />
-            </div>
-
-            <UnderlineInput placeholder="Your email" />
-            <UnderlineInput placeholder="Phone number" />
-
-            <textarea
-              placeholder="How can we help?"
-              rows="3"
-              className="
-                w-full bg-transparent
-                border-b border-black/30
-                focus:outline-none
-                focus:border-[#FC6CB4]
-                hover:border-[#731162]
-                transition-all duration-300
-                placeholder-black/50 py-2 resize-none
-              "
-            />
-
-            <button
-              className="
-                w-full bg-[#FC6CB4] text-black py-3 rounded-full
-                hover:bg-[#F0A400]
-                transition-all duration-300
-              "
-            >
-              Submit
-            </button>
-
-            <p className="text-xs text-center text-black">
-              By contacting us, you agree to our{" "}
-              <span className="font-medium">Terms</span> and{" "}
-              <span className="font-medium">Privacy Policy</span>
-            </p>
-          </form>
-        </div>
-
       </div>
     </section>
   );
