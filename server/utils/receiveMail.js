@@ -20,10 +20,10 @@ const receiveMail = async ({ name, email, subject, message }) => {
       },
     });
 
-    // Mail options
+    // Mail options - send to business email
     const mailOptions = {
       from: `"MakeMee Cosmetics" <${process.env.SMTP_USER}>`,
-      to: process.env.SMTP_USER,
+      to: "makemeecosmetics@gmail.com",
       replyTo: email,
       subject: `📩 New Contact Form: ${subject}`,
       html: `

@@ -288,22 +288,32 @@ exports.deleteProduct = async (req, res) => {
             return res.status(404).json({ message: 'Product not found' });
         }
 
-        // Delete associated images from Cloudinary
-        if (product.images && product.images.length > 0) {
-            const deletePromises = product.images.map(imgUrl => {
-                // Ensure correct public ID extraction for files in the 'products' folder
-                const publicId = imgUrl.split('/').pop().split('.')[0];
-                return cloudinary.uploader.destroy(`products/${publicId}`);
-            });
-            await Promise.all(deletePromises);
-        }
-        
-        // Delete the product from the database
+        // Delete the product from the database first (most important)
         await Product.findByIdAndDelete(req.params.id);
+
+        // Try to delete associated images from Cloudinary (non-blocking)
+        // Don't let Cloudinary errors prevent product deletion
+        if (product.images && product.images.length > 0) {
+            try {
+                const deletePromises = product.images.map(imgUrl => {
+                    // Extract public ID from Cloudinary URL
+                    // URL format: https://res.cloudinary.com/{cloud}/image/upload/v{timestamp}/products/{public_id}.{ext}
+                    const publicId = imgUrl.split('/').pop().split('.')[0];
+                    return cloudinary.uploader.destroy(`products/${publicId}`).catch(err => {
+                        console.error(`Failed to delete image ${publicId}:`, err.message);
+                        return null; // Don't throw, just log
+                    });
+                });
+                await Promise.all(deletePromises);
+            } catch (cloudinaryError) {
+                // Log but don't fail the request
+                console.error('Cloudinary cleanup error:', cloudinaryError.message);
+            }
+        }
 
         res.status(200).json({ message: 'Product deleted' });
     } catch (error) {
-        console.error('Error deleting product:', error.message);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Error deleting product:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 };

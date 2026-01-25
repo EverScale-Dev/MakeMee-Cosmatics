@@ -1,11 +1,15 @@
 const express = require('express');
 const dotenv = require('dotenv');
+
+// Load env vars FIRST before any other imports
+dotenv.config();
+
 const connectDB = require('../config/db');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 
-// Import routes
+// Import routes (after env vars are loaded)
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/product');
 const orderRoutes = require('./routes/order');
@@ -21,7 +25,6 @@ const cartRoutes = require("./routes/cart");
 const couponRoutes = require("./routes/couponRoutes");
 const bannerRoutes = require("./routes/bannerRoutes");
 
-dotenv.config();
 connectDB();
 
 const app = express();
