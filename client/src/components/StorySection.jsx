@@ -64,7 +64,7 @@ const StorySection = () => {
           </h1>
 
           <p className="text-neutral-600 leading-relaxed">
-            At Lumière, we believe beauty is intentional.
+            At MakeMee, we believe beauty is intentional.
             Crafted with nature, refined by science.
           </p>
         </div>
