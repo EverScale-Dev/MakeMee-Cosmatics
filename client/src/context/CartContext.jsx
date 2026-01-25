@@ -81,7 +81,7 @@ export const CartProvider = ({ children }) => {
     }
   }, [items, initialized]);
 
-  // Save entire cart to backend (debounced)
+  // Save entire cart to backend (debounced) - uses sync (replace) not merge (add)
   const saveToBackend = useCallback(async (cartItems) => {
     if (!isLoggedIn()) return;
 
@@ -95,7 +95,7 @@ export const CartProvider = ({ children }) => {
       try {
         setSyncing(true);
         const backendCart = cartItems.map(transformForBackend);
-        await cartService.mergeCart(backendCart);
+        await cartService.syncCart(backendCart);
       } catch (error) {
         console.error('Failed to save cart to backend:', error);
       } finally {

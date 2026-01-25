@@ -92,6 +92,54 @@ exports.mergeCart = async (req, res) => {
   }
 };
 
+// Sync cart - replaces entire cart (used for frontend state sync)
+exports.syncCart = async (req, res) => {
+  const { items } = req.body; // Array of { id, name, price, quantity, image, weight, selectedSize }
+
+  if (!items || !Array.isArray(items)) {
+    return res.status(400).json({ message: 'Invalid cart data' });
+  }
+
+  try {
+    let cart = await Cart.findOne({ user: req.User._id });
+
+    if (!cart) {
+      cart = new Cart({ user: req.User._id, items: [] });
+    }
+
+    // Replace entire cart
+    cart.items = items.map((item) => ({
+      productId: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      image: item.image,
+      weight: item.weight,
+      selectedSize: item.selectedSize || null,
+    }));
+
+    await cart.save();
+
+    const totalQuantity = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+
+    res.status(200).json({
+      items: cart.items.map((item) => ({
+        id: item.productId.toString(),
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image,
+        weight: item.weight,
+        selectedSize: item.selectedSize || null,
+      })),
+      totalQuantity,
+    });
+  } catch (error) {
+    console.error('Error syncing cart:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // Update cart (add/remove/update items)
 exports.updateCart = async (req, res) => {
   const { action, item } = req.body;
