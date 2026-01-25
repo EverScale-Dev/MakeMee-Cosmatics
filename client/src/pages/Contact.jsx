@@ -26,10 +26,10 @@ const Contact = () => {
             Get In Touch
           </h1>
           <p className="text-main/70 max-w-2xl mx-auto text-sm sm:text-base">
-            Lorem ipsum dolor sit amet. Ut omnis veritatis ut deserunt quia ut
-            reprehenderit quam rem omnis tempora. Non excepturi impedit est
-            ipsum blanditiis
-          </p>
+  Have questions about our products or need personalized beauty advice?
+  Reach out to us anytime — we’re here to help you feel confident and radiant.
+</p>
+
         </div>
 
         {/* CARD WITH GLOW */}
@@ -48,9 +48,10 @@ const Contact = () => {
               <h3 className="text-4xl font-semibold mb-3  text-main" >
                 Contact Information
               </h3>
-              <p className="text-white/80 text-md mb-10">
-                Lorem ipsum dolor sit amet. Ut omnis veritatis ut deserunt quia
-              </p>
+             <p className="text-white/80 text-md mb-10">
+  We’re always happy to connect. Contact us for product inquiries, order
+  support, collaborations, or any questions related to MakeMee Cosmetics.
+</p>
 
               <div className="mt-10 space-y-5">
                 {/* Phone */}
