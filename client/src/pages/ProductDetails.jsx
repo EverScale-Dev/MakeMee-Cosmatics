@@ -10,7 +10,6 @@ import {
   Check,
 } from "lucide-react";
 
-import { getProductById, products } from "@/data/products";
 import { productService } from "@/services";
 import ProductCard from "@/components/ProductCard";
 import AnimatedSection from "@/components/AnimatedSection";
@@ -76,7 +75,6 @@ const ProductDetails = () => {
         return;
       }
 
-      // Try API first (real products from database)
       try {
         const data = await productService.getById(id);
         const transformed = transformBackendProduct(data);
@@ -84,14 +82,7 @@ const ProductDetails = () => {
         setSelectedSize(transformed.sizes?.[0]);
       } catch (err) {
         console.error("Failed to fetch product:", err);
-        // Fallback to mock data only for development
-        const mockProduct = getProductById(id);
-        if (mockProduct) {
-          setProduct(mockProduct);
-          setSelectedSize(mockProduct.sizes?.[0]);
-        } else {
-          setError("Product not found");
-        }
+        setError("Product not found");
       } finally {
         setLoading(false);
       }
@@ -190,14 +181,8 @@ const ProductDetails = () => {
     navigate("/cart");
   };
 
-  // Related products from mock data (or could fetch from API)
-  const relatedProducts = products
-    .filter(
-      (p) =>
-        p.id !== product.id &&
-        p.tags?.some((tag) => product.tags?.includes(tag))
-    )
-    .slice(0, 4);
+  // Related products - will be empty until we fetch from API
+  const relatedProducts = [];
 
   const tabs = [
     { id: "description", label: "Description", content: product.shortDescription},

@@ -7,7 +7,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import ProductCard from "../components/ProductCard";
 import AnimatedSection from "../components/AnimatedSection";
 import StorySection from "../components/StorySection";
-import { getFeaturedProducts } from "../data/products";
 import { productService } from "../services";
 import { useHeroAnimation } from "../animations/useHeroAnimation";
 
@@ -53,18 +52,15 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
-        // Try fetching bestsellers from API first
         const products = await productService.getFeatured(4);
         if (products && products.length > 0) {
           setFeaturedProducts(products.map(transformProduct));
         } else {
-          // Fallback to mock data if no products in DB
-          setFeaturedProducts(getFeaturedProducts());
+          setFeaturedProducts([]);
         }
       } catch (error) {
         console.error("Failed to fetch featured products:", error);
-        // Fallback to mock data on error
-        setFeaturedProducts(getFeaturedProducts());
+        setFeaturedProducts([]);
       } finally {
         setLoadingProducts(false);
       }
@@ -188,42 +184,44 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
       </section>
 
       {/* ================= FEATURED PRODUCTS ================= */}
-      <AnimatedSection className="py-20 bg-base">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-[#731162] mb-4">
-              Bestselling Products
-            </h2>
-            <p className="text-black/70 text-lg">
-              Our most loved skincare essentials.
-            </p>
-          </div>
+      {featuredProducts.length > 0 && (
+        <AnimatedSection className="py-20 bg-base">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-[#731162] mb-4">
+                Bestselling Products
+              </h2>
+              <p className="text-black/70 text-lg">
+                Our most loved skincare essentials.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featuredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={onAddToCart}
-                onAddToWishlist={onAddToWishlist}
-              />
-            ))}
-          </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {featuredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAddToCart={onAddToCart}
+                  onAddToWishlist={onAddToWishlist}
+                />
+              ))}
+            </div>
 
-          <div className="text-center mt-12">
-            <Link to="/shop">
-              <button
-                className="inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold
-                rounded-full border-2 border-[#731162] text-[#731162]
-                hover:bg-[#731162] hover:text-white transition"
-              >
-                View All Products
-                <ArrowRight size={20} />
-              </button>
-            </Link>
+            <div className="text-center mt-12">
+              <Link to="/shop">
+                <button
+                  className="inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold
+                  rounded-full border-2 border-[#731162] text-[#731162]
+                  hover:bg-[#731162] hover:text-white transition"
+                >
+                  View All Products
+                  <ArrowRight size={20} />
+                </button>
+              </Link>
+            </div>
           </div>
-        </div>
-      </AnimatedSection>
+        </AnimatedSection>
+      )}
 
       {/* ================= PROMOTIONAL BANNER ================= */}
       <section className="w-full">
