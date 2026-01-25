@@ -17,7 +17,7 @@ export default function AddressCard({
         )}
       </div>
 
-      <p className="text-gray-600">
+      <p className="text-gray-600 break-words">
         {data.address}, {data.city} – {data.pincode}
       </p>
       <p className="text-gray-600">{data.phone}</p>

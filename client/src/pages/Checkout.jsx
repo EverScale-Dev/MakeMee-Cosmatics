@@ -48,6 +48,7 @@ const Checkout = () => {
   // Phone verification state
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [phoneVerificationRequired, setPhoneVerificationRequired] = useState(false);
+  const [codEnabled, setCodEnabled] = useState(true);
 
   // Login guard
   useEffect(() => {
@@ -57,12 +58,17 @@ const Checkout = () => {
     }
   }, [isLoggedIn, navigate]);
 
-  // Fetch settings (phone verification requirement)
+  // Fetch settings (phone verification, COD)
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         const response = await api.get("/settings/public");
         setPhoneVerificationRequired(response.data.phoneVerificationRequired || false);
+        setCodEnabled(response.data.codEnabled !== false); // Default true if not set
+        // If COD is disabled and currently selected, switch to online payment
+        if (response.data.codEnabled === false && paymentMethod === "cashOnDelivery") {
+          setPaymentMethod("onlinePayment");
+        }
       } catch (error) {
         console.error("Failed to fetch settings:", error);
       }
@@ -544,19 +550,21 @@ const Checkout = () => {
           <div className="bg-white rounded-3xl shadow-lg p-6 sm:p-8">
             <h2 className="text-xl font-medium mb-6">Payment Method</h2>
             <div className="space-y-4">
-              <button
-                onClick={() => setPaymentMethod("cashOnDelivery")}
-                className={`w-full p-5 rounded-2xl shadow-md text-left transition flex items-center justify-between ${
-                  paymentMethod === "cashOnDelivery"
-                    ? "ring-2 ring-[#FC6CB4]"
-                    : "hover:shadow-lg"
-                }`}
-              >
-                <span>Cash on Delivery</span>
-                {paymentMethod === "cashOnDelivery" && (
-                  <Check className="text-[#FC6CB4]" />
-                )}
-              </button>
+              {codEnabled && (
+                <button
+                  onClick={() => setPaymentMethod("cashOnDelivery")}
+                  className={`w-full p-5 rounded-2xl shadow-md text-left transition flex items-center justify-between ${
+                    paymentMethod === "cashOnDelivery"
+                      ? "ring-2 ring-[#FC6CB4]"
+                      : "hover:shadow-lg"
+                  }`}
+                >
+                  <span>Cash on Delivery</span>
+                  {paymentMethod === "cashOnDelivery" && (
+                    <Check className="text-[#FC6CB4]" />
+                  )}
+                </button>
+              )}
               <button
                 onClick={() => setPaymentMethod("onlinePayment")}
                 className={`w-full p-5 rounded-2xl shadow-md text-left transition flex items-center justify-between ${

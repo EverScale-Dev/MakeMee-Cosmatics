@@ -272,23 +272,36 @@ const ProductDetails = () => {
               {/* Size Selector */}
               <div>
                 <p className="font-medium mb-2">Select Size</p>
-                <div className="flex gap-3">
-                  {product.sizes.map((size) => (
-                    <button
-                      key={size.ml}
-                      onClick={() => {
-                        setSelectedSize(size);
-                        setQuantity(1);
-                      }}
-                      className={`px-4 py-2 rounded-full border ${
-                        selectedSize.ml === size.ml
-                          ? "border-[#FC6CB4] bg-[#FC6CB4]/20"
-                          : "border-black/20"
-                      }`}
-                    >
-                      {size.ml} ml
-                    </button>
-                  ))}
+                <div className="flex flex-wrap gap-3">
+                  {product.sizes.map((size) => {
+                    const isOutOfStock = size.inStock === false || (size.stock !== undefined && size.stock <= 0);
+                    return (
+                      <button
+                        key={size.ml}
+                        onClick={() => {
+                          if (!isOutOfStock) {
+                            setSelectedSize(size);
+                            setQuantity(1);
+                          }
+                        }}
+                        disabled={isOutOfStock}
+                        className={`px-4 py-2 rounded-full border relative ${
+                          isOutOfStock
+                            ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : selectedSize?.ml === size.ml
+                            ? "border-[#FC6CB4] bg-[#FC6CB4]/20"
+                            : "border-black/20"
+                        }`}
+                      >
+                        {size.ml} ml
+                        {isOutOfStock && (
+                          <span className="absolute -top-2 -right-2 text-[10px] bg-red-500 text-white px-1 rounded">
+                            Out
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -313,59 +326,89 @@ const ProductDetails = () => {
                 </span>
               </div>
 
-              {/* Stock */}
-              <div className="flex items-center gap-2">
-                <Check className="text-[#731162]" />
-                <span className="text-[#731162] font-medium">In Stock</span>
-              </div>
+              {/* Stock Status */}
+              {(() => {
+                const isOutOfStock = selectedSize?.inStock === false || (selectedSize?.stock !== undefined && selectedSize?.stock <= 0);
+                return isOutOfStock ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-red-500 font-medium">Out of Stock</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Check className="text-[#731162]" />
+                    <span className="text-[#731162] font-medium">
+                      In Stock {selectedSize?.stock > 0 && selectedSize?.stock <= 10 && `(Only ${selectedSize.stock} left)`}
+                    </span>
+                  </div>
+                );
+              })()}
 
               {/* Quantity */}
-              <div className="flex items-center gap-4">
-                <span className="font-medium">Quantity</span>
-                <div className="flex items-center bg-black/5 rounded-lg">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-3"
-                  >
-                    <Minus />
-                  </button>
-                  <span className="w-12 text-center">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="p-3"
-                  >
-                    <Plus />
-                  </button>
-                </div>
-              </div>
+              {(() => {
+                const isOutOfStock = selectedSize?.inStock === false || (selectedSize?.stock !== undefined && selectedSize?.stock <= 0);
+                const maxQty = selectedSize?.stock > 0 ? selectedSize.stock : 10;
+                return !isOutOfStock && (
+                  <div className="flex items-center gap-4">
+                    <span className="font-medium">Quantity</span>
+                    <div className="flex items-center bg-black/5 rounded-lg">
+                      <button
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="p-3"
+                      >
+                        <Minus />
+                      </button>
+                      <span className="w-12 text-center">{quantity}</span>
+                      <button
+                        onClick={() => setQuantity(Math.min(maxQty, quantity + 1))}
+                        className="p-3"
+                      >
+                        <Plus />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Actions */}
-              <div className="flex gap-3">
-                <button
-                  onClick={handleAddToCart}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-[#FC6CB4] rounded-full"
-                >
-                  <ShoppingBag />
-                  Add to Cart
-                </button>
+              {(() => {
+                const isOutOfStock = selectedSize?.inStock === false || (selectedSize?.stock !== undefined && selectedSize?.stock <= 0);
+                return (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleAddToCart}
+                      disabled={isOutOfStock}
+                      className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-full ${
+                        isOutOfStock
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-[#FC6CB4]"
+                      }`}
+                    >
+                      <ShoppingBag />
+                      {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+                    </button>
 
-                <button
-                  onClick={handleBuyNow}
-                  className="flex-1 px-6 py-3 border rounded-full"
-                >
-                  Buy Now
-                </button>
+                    <button
+                      onClick={handleBuyNow}
+                      disabled={isOutOfStock}
+                      className={`flex-1 px-6 py-3 border rounded-full ${
+                        isOutOfStock ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      Buy Now
+                    </button>
 
-                <button onClick={() => toggleWishlist(product)}>
-                  <Heart
-                    className={`w-6 h-6 ${
-                      isInWishlist(product.id)
-                        ? "fill-[#FC6CB4] text-[#FC6CB4]"
-                        : "text-black"
-                    }`}
-                  />
-                </button>
-              </div>
+                    <button onClick={() => toggleWishlist(product)}>
+                      <Heart
+                        className={`w-6 h-6 ${
+                          isInWishlist(product.id)
+                            ? "fill-[#FC6CB4] text-[#FC6CB4]"
+                            : "text-black"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                );
+              })()}
 
               {/* Tabs */}
               <div className="pt-8 border-t">

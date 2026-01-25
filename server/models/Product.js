@@ -108,11 +108,12 @@ const productSchema = new mongoose.Schema({
     default: 0
   },
 
-  // Multiple size variants with individual pricing
+  // Multiple size variants with individual pricing and stock
   sizes: [{
     ml: { type: Number, required: true },
     originalPrice: { type: Number, required: true, min: 0 },
     sellingPrice: { type: Number, required: true, min: 0 },
+    stock: { type: Number, default: 0, min: 0 },
     inStock: { type: Boolean, default: true }
   }],
   

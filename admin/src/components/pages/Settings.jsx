@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Settings as SettingsIcon, Phone, Mail, MessageSquare, Save, Loader2 } from "lucide-react";
+import { Settings as SettingsIcon, Phone, Mail, MessageSquare, Save, Loader2, Wallet } from "lucide-react";
 import settingsService from "../../services/settingsService";
 
 const Settings = () => {
   const [settings, setSettings] = useState({
     phoneVerificationRequired: false,
     otpProvider: "EMAIL",
+    codEnabled: true,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -25,6 +26,7 @@ const Settings = () => {
       setSettings({
         phoneVerificationRequired: data.phoneVerificationRequired?.value ?? false,
         otpProvider: data.otpProvider?.value ?? "EMAIL",
+        codEnabled: data.codEnabled?.value ?? true,
       });
     } catch (err) {
       setError("Failed to load settings");
@@ -121,6 +123,41 @@ const Settings = () => {
               : "bg-gray-100 text-gray-600"
           }`}>
             {settings.phoneVerificationRequired ? "ENABLED" : "DISABLED"}
+          </span>
+        </div>
+      </div>
+
+      {/* COD Settings Card */}
+      <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Wallet className="w-5 h-5 text-blue-600" />
+          <h2 className="text-lg font-semibold text-gray-800">Payment Options</h2>
+        </div>
+        <hr className="mb-4" />
+
+        <label className="flex items-start gap-4 cursor-pointer">
+          <div className="relative mt-1">
+            <input
+              type="checkbox"
+              checked={settings.codEnabled}
+              onChange={(e) => handleChange("codEnabled", e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+          </div>
+          <div>
+            <p className="font-medium text-gray-800">Enable Cash on Delivery (COD)</p>
+            <p className="text-sm text-gray-500">Allow customers to pay cash when order is delivered</p>
+          </div>
+        </label>
+
+        <div className="mt-4">
+          <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+            settings.codEnabled
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-600"
+          }`}>
+            {settings.codEnabled ? "COD ENABLED" : "COD DISABLED"}
           </span>
         </div>
       </div>

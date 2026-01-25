@@ -48,7 +48,10 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
           name: i.name || "",
           benefit: i.benefit || ""
         })) || [],
-        sizes: initialData.sizes || [],
+        sizes: initialData.sizes?.map(s => ({
+          ...s,
+          stock: s.stock || 0
+        })) || [],
         existingImages: initialData.images || [],
         newImages: []
       });
@@ -131,11 +134,11 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
     }));
   };
 
-  // Sizes (array with ml, originalPrice, sellingPrice)
+  // Sizes (array with ml, originalPrice, sellingPrice, stock)
   const addSize = () => {
     setData((prev) => ({
       ...prev,
-      sizes: [...prev.sizes, { ml: "", originalPrice: "", sellingPrice: "", inStock: true }]
+      sizes: [...prev.sizes, { ml: "", originalPrice: "", sellingPrice: "", stock: "", inStock: true }]
     }));
   };
 
@@ -194,6 +197,7 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
           ml: Number(s.ml),
           originalPrice: Number(s.originalPrice) || 0,
           sellingPrice: Number(s.sellingPrice) || 0,
+          stock: Number(s.stock) || 0,
           inStock: s.inStock !== false
         }));
       formData.append("sizes", JSON.stringify(sizesArray));
@@ -307,63 +311,43 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
             </div>
           </section>
 
-          {/* Pricing */}
+          {/* Size Variants with Stock */}
           <section>
-            <h3 className="text-blue-600 font-semibold mb-4">Pricing & Weight</h3>
-            <div className="grid grid-cols-3 gap-4">
-              <input
-                type="number"
-                name="regularPrice"
-                value={data.regularPrice}
-                onChange={handleOnChange}
-                className="input"
-                placeholder="Regular Price"
-              />
-              <input
-                type="number"
-                name="salePrice"
-                value={data.salePrice}
-                onChange={handleOnChange}
-                className="input"
-                placeholder="Sale Price"
-              />
-              <input
-                name="weight"
-                value={data.weight}
-                onChange={handleOnChange}
-                className="input"
-                placeholder="Weight (e.g., 30ml)"
-              />
-            </div>
-          </section>
-
-          {/* Size Variants */}
-          <section>
-            <h3 className="text-blue-600 font-semibold mb-3">Size Variants</h3>
+            <h3 className="text-blue-600 font-semibold mb-3">Size Variants & Pricing</h3>
+            <p className="text-sm text-gray-500 mb-3">Add at least one size variant with pricing and stock</p>
             {data.sizes.map((size, i) => (
-              <div key={i} className="flex gap-2 mb-2 items-center">
+              <div key={i} className="flex flex-wrap gap-2 mb-3 items-center p-3 bg-gray-50 rounded-lg">
                 <input
                   type="number"
                   value={size.ml}
                   onChange={(e) => updateSize(i, "ml", e.target.value)}
-                  className="input w-24"
+                  className="input w-20"
                   placeholder="ml"
                 />
+                <span className="text-gray-400">ml</span>
                 <input
                   type="number"
                   value={size.originalPrice}
                   onChange={(e) => updateSize(i, "originalPrice", e.target.value)}
-                  className="input w-32"
-                  placeholder="Original Price"
+                  className="input w-28"
+                  placeholder="MRP"
                 />
                 <input
                   type="number"
                   value={size.sellingPrice}
                   onChange={(e) => updateSize(i, "sellingPrice", e.target.value)}
-                  className="input w-32"
+                  className="input w-28"
                   placeholder="Selling Price"
                 />
-                <label className="flex items-center gap-1 text-sm">
+                <input
+                  type="number"
+                  value={size.stock || ""}
+                  onChange={(e) => updateSize(i, "stock", e.target.value)}
+                  className="input w-24"
+                  placeholder="Stock"
+                  min="0"
+                />
+                <label className="flex items-center gap-1 text-sm whitespace-nowrap">
                   <input
                     type="checkbox"
                     checked={size.inStock !== false}
@@ -374,14 +358,14 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
                 <button
                   type="button"
                   onClick={() => removeSize(i)}
-                  className="text-red-500 hover:text-red-700"
+                  className="text-red-500 hover:text-red-700 ml-auto"
                 >
                   <MdDelete size={18} />
                 </button>
               </div>
             ))}
             <button type="button" onClick={addSize} className="btn-outline">
-              <FaPlus /> Add Size
+              <FaPlus /> Add Size Variant
             </button>
           </section>
 

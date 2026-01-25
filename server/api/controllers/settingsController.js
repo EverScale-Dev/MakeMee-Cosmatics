@@ -110,9 +110,11 @@ exports.initializeSettings = async () => {
 exports.getPublicSettings = async (req, res) => {
   try {
     const phoneVerificationRequired = await Settings.get("phoneVerificationRequired", false);
+    const codEnabled = await Settings.get("codEnabled", true);
 
     res.status(200).json({
       phoneVerificationRequired,
+      codEnabled,
     });
   } catch (error) {
     console.error("Error fetching public settings:", error.message);

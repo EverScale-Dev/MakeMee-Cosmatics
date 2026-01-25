@@ -89,7 +89,7 @@ export default function SavedAddressSelector({
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600 mt-1 truncate">
+                  <p className="text-sm text-gray-600 mt-1 break-words">
                     {address.apartment_address && `${address.apartment_address}, `}
                     {address.street_address1}
                   </p>

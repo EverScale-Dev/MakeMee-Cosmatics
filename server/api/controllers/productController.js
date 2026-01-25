@@ -30,8 +30,14 @@ exports.createProduct = async (req, res) => {
             sizes: sizesStr
         } = req.body;
 
-        // 1. Generate Slug
-        const slug = slugify(name, { lower: true, strict: true });
+        // 1. Generate Slug with uniqueness check
+        let slug = slugify(name, { lower: true, strict: true });
+
+        // Check if slug already exists and append timestamp if needed
+        const existingProduct = await Product.findOne({ slug });
+        if (existingProduct) {
+            slug = `${slug}-${Date.now()}`;
+        }
 
         // 2. Process Complex Array Fields
         const features = parseArrayField(featuresStr);
@@ -230,13 +236,20 @@ exports.updateProduct = async (req, res) => {
         }
         
         // 2. Update Product Fields
+        const oldName = product.name;
         product.name = name || product.name;
         product.brand = brand || product.brand;
         // Removed assignment for product.category
-        
+
         // Update slug only if name changes
-        if (name && name !== product.name) {
-             product.slug = slugify(name, { lower: true, strict: true });
+        if (name && name !== oldName) {
+            let newSlug = slugify(name, { lower: true, strict: true });
+            // Check for slug collision (excluding current product)
+            const existingProduct = await Product.findOne({ slug: newSlug, _id: { $ne: product._id } });
+            if (existingProduct) {
+                newSlug = `${newSlug}-${Date.now()}`;
+            }
+            product.slug = newSlug;
         }
 
         product.description = description || product.description;

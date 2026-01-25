@@ -49,6 +49,11 @@ settingsSchema.statics.initDefaults = async function () {
       value: "EMAIL", // EMAIL or SMS
       description: "OTP delivery method: EMAIL (temporary) or SMS (MSG91)",
     },
+    {
+      key: "codEnabled",
+      value: true,
+      description: "Enable Cash on Delivery payment option",
+    },
   ];
 
   for (const setting of defaults) {
