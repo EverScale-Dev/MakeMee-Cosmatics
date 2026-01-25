@@ -196,13 +196,8 @@ const ProductDetails = () => {
 
   const tabs = [
     { id: "description", label: "Description", content: product.shortDescription || product.description },
-    {
-      id: "ingredients",
-      label: "Ingredients",
-      content: formatIngredients(),
-    },
     { id: "usage", label: "How to Use", content: product.howToUse || product.usage },
-    { id: "sourcing", label: "Sourcing", content: product.sourcingInfo },
+    { id: "sourcing", label: "Ingredients & Sourcing Info", content: product.sourcingInfo },
   ];
 
   return (
@@ -327,22 +322,35 @@ const ProductDetails = () => {
                 </span>
               </div>
 
-              {/* Stock Status */}
-              {(() => {
-                const isOutOfStock = selectedSize?.inStock === false || (selectedSize?.stock !== undefined && selectedSize?.stock <= 0);
-                return isOutOfStock ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-red-500 font-medium">Out of Stock</span>
+              {/* Key Features */}
+              {product.features && product.features.length > 0 && (
+                <div className="bg-[#FDE6F1] rounded-2xl p-4">
+                  <h3 className="font-semibold text-[#731162] mb-3">Why You'll Love It</h3>
+                  <ul className="space-y-2">
+                    {product.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-[#FC6CB4] mt-0.5 flex-shrink-0" />
+                        <span>{feature.text || feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Key Ingredients */}
+              {product.ingredients && product.ingredients.length > 0 && (
+                <div className="bg-gray-50 rounded-2xl p-4">
+                  <h3 className="font-semibold text-[#731162] mb-3">Key Ingredients</h3>
+                  <div className="space-y-2">
+                    {product.ingredients.map((ing, idx) => (
+                      <div key={idx} className="text-sm">
+                        <span className="font-medium">{ing.name || ing}</span>
+                        {ing.benefit && <span className="text-gray-600"> — {ing.benefit}</span>}
+                      </div>
+                    ))}
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Check className="text-[#731162]" />
-                    <span className="text-[#731162] font-medium">
-                      In Stock {selectedSize?.stock > 0 && selectedSize?.stock <= 10 && `(Only ${selectedSize.stock} left)`}
-                    </span>
-                  </div>
-                );
-              })()}
+                </div>
+              )}
 
               {/* Quantity */}
               {(() => {

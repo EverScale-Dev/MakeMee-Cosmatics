@@ -1,7 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import gsap from "gsap";
+import { toast } from "sonner";
+import api from "@/services/api";
 
 const Contact = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: ""
+  });
+  const [submitting, setSubmitting] = useState(false);
+
   useEffect(() => {
     gsap.fromTo(
       ".animate",
@@ -15,6 +25,30 @@ const Contact = () => {
       },
     );
   }, []);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!formData.name || !formData.email || !formData.message) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await api.post("/contact", formData);
+      toast.success(response.data.message || "Message sent successfully!");
+      setFormData({ name: "", email: "", subject: "", message: "" });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to send message");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <section className="min-h-screen bg-white flex items-center justify-center px-4 py-20">
@@ -96,11 +130,15 @@ const Contact = () => {
 
           {/* RIGHT FORM (TALLER) */}
           <div className="p-10 flex flex-col justify-center">
-            <form className="space-y-8">
+            <form className="space-y-8" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <input
                   type="text"
-                  placeholder="Name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Name *"
+                  required
                   className="
                     border border-black/10 rounded-lg px-4 py-3
                     focus:outline-none focus:border-[#FC6CB4]
@@ -109,7 +147,11 @@ const Contact = () => {
                 />
                 <input
                   type="email"
-                  placeholder="Email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Email *"
+                  required
                   className="
                     border border-black/10 rounded-lg px-4 py-3
                     focus:outline-none focus:border-[#FC6CB4]
@@ -120,6 +162,9 @@ const Contact = () => {
 
               <input
                 type="text"
+                name="subject"
+                value={formData.subject}
+                onChange={handleChange}
                 placeholder="Subject"
                 className="
                   w-full border border-black/10 rounded-lg px-4 py-3
@@ -129,7 +174,11 @@ const Contact = () => {
               />
 
               <textarea
-                placeholder="Message"
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                placeholder="Message *"
+                required
                 rows="5"
                 className="
                   w-full border border-black/10 rounded-lg px-4 py-3
@@ -140,15 +189,17 @@ const Contact = () => {
 
               <button
                 type="submit"
+                disabled={submitting}
                 className="
                   bg-[#FC6CB4] text-main font-medium
                   px-10 py-3 rounded-lg
                   hover:bg-[#F0A400]
                   transition-all duration-300
                   self-start
+                  disabled:opacity-50 disabled:cursor-not-allowed
                 "
               >
-                Submit
+                {submitting ? "Sending..." : "Submit"}
               </button>
             </form>
           </div>

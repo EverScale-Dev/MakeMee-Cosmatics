@@ -5,6 +5,7 @@ import Customers from "./Customers";
 import Reviews from "./Reviews";
 import Coupons from "./Coupons";
 import Settings from "./Settings";
+import ContactSubmissions from "./ContactSubmissions";
 
 const pages = {
   Dashboard,
@@ -13,6 +14,7 @@ const pages = {
   Customers,
   Reviews,
   Coupons,
+  Messages: ContactSubmissions,
   Settings
 };
 

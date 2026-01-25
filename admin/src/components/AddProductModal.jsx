@@ -15,6 +15,7 @@ const emptyProduct = {
   regularPrice: "",
   salePrice: "",
   weight: "",
+  rating: "",
   features: [],
   ingredients: [],
   sizes: [],
@@ -43,6 +44,7 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
         regularPrice: initialData.regularPrice || "",
         salePrice: initialData.salePrice || "",
         weight: initialData.weight || "",
+        rating: initialData.rating || "",
         features: initialData.features?.map(f => f.text || f) || [],
         ingredients: initialData.ingredients?.map(i => ({
           name: i.name || "",
@@ -179,6 +181,7 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
       formData.append("regularPrice", data.regularPrice || 0);
       formData.append("salePrice", data.salePrice || 0);
       formData.append("weight", data.weight);
+      formData.append("rating", data.rating || 0);
 
       // Features - convert to array of objects with text field
       const featuresArray = data.features
@@ -267,7 +270,7 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
                 name="badge"
                 value={data.badge}
                 onChange={handleOnChange}
-                className="input col-span-2"
+                className="input"
               >
                 <option value="">No Badge</option>
                 {BADGE_OPTIONS.filter(b => b).map((badge) => (
@@ -276,6 +279,21 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
                   </option>
                 ))}
               </select>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  name="rating"
+                  value={data.rating}
+                  onChange={handleOnChange}
+                  placeholder="Rating"
+                  className="input w-24"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                />
+                <span className="text-gray-500 text-sm">/ 5 stars</span>
+              </div>
 
               <textarea
                 name="shortDescription"

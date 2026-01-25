@@ -24,6 +24,7 @@ import About from "./pages/About";
 import SignUp from "./pages/SignUp";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
+import TermsAndConditions from "./pages/TermsAndConditions";
 
 if ("scrollRestoration" in window.history) {
   window.history.scrollRestoration = "manual";
@@ -93,6 +94,7 @@ function AppLayout() {
           <Route path="/shop" element={<Shop />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/about" element={<About />} />
+          <Route path="/terms" element={<TermsAndConditions />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/product/:id" element={<ProductDetails />} />
