@@ -25,6 +25,10 @@ import SignUp from "./pages/SignUp";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 
+if ("scrollRestoration" in window.history) {
+  window.history.scrollRestoration = "manual";
+}
+
 // Auth redirect wrapper - redirects logged-in users away from login/signup
 function AuthRoute({ children }) {
   const { isLoggedIn } = useAuth();

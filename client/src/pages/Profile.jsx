@@ -166,8 +166,6 @@ export default function Profile() {
           <div className="lg:col-span-2 space-y-6">
             <AddressSection />
             <OrdersSection />
-
-            <SupportSection />
           </div>
         </div>
       </div>
@@ -355,15 +353,15 @@ function PaymentSection() {
   );
 }
 
-function SupportSection() {
-  return (
-    <Card title="Help & Support" icon={HelpCircle}>
-      <p className="text-sm">Email: support@store.com</p>
-      <p className="text-sm">WhatsApp: +91 99999 88888</p>
-      <TextButton>Raise Support Ticket</TextButton>
-    </Card>
-  );
-}
+// function SupportSection() {
+//   return (
+//     <Card title="Help & Support" icon={HelpCircle}>
+//       <p className="text-sm">Email: support@store.com</p>
+//       <p className="text-sm">WhatsApp: +91 99999 88888</p>
+//       <TextButton>Raise Support Ticket</TextButton>
+//     </Card>
+//   );
+// }
 
 /* ======================
    UI BUILDING BLOCKS
