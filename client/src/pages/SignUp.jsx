@@ -63,7 +63,7 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base px-4">
+    <div className="min-h-screen flex items-center justify-center bg-base px-4 mt-10">
       <div className="bg-white rounded-2xl shadow-xl p-10 w-[400px] max-w-lg">
         <h2 className="text-2xl font-semibold text-black mb-1">
           {isLogin ? "Welcome Back" : "Create Account"}

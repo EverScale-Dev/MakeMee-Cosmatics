@@ -70,6 +70,13 @@ function AppLayout() {
 
   return (
     <div className="flex flex-col min-h-screen">
+       <Toaster
+        position="bottom-right"
+        richColors
+        closeButton
+        duration={3000}
+      />
+      
       {!shouldHideNavbar && (
         <Navbar
           isAuthenticated={isLoggedIn}
