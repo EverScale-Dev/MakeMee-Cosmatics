@@ -115,7 +115,8 @@ function generateHeader(doc, order, logoPath) {
 
 // === CUSTOMER SECTION ===
 function generateCustomerSection(doc, order, startY) {
-  const customer = order.customer;
+  // Handle case when customer was deleted but order still exists
+  const customer = order.customer || {};
   const addr = customer.shippingAddress || {};
 
   // Two-column layout - left for address, right for contact
