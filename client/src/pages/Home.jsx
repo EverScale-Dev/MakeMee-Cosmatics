@@ -93,23 +93,24 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
     });
   }, [currentSlide]);
 
-  const testimonials = [
-    {
-      name: "Sarah Johnson",
-      text: "These products have completely transformed my skincare routine.",
-      rating: 5,
-    },
-    {
-      name: "Emily Chen",
-      text: "Cruelty-free, natural, and incredibly effective.",
-      rating: 5,
-    },
-    {
-      name: "Maria Garcia",
-      text: "Premium quality and visible results.",
-      rating: 5,
-    },
-  ];
+const testimonials = [
+  {
+    name: "Ananya Sharma",
+    text: "These products have completely transformed my skincare routine.",
+    rating: 4,
+  },
+  {
+    name: "Riya Mehta",
+    text: "Cruelty-free, natural, and incredibly effective.",
+    rating: 5,
+  },
+  {
+    name: "Priya Iyer",
+    text: "Premium quality and visible results.",
+    rating: 4,
+  },
+];
+;
 
   return (
     <div className="bg-white text-black">
