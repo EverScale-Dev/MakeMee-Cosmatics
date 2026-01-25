@@ -149,13 +149,13 @@ const productSchema = new mongoose.Schema({
   
   // Array of ingredients or key benefits (for the "Why You'll Love It" section)
   features: [{
-    text: { type: String, required: true }, // e.g., "Dermatologist Tested & Approved"
+    text: { type: String }, // e.g., "Dermatologist Tested & Approved"
   }],
   
   // Detailed list of key ingredients (for the "Key Ingredients Spotlight" section)
   ingredients: [{
     name: { type: String, required: true }, // e.g., "Hyaluronic Acid"
-    benefit: { type: String, required: true } // e.g., "Deep hydration and plumping."
+    benefit: { type: String, default: "" } // e.g., "Deep hydration and plumping."
   }],
   
   sourcingInfo: { // For the "Sourcing" tab

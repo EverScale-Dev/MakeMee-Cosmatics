@@ -186,8 +186,10 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
         .map(f => ({ text: f }));
       formData.append("features", JSON.stringify(featuresArray));
 
-      // Ingredients - already in correct format
-      const ingredientsArray = data.ingredients.filter(i => i.name.trim());
+      // Ingredients - filter out entries without name (benefit is optional)
+      const ingredientsArray = data.ingredients
+        .filter(i => i.name.trim())
+        .map(i => ({ name: i.name.trim(), benefit: i.benefit?.trim() || "" }));
       formData.append("ingredients", JSON.stringify(ingredientsArray));
 
       // Sizes - convert values to numbers

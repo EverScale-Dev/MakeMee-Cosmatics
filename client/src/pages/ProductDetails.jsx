@@ -202,6 +202,7 @@ const ProductDetails = () => {
       content: formatIngredients(),
     },
     { id: "usage", label: "How to Use", content: product.howToUse || product.usage },
+    { id: "sourcing", label: "Sourcing", content: product.sourcingInfo },
   ];
 
   return (

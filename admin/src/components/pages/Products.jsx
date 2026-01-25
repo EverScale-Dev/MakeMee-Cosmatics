@@ -62,6 +62,15 @@ export default function Products() {
     }).format(amount || 0);
   };
 
+  // Get price from sizes array or fallback to regularPrice/salePrice
+  const getProductPrice = (product, type) => {
+    if (product.sizes && product.sizes.length > 0) {
+      const firstSize = product.sizes[0];
+      return type === 'regular' ? firstSize.originalPrice : firstSize.sellingPrice;
+    }
+    return type === 'regular' ? product.regularPrice : product.salePrice;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -127,9 +136,9 @@ export default function Products() {
                       </td>
                       <td className="text-center">{product.brand || "—"}</td>
                       <td className="text-center">{product.category || "—"}</td>
-                      <td className="text-center">{formatCurrency(product.regularPrice)}</td>
+                      <td className="text-center">{formatCurrency(getProductPrice(product, 'regular'))}</td>
                       <td className="text-center text-green-600 font-medium">
-                        {formatCurrency(product.salePrice)}
+                        {formatCurrency(getProductPrice(product, 'sale'))}
                       </td>
                       <td className="text-center">
                         {product.badge ? (
