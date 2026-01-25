@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const protect = require("../../middlewares/protect");
+const adminProtect = require("../../middlewares/adminProtect");
 const {
   shipOrder,
   assignAwbToOrder,
@@ -10,17 +10,17 @@ const {
   getShipmentStatus,
 } = require("../controllers/shiprocketController");
 
-// Create shipment for an order
+// Admin routes - create/manage shipments
 // POST /api/shiprocket/ship/:id
-router.post("/ship/:id", protect, shipOrder);
+router.post("/ship/:id", adminProtect, shipOrder);
 
 // Assign AWB to existing shipment (retry)
 // POST /api/shiprocket/assign-awb/:id
-router.post("/assign-awb/:id", protect, assignAwbToOrder);
+router.post("/assign-awb/:id", adminProtect, assignAwbToOrder);
 
 // Generate shipping label for an order
 // POST /api/shiprocket/generate-label/:id
-router.post("/generate-label/:id", protect, generateLabelForOrder);
+router.post("/generate-label/:id", adminProtect, generateLabelForOrder);
 
 // Track shipment by order ID (MongoDB _id or orderId number)
 // GET /api/shiprocket/track/:orderId

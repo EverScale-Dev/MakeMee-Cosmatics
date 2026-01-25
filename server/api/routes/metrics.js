@@ -1,15 +1,15 @@
 const express = require('express');
 const { getMetrics, getChartData } = require('../controllers/metricsController');
-const protect = require('../../middlewares/protect');
+const adminProtect = require('../../middlewares/adminProtect');
 
 const router = express.Router();
 
 // @route   GET /api/metrics
-// @desc    Get dashboard metrics
-router.get('/', protect, getMetrics);
+// @desc    Get dashboard metrics (admin only)
+router.get('/', adminProtect, getMetrics);
 
 // @route   GET /api/metrics/charts
-// @desc    Get chart data (sales by month, orders by status)
-router.get('/charts', protect, getChartData);
+// @desc    Get chart data (sales by month, orders by status) (admin only)
+router.get('/charts', adminProtect, getChartData);
 
 module.exports = router;
