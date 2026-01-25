@@ -4,7 +4,8 @@ import {
   Package,
   Users,
   Star,
-  Ticket
+  Ticket,
+  Settings
 } from "lucide-react";
 
 import SidebarItem from "./SidebarItem";
@@ -16,7 +17,8 @@ export default function Sidebar({ active, setActive }) {
     { label: "Products", icon: Package },
     { label: "Customers", icon: Users },
     { label: "Coupons", icon: Ticket },
-    { label: "Reviews", icon: Star }
+    { label: "Reviews", icon: Star },
+    { label: "Settings", icon: Settings }
   ];
 
   return (

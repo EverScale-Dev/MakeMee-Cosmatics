@@ -4,6 +4,7 @@ import Products from "./Products";
 import Customers from "./Customers";
 import Reviews from "./Reviews";
 import Coupons from "./Coupons";
+import Settings from "./Settings";
 
 const pages = {
   Dashboard,
@@ -11,7 +12,8 @@ const pages = {
   Products,
   Customers,
   Reviews,
-  Coupons
+  Coupons,
+  Settings
 };
 
 export default pages;

@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
 const axios = require("axios");
+const Settings = require("../models/Settings");
 
 // In-memory OTP storage (use Redis in production for scalability)
 const otpStore = new Map();
@@ -119,14 +120,12 @@ const sendOTPviaMSG91 = async (phone, otp) => {
 
 // ============ MAIN FUNCTIONS ============
 
-// Check which provider to use
-const useMsg91 = () => {
-  return process.env.OTP_PROVIDER === "MSG91" &&
-         process.env.MSG91_AUTH_KEY &&
-         process.env.MSG91_TEMPLATE_ID;
+// Check if MSG91 credentials are available
+const hasMsg91Credentials = () => {
+  return process.env.MSG91_AUTH_KEY && process.env.MSG91_TEMPLATE_ID;
 };
 
-// Send OTP (auto-selects provider)
+// Send OTP (auto-selects provider based on admin settings)
 const sendOTP = async (phone, email = null) => {
   const otp = generateOTP();
 
@@ -134,8 +133,12 @@ const sendOTP = async (phone, email = null) => {
   storeOTP(phone, otp);
 
   try {
-    if (useMsg91()) {
-      // Production: Use MSG91
+    // Check admin setting for OTP provider
+    const otpProvider = await Settings.get("otpProvider", "EMAIL");
+    const useSMS = otpProvider === "SMS" && hasMsg91Credentials();
+
+    if (useSMS) {
+      // Use MSG91 SMS
       await sendOTPviaMSG91(phone, otp);
       return {
         success: true,
@@ -143,7 +146,7 @@ const sendOTP = async (phone, email = null) => {
         provider: "SMS"
       };
     } else {
-      // Temporary: Use Email
+      // Use Email
       if (!email) {
         throw new Error("Email required for OTP delivery");
       }
@@ -171,5 +174,5 @@ module.exports = {
   sendOTP,
   verifyPhoneOTP,
   generateOTP,
-  useMsg91,
+  hasMsg91Credentials,
 };

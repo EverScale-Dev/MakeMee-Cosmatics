@@ -4,6 +4,7 @@ import { Check } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { authService, customerService, orderService, paymentService, deliveryService, couponService } from "@/services";
+import api from "@/services/api";
 import { toast } from "sonner";
 import SavedAddressSelector from "@/components/SavedAddressSelector";
 import AddressFormModal from "@/components/AddressFormModal";
@@ -46,6 +47,7 @@ const Checkout = () => {
 
   // Phone verification state
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const [phoneVerificationRequired, setPhoneVerificationRequired] = useState(false);
 
   // Login guard
   useEffect(() => {
@@ -54,6 +56,19 @@ const Checkout = () => {
       navigate("/login?redirect=/checkout");
     }
   }, [isLoggedIn, navigate]);
+
+  // Fetch settings (phone verification requirement)
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await api.get("/settings/public");
+        setPhoneVerificationRequired(response.data.phoneVerificationRequired || false);
+      } catch (error) {
+        console.error("Failed to fetch settings:", error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   // Fetch user profile and addresses
   useEffect(() => {
@@ -367,11 +382,13 @@ const Checkout = () => {
   const handlePlaceOrder = () => {
     if (!validateForm()) return;
 
-    // Check if phone is verified
-    const isPhoneVerified = profile?.phoneVerified && form.phone === profile.phone;
-    if (!isPhoneVerified) {
-      setShowPhoneVerification(true);
-      return;
+    // Check if phone verification is required (from admin settings)
+    if (phoneVerificationRequired) {
+      const isPhoneVerified = profile?.phoneVerified && form.phone === profile.phone;
+      if (!isPhoneVerified) {
+        setShowPhoneVerification(true);
+        return;
+      }
     }
 
     if (paymentMethod === "cashOnDelivery") {
@@ -677,9 +694,9 @@ const Checkout = () => {
           </div>
 
           {/* Phone verification notice */}
-          {!(profile?.phoneVerified && form.phone === profile.phone) && form.phone.length === 10 && (
+          {phoneVerificationRequired && !(profile?.phoneVerified && form.phone === profile.phone) && form.phone.length === 10 && (
             <p className="mt-6 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-              Phone verification required before placing order. Click "Verify" next to your phone number or proceed to verify when placing order.
+              Phone verification required before placing order. Click "Verify" next to your phone number.
             </p>
           )}
 

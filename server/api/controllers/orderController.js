@@ -2,6 +2,7 @@ const Order = require("../../models/Order");
 const Product = require("../../models/Product");
 const Customer = require("../../models/Customer");
 const User = require("../../models/User");
+const Settings = require("../../models/Settings");
 const createInvoice = require("../../utils/createInvoice");
 const sendEmail = require("../../utils/sendMail");
 const { incrementCouponUsage } = require("./couponController");
@@ -15,8 +16,10 @@ exports.createOrder = async (req, res) => {
   const { customer, products, totalAmount, paymentMethod, note, couponCode, couponDiscount } = req.body;
 
   try {
-    // ✅ Check if user's phone is verified (required for placing orders)
-    if (req.User?._id) {
+    // Check if phone verification is required (from admin settings)
+    const phoneVerificationRequired = await Settings.get("phoneVerificationRequired", false);
+
+    if (phoneVerificationRequired && req.User?._id) {
       const user = await User.findById(req.User._id);
       if (!user?.phoneVerified) {
         return res.status(403).json({

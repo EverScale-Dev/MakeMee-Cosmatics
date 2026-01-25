@@ -24,8 +24,13 @@ const deliveryRoutes = require("./routes/deliveryRoutes");
 const cartRoutes = require("./routes/cart");
 const couponRoutes = require("./routes/couponRoutes");
 const bannerRoutes = require("./routes/bannerRoutes");
+const settingsRoutes = require("./routes/settings");
+const { initializeSettings } = require("./controllers/settingsController");
 
-connectDB();
+connectDB().then(() => {
+  // Initialize default settings after DB connection
+  initializeSettings();
+});
 
 const app = express();
 
@@ -85,6 +90,7 @@ app.use("/api/delivery", deliveryRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/banners", bannerRoutes);
+app.use("/api/settings", settingsRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello, MakeMeeCosmetics Server!');
