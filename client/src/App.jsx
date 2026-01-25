@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
+import Footer from "./components/Footer.jsx";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // Context Providers
