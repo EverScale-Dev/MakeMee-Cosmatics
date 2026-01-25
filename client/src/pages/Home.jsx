@@ -45,23 +45,61 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
   const titleRef = useRef(null);
   const subtitleRef = useRef(null);
   const ctaRef = useRef(null);
-  const imageRef = useRef(null);
+
+  // 🔥 Hero background refs
+  const bgRef1 = useRef(null);
+  const bgRef2 = useRef(null);
+  const activeBg = useRef(0);
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
-  // Fetch featured products from API
+  const heroImages = [Hero1, Hero2, Hero3, Hero4];
+
+  useHeroAnimation({ titleRef, subtitleRef, ctaRef });
+
+  // Auto slide
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Smooth cross-fade background animation
+  useEffect(() => {
+    const current =
+      activeBg.current === 0 ? bgRef1.current : bgRef2.current;
+    const next =
+      activeBg.current === 0 ? bgRef2.current : bgRef1.current;
+
+    if (!current || !next) return;
+
+    next.style.backgroundImage = `url(${heroImages[currentSlide]})`;
+
+    gsap.fromTo(
+      next,
+      { opacity: 0, scale: 1.05 },
+      { opacity: 0.25, scale: 1, duration: 1.2, ease: "power2.out" }
+    );
+
+    gsap.to(current, {
+      opacity: 0,
+      duration: 1.2,
+      ease: "power2.out",
+    });
+
+    activeBg.current = activeBg.current === 0 ? 1 : 0;
+  }, [currentSlide]);
+
+  // Fetch featured products
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
         const products = await productService.getFeatured(4);
-        if (products && products.length > 0) {
-          setFeaturedProducts(products.map(transformProduct));
-        } else {
-          setFeaturedProducts([]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch featured products:", error);
+        setFeaturedProducts(products.map(transformProduct));
+      } catch (e) {
         setFeaturedProducts([]);
       } finally {
         setLoadingProducts(false);
@@ -70,63 +108,50 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
     fetchFeatured();
   }, []);
 
-  const heroImages = [Hero1, Hero2, Hero3, Hero4];
-
-  useHeroAnimation({ titleRef, subtitleRef, ctaRef, imageRef });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (!imageRef.current) return;
-
-    gsap.to(imageRef.current, {
-      opacity: 0,
-      duration: 0.3,
-      onComplete: () => {
-        gsap.to(imageRef.current, { opacity: 1, duration: 0.5 });
-      },
-    });
-  }, [currentSlide]);
-
-const testimonials = [
-  {
-    name: "Ananya Sharma",
-    text: "These products have completely transformed my skincare routine.",
-    rating: 4,
-  },
-  {
-    name: "Riya Mehta",
-    text: "Cruelty-free, natural, and incredibly effective.",
-    rating: 5,
-  },
-  {
-    name: "Priya Iyer",
-    text: "Premium quality and visible results.",
-    rating: 4,
-  },
-];
-;
+  const testimonials = [
+    {
+      name: "Ananya Sharma",
+      text: "These products have completely transformed my skincare routine.",
+      rating: 4,
+    },
+    {
+      name: "Riya Mehta",
+      text: "Cruelty-free, natural, and incredibly effective.",
+      rating: 5,
+    },
+    {
+      name: "Priya Iyer",
+      text: "Premium quality and visible results.",
+      rating: 4,
+    },
+  ];
 
   return (
     <div className="bg-white text-black">
       {/* ================= HERO ================= */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#731162] to-[#FC6CB4]">
+      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-[#731162]">
+        {/* Background layers */}
         <div
-          ref={imageRef}
+          ref={bgRef1}
           className="absolute inset-0 opacity-25"
           style={{
-            backgroundImage: `url(${heroImages[currentSlide]})`,
+            backgroundImage: `url(${heroImages[0]})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "blur(2px)",
+          }}
+        />
+        <div
+          ref={bgRef2}
+          className="absolute inset-0 opacity-0"
+          style={{
             backgroundSize: "cover",
             backgroundPosition: "center",
             filter: "blur(2px)",
           }}
         />
 
+        {/* Content */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 text-center">
           <h1
             ref={titleRef}
@@ -149,35 +174,29 @@ const testimonials = [
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <Link to="/shop">
-              <button
-                className="px-8 py-4 text-lg font-semibold rounded-full
-                bg-[#FC6CB4] text-white
-                hover:bg-[#F0A400] transition"
-              >
+              <button className="px-8 py-4 text-lg font-semibold rounded-full bg-[#FC6CB4] text-white hover:bg-[#F0A400] transition">
                 Shop Now
               </button>
             </Link>
 
             <Link to="/about">
-              <button
-                className="px-8 py-4 text-lg font-semibold rounded-full
-                border-2 border-white text-white
-                hover:bg-white hover:text-[#731162] transition"
-              >
+              <button className="px-8 py-4 text-lg font-semibold rounded-full border-2 border-white text-white hover:bg-white hover:text-[#731162] transition">
                 Our Story
               </button>
             </Link>
           </div>
         </div>
 
-        {/* Slider Dots */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+        {/* Slider dots */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
           {heroImages.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
               className={`h-2 rounded-full transition-all ${
-                currentSlide === index ? "bg-[#F0A400] w-8" : "bg-white/50 w-2"
+                currentSlide === index
+                  ? "bg-[#F0A400] w-8"
+                  : "bg-white/50 w-2"
               }`}
             />
           ))}
@@ -210,11 +229,7 @@ const testimonials = [
 
             <div className="text-center mt-12">
               <Link to="/shop">
-                <button
-                  className="inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold
-                  rounded-full border-2 border-[#731162] text-[#731162]
-                  hover:bg-[#731162] hover:text-white transition"
-                >
+                <button className="inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold rounded-full border-2 border-[#731162] text-[#731162] hover:bg-[#731162] hover:text-white transition">
                   View All Products
                   <ArrowRight size={20} />
                 </button>
@@ -224,16 +239,13 @@ const testimonials = [
         </AnimatedSection>
       )}
 
-      {/* ================= PROMOTIONAL BANNER ================= */}
+      {/* ================= BANNER ================= */}
       <section className="w-full">
-        {/* Desktop / Laptop Banner */}
         <img
           src={pcbanner}
           alt="Promotional Banner"
           className="hidden md:block w-full object-cover"
         />
-
-        {/* Mobile Banner */}
         <img
           src={pcbannerMobile}
           alt="Promotional Banner"
@@ -246,7 +258,7 @@ const testimonials = [
       </div>
 
       {/* ================= TESTIMONIALS ================= */}
-      <AnimatedSection className="py-20 bg-[#FC6CB4]/5 ">
+      <AnimatedSection className="py-20 bg-[#FC6CB4]/5">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold text-[#731162] mb-4">
             What Our Customers Say
@@ -263,9 +275,7 @@ const testimonials = [
               >
                 <div className="flex justify-center mb-4">
                   {[...Array(t.rating)].map((_, j) => (
-                    <span key={j} className="text-[#F0A400] text-xl">
-                      ★
-                    </span>
+                    <span key={j} className="text-[#F0A400] text-xl">★</span>
                   ))}
                 </div>
                 <p className="text-black/70 mb-4">"{t.text}"</p>
