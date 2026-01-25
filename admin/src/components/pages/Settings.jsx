@@ -1,28 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Switch,
-  FormControlLabel,
-  FormControl,
-  FormLabel,
-  RadioGroup,
-  Radio,
-  Button,
-  CircularProgress,
-  Alert,
-  Divider,
-  Chip,
-} from "@mui/material";
-import {
-  Settings as SettingsIcon,
-  Phone as PhoneIcon,
-  Email as EmailIcon,
-  Sms as SmsIcon,
-  Save as SaveIcon,
-} from "@mui/icons-material";
+import { Settings as SettingsIcon, Phone, Mail, MessageSquare, Save, Loader2 } from "lucide-react";
 import settingsService from "../../services/settingsService";
 
 const Settings = () => {
@@ -83,158 +60,162 @@ const Settings = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+      </div>
     );
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 800, mx: "auto" }}>
-      <Box display="flex" alignItems="center" gap={2} mb={3}>
-        <SettingsIcon fontSize="large" color="primary" />
-        <Typography variant="h4" fontWeight="bold">
-          Settings
-        </Typography>
-      </Box>
+    <div className="max-w-2xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <SettingsIcon className="w-8 h-8 text-gray-700" />
+        <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
+      </div>
 
+      {/* Error Alert */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
           {error}
-        </Alert>
+          <button onClick={() => setError(null)} className="float-right font-bold">&times;</button>
+        </div>
       )}
 
+      {/* Success Alert */}
       {success && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
           {success}
-        </Alert>
+          <button onClick={() => setSuccess(null)} className="float-right font-bold">&times;</button>
+        </div>
       )}
 
-      {/* Phone Verification Settings */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box display="flex" alignItems="center" gap={1} mb={2}>
-            <PhoneIcon color="primary" />
-            <Typography variant="h6">Phone Verification</Typography>
-          </Box>
-          <Divider sx={{ mb: 3 }} />
+      {/* Phone Verification Card */}
+      <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Phone className="w-5 h-5 text-blue-600" />
+          <h2 className="text-lg font-semibold text-gray-800">Phone Verification</h2>
+        </div>
+        <hr className="mb-4" />
 
-          <FormControlLabel
-            control={
-              <Switch
-                checked={settings.phoneVerificationRequired}
-                onChange={(e) => handleChange("phoneVerificationRequired", e.target.checked)}
-                color="primary"
-              />
-            }
-            label={
-              <Box>
-                <Typography fontWeight="medium">
-                  Require phone verification for orders
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  When enabled, customers must verify their phone number before placing orders
-                </Typography>
-              </Box>
-            }
-            sx={{ alignItems: "flex-start", ml: 0 }}
-          />
-
-          <Box mt={2}>
-            <Chip
-              label={settings.phoneVerificationRequired ? "ENABLED" : "DISABLED"}
-              color={settings.phoneVerificationRequired ? "success" : "default"}
-              size="small"
+        <label className="flex items-start gap-4 cursor-pointer">
+          <div className="relative mt-1">
+            <input
+              type="checkbox"
+              checked={settings.phoneVerificationRequired}
+              onChange={(e) => handleChange("phoneVerificationRequired", e.target.checked)}
+              className="sr-only peer"
             />
-          </Box>
-        </CardContent>
-      </Card>
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+          </div>
+          <div>
+            <p className="font-medium text-gray-800">Require phone verification for orders</p>
+            <p className="text-sm text-gray-500">When enabled, customers must verify their phone number before placing orders</p>
+          </div>
+        </label>
 
-      {/* OTP Provider Settings */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box display="flex" alignItems="center" gap={1} mb={2}>
-            <SmsIcon color="primary" />
-            <Typography variant="h6">OTP Delivery Method</Typography>
-          </Box>
-          <Divider sx={{ mb: 3 }} />
+        <div className="mt-4">
+          <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+            settings.phoneVerificationRequired
+              ? "bg-green-100 text-green-700"
+              : "bg-gray-100 text-gray-600"
+          }`}>
+            {settings.phoneVerificationRequired ? "ENABLED" : "DISABLED"}
+          </span>
+        </div>
+      </div>
 
-          <FormControl component="fieldset">
-            <FormLabel component="legend" sx={{ mb: 2 }}>
-              How should OTP be sent to customers?
-            </FormLabel>
-            <RadioGroup
-              value={settings.otpProvider}
+      {/* OTP Provider Card */}
+      <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <MessageSquare className="w-5 h-5 text-blue-600" />
+          <h2 className="text-lg font-semibold text-gray-800">OTP Delivery Method</h2>
+        </div>
+        <hr className="mb-4" />
+
+        <p className="text-sm text-gray-600 mb-4">How should OTP be sent to customers?</p>
+
+        <div className="space-y-3">
+          {/* Email Option */}
+          <label className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition ${
+            settings.otpProvider === "EMAIL"
+              ? "border-blue-500 bg-blue-50"
+              : "border-gray-200 hover:border-gray-300"
+          }`}>
+            <input
+              type="radio"
+              name="otpProvider"
+              value="EMAIL"
+              checked={settings.otpProvider === "EMAIL"}
               onChange={(e) => handleChange("otpProvider", e.target.value)}
-            >
-              <FormControlLabel
-                value="EMAIL"
-                control={<Radio />}
-                label={
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <EmailIcon fontSize="small" />
-                    <Box>
-                      <Typography fontWeight="medium">Email OTP</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Send OTP to customer's registered email address
-                      </Typography>
-                    </Box>
-                  </Box>
-                }
-                sx={{ mb: 2, alignItems: "flex-start" }}
-              />
-              <FormControlLabel
-                value="SMS"
-                control={<Radio />}
-                label={
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <SmsIcon fontSize="small" />
-                    <Box>
-                      <Typography fontWeight="medium">SMS OTP (MSG91)</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Send OTP via SMS to customer's phone number
-                      </Typography>
-                      <Typography variant="caption" color="warning.main">
-                        Requires MSG91 credentials configured on server
-                      </Typography>
-                    </Box>
-                  </Box>
-                }
-                sx={{ alignItems: "flex-start" }}
-              />
-            </RadioGroup>
-          </FormControl>
+              className="mt-1"
+            />
+            <div className="flex items-start gap-2">
+              <Mail className="w-5 h-5 text-gray-600 mt-0.5" />
+              <div>
+                <p className="font-medium text-gray-800">Email OTP</p>
+                <p className="text-sm text-gray-500">Send OTP to customer's registered email address</p>
+              </div>
+            </div>
+          </label>
 
-          <Box mt={3} p={2} bgcolor="grey.100" borderRadius={1}>
-            <Typography variant="body2" color="text.secondary">
-              <strong>Current:</strong>{" "}
-              {settings.otpProvider === "SMS" ? (
-                <>
-                  SMS via MSG91 <SmsIcon fontSize="inherit" sx={{ verticalAlign: "middle" }} />
-                </>
-              ) : (
-                <>
-                  Email <EmailIcon fontSize="inherit" sx={{ verticalAlign: "middle" }} />
-                </>
-              )}
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
+          {/* SMS Option */}
+          <label className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition ${
+            settings.otpProvider === "SMS"
+              ? "border-blue-500 bg-blue-50"
+              : "border-gray-200 hover:border-gray-300"
+          }`}>
+            <input
+              type="radio"
+              name="otpProvider"
+              value="SMS"
+              checked={settings.otpProvider === "SMS"}
+              onChange={(e) => handleChange("otpProvider", e.target.value)}
+              className="mt-1"
+            />
+            <div className="flex items-start gap-2">
+              <MessageSquare className="w-5 h-5 text-gray-600 mt-0.5" />
+              <div>
+                <p className="font-medium text-gray-800">SMS OTP (MSG91)</p>
+                <p className="text-sm text-gray-500">Send OTP via SMS to customer's phone number</p>
+                <p className="text-xs text-amber-600 mt-1">Requires MSG91 credentials configured on server</p>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-600">
+            <strong>Current:</strong>{" "}
+            {settings.otpProvider === "SMS" ? (
+              <span className="inline-flex items-center gap-1">
+                SMS via MSG91 <MessageSquare className="w-4 h-4" />
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1">
+                Email <Mail className="w-4 h-4" />
+              </span>
+            )}
+          </p>
+        </div>
+      </div>
 
       {/* Save Button */}
-      <Box display="flex" justifyContent="flex-end">
-        <Button
-          variant="contained"
-          size="large"
-          startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+      <div className="flex justify-end">
+        <button
           onClick={handleSave}
           disabled={saving}
+          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
+          {saving ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Save className="w-5 h-5" />
+          )}
           {saving ? "Saving..." : "Save Settings"}
-        </Button>
-      </Box>
-    </Box>
+        </button>
+      </div>
+    </div>
   );
 };
 
