@@ -56,7 +56,7 @@ const ProductCard = ({ product }) => {
           duration: 0.2,
           onComplete: () => {
             image.src = optimizedImage1;
-            gsap.to(image, { opacity: 1, duration: 0.2 });
+            gsap.to(image, { opacity: 1, duration: 0.2, scale: 1.5 });
           },
         });
       }
