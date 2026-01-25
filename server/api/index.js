@@ -26,6 +26,9 @@ connectDB();
 
 const app = express();
 
+// Trust proxy (needed for rate-limiter behind nginx)
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow images to load cross-origin
