@@ -7,6 +7,7 @@ import { authService, customerService, orderService, paymentService, deliverySer
 import { toast } from "sonner";
 import SavedAddressSelector from "@/components/SavedAddressSelector";
 import AddressFormModal from "@/components/AddressFormModal";
+import PhoneVerificationModal from "@/components/PhoneVerificationModal";
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat("en-IN", {
@@ -42,6 +43,9 @@ const Checkout = () => {
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+
+  // Phone verification state
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
 
   // Login guard
   useEffect(() => {
@@ -246,7 +250,13 @@ const Checkout = () => {
       clearCart();
       navigate(`/order-success?orderId=${order._id}`);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to place order");
+      // Handle phone verification requirement from backend
+      if (error.response?.data?.requiresPhoneVerification) {
+        setShowPhoneVerification(true);
+        toast.error("Please verify your phone number first");
+      } else {
+        toast.error(error.response?.data?.message || "Failed to place order");
+      }
     } finally {
       setLoading(false);
     }
@@ -342,7 +352,13 @@ const Checkout = () => {
         razorpay.open();
       };
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to initiate payment");
+      // Handle phone verification requirement from backend
+      if (error.response?.data?.requiresPhoneVerification) {
+        setShowPhoneVerification(true);
+        toast.error("Please verify your phone number first");
+      } else {
+        toast.error(error.response?.data?.message || "Failed to initiate payment");
+      }
     } finally {
       setLoading(false);
     }
@@ -351,11 +367,35 @@ const Checkout = () => {
   const handlePlaceOrder = () => {
     if (!validateForm()) return;
 
+    // Check if phone is verified
+    const isPhoneVerified = profile?.phoneVerified && form.phone === profile.phone;
+    if (!isPhoneVerified) {
+      setShowPhoneVerification(true);
+      return;
+    }
+
     if (paymentMethod === "cashOnDelivery") {
       handleCODOrder();
     } else {
       handleOnlinePayment();
     }
+  };
+
+  // Handle phone verification success
+  const handlePhoneVerified = (verifiedPhone) => {
+    // Update profile state with verified phone
+    setProfile((prev) => ({
+      ...prev,
+      phone: verifiedPhone,
+      phoneVerified: true,
+    }));
+    // Update form phone
+    setForm((prev) => ({
+      ...prev,
+      phone: verifiedPhone,
+    }));
+    setShowPhoneVerification(false);
+    toast.success("Phone verified! You can now place your order.");
   };
 
   const handleAddAddress = async (addressData) => {
@@ -442,13 +482,21 @@ const Checkout = () => {
                     value={form.phone}
                     onChange={handleChange}
                     maxLength={10}
-                    className="w-full px-5 py-4 rounded-2xl shadow-md focus:ring-2 focus:ring-[#FC6CB4] outline-none"
+                    className="w-full px-5 py-4 pr-24 rounded-2xl shadow-md focus:ring-2 focus:ring-[#FC6CB4] outline-none"
                   />
-                  {profile?.phoneVerified && form.phone === profile.phone && (
+                  {profile?.phoneVerified && form.phone === profile.phone ? (
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
                       Verified
                     </span>
-                  )}
+                  ) : form.phone.length === 10 ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowPhoneVerification(true)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white bg-[#FC6CB4] hover:bg-[#e55a9f] px-3 py-1.5 rounded-full transition"
+                    >
+                      Verify
+                    </button>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -628,10 +676,17 @@ const Checkout = () => {
             </div>
           </div>
 
+          {/* Phone verification notice */}
+          {!(profile?.phoneVerified && form.phone === profile.phone) && form.phone.length === 10 && (
+            <p className="mt-6 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              Phone verification required before placing order. Click "Verify" next to your phone number or proceed to verify when placing order.
+            </p>
+          )}
+
           <button
             onClick={handlePlaceOrder}
             disabled={loading}
-            className="w-full mt-10 py-4 bg-[#FC6CB4] text-black rounded-full hover:bg-[#F0A400] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full mt-6 py-4 bg-[#FC6CB4] text-black rounded-full hover:bg-[#F0A400] transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading
               ? "Processing..."
@@ -649,6 +704,15 @@ const Checkout = () => {
         onSave={handleAddAddress}
         saving={savingAddress}
       />
+
+      {/* Phone Verification Modal */}
+      {showPhoneVerification && (
+        <PhoneVerificationModal
+          currentPhone={form.phone}
+          onClose={() => setShowPhoneVerification(false)}
+          onVerified={handlePhoneVerified}
+        />
+      )}
     </main>
   );
 };

@@ -19,6 +19,8 @@ export default function PhoneVerificationModal({ currentPhone, onClose, onVerifi
     }
   }, [countdown]);
 
+  const [otpProvider, setOtpProvider] = useState(null);
+
   const handleSendOtp = async () => {
     if (!/^\d{10}$/.test(phone)) {
       toast.error("Please enter a valid 10-digit phone number");
@@ -28,7 +30,14 @@ export default function PhoneVerificationModal({ currentPhone, onClose, onVerifi
     setLoading(true);
     try {
       const response = await authService.sendOtp(phone);
-      toast.success("OTP sent to your phone");
+
+      // Show appropriate message based on provider
+      setOtpProvider(response.provider);
+      if (response.provider === "EMAIL") {
+        toast.success("OTP sent to your registered email");
+      } else {
+        toast.success("OTP sent to your phone");
+      }
 
       // In development, show the OTP
       if (response.otp) {
@@ -170,8 +179,15 @@ export default function PhoneVerificationModal({ currentPhone, onClose, onVerifi
             <div className="space-y-6">
               <div className="text-center">
                 <p className="text-gray-600">
-                  OTP sent to <span className="font-medium">+91 {phone}</span>
+                  {otpProvider === "EMAIL" ? (
+                    <>OTP sent to your <span className="font-medium">registered email</span> for phone <span className="font-medium">+91 {phone}</span></>
+                  ) : (
+                    <>OTP sent to <span className="font-medium">+91 {phone}</span></>
+                  )}
                 </p>
+                {otpProvider === "EMAIL" && (
+                  <p className="text-xs text-gray-500 mt-1">Check your email inbox for the OTP</p>
+                )}
                 <button
                   onClick={() => setStep("phone")}
                   className="text-sm text-[#731162] hover:underline mt-1"

@@ -481,10 +481,11 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// In-memory OTP store (for development - use Redis in production)
-const otpStore = {};
+// Import OTP service
+const otpService = require('../../utils/otpService');
 
-// Send OTP (Mock implementation)
+// Send OTP for phone verification
+// Currently sends via Email, will switch to MSG91 when configured
 exports.sendOtp = async (req, res) => {
   const { phone } = req.body;
 
@@ -493,30 +494,21 @@ exports.sendOtp = async (req, res) => {
   }
 
   try {
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Store OTP with expiry (5 minutes)
-    otpStore[phone] = {
-      otp,
-      expiresAt: Date.now() + 5 * 60 * 1000,
-      userId: req.User._id,
-    };
-
-    // In production, send OTP via SMS (Twilio/MSG91)
-    // For now, log it for development only
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[DEV] OTP for ${phone}: ${otp}`);
+    const user = await User.findById(req.User._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
+    // Send OTP (via email for now, MSG91 when configured)
+    const result = await otpService.sendOTP(phone, user.email);
+
     res.status(200).json({
-      message: 'OTP sent successfully',
-      // Only include OTP in development mode
-      ...(process.env.NODE_ENV !== 'production' && { otp }),
+      message: result.message,
+      provider: result.provider, // 'EMAIL' or 'SMS' - helps frontend show appropriate message
     });
   } catch (error) {
     console.error('Error sending OTP:', error.message);
-    res.status(500).json({ message: 'Failed to send OTP' });
+    res.status(500).json({ message: 'Failed to send OTP. Please try again.' });
   }
 };
 
@@ -529,19 +521,11 @@ exports.verifyOtp = async (req, res) => {
   }
 
   try {
-    const storedData = otpStore[phone];
+    // Verify OTP
+    const result = otpService.verifyPhoneOTP(phone, otp);
 
-    if (!storedData) {
-      return res.status(400).json({ message: 'OTP not found. Please request a new one.' });
-    }
-
-    if (Date.now() > storedData.expiresAt) {
-      delete otpStore[phone];
-      return res.status(400).json({ message: 'OTP expired. Please request a new one.' });
-    }
-
-    if (storedData.otp !== otp) {
-      return res.status(400).json({ message: 'Invalid OTP' });
+    if (!result.valid) {
+      return res.status(400).json({ message: result.message });
     }
 
     // OTP verified - update user
@@ -553,9 +537,6 @@ exports.verifyOtp = async (req, res) => {
     user.phone = phone;
     user.phoneVerified = true;
     await user.save();
-
-    // Clear OTP
-    delete otpStore[phone];
 
     res.status(200).json({
       message: 'Phone verified successfully',
