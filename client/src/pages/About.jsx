@@ -6,8 +6,8 @@ import productImg from "../assets/fasewash.png";
 import { LiquidGlass } from "@/components/liquid-glass";
 
 import herobg from "../assets/about/hero.png";
-import aftervsbefore from "../assets/about/aftervsbefore.png";
-import guidebynature from "../assets/about/guidebynature.png";
+import aftervsbefore from "../assets/about/aftervsbefore.jpg";
+import guidebynature from "../assets/about/guidebynature.jpg";
 import aboutside from "../assets/about/about-side.png";
 
 gsap.registerPlugin(ScrollTrigger);
