@@ -42,7 +42,8 @@ app.use(
       "https://www.makemee.in",
       "http://localhost:3000",
       "http://localhost:3001",
-      "http://localhost:5173"  // admin panel
+      "http://localhost:5173",  // admin panel local
+      "https://admin.makemee.in"  // admin panel production
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
