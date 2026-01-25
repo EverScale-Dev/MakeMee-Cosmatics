@@ -196,6 +196,14 @@ exports.getOrderById = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
+    // Security: User can only view their own orders (admin can view any)
+    const isOwner = order.user && order.user.toString() === req.User._id.toString();
+    const isAdmin = req.User.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     if (!order.isViewed) {
       order.isViewed = true;
       await order.save();

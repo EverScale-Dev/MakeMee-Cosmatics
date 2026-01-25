@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const adminProtect = require("../../middlewares/adminProtect");
 
 const {
   addReview,
@@ -9,13 +10,13 @@ const {
   deleteReview,
 } = require("../controllers/reviewController");
 
-// USER
+// USER (public)
 router.post("/", addReview);
 router.get("/:productId", getApprovedReviews);
 
-// ADMIN
-router.get("/admin/all", getAllReviews);
-router.put("/admin/approve/:id", approveReview);
-router.delete("/admin/delete/:id", deleteReview);
+// ADMIN (protected)
+router.get("/admin/all", adminProtect, getAllReviews);
+router.put("/admin/approve/:id", adminProtect, approveReview);
+router.delete("/admin/delete/:id", adminProtect, deleteReview);
 
 module.exports = router;

@@ -1,12 +1,16 @@
 const express = require("express");
 const router = express.Router();
+const adminProtect = require("../../middlewares/adminProtect");
 
 const {
   getDeliverySettings,
   updateDeliverySettings,
-} = require("../controllers/deliveryController"); // path must match your folder structure
+} = require("../controllers/deliveryController");
 
+// Public - get delivery charges
 router.get("/", getDeliverySettings);
-router.post("/", updateDeliverySettings);
+
+// Admin only - update delivery settings
+router.post("/", adminProtect, updateDeliverySettings);
 
 module.exports = router;

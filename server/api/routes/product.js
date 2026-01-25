@@ -1,5 +1,5 @@
 const express = require("express");
-const { upload, handleMulterError } = require("../../middlewares/upload"); // ✅ updated import
+const { upload, handleMulterError } = require("../../middlewares/upload");
 const {
   createProduct,
   getProducts,
@@ -7,35 +7,31 @@ const {
   updateProduct,
   deleteProduct,
 } = require("../controllers/productController");
-const protect = require("../../middlewares/protect"); // Importing the protect middleware
+const adminProtect = require("../../middlewares/adminProtect");
 
 const router = express.Router();
 
-// ✅ Create new product (max 5 images, handle file size or type errors)
+// Public routes
+router.get("/", getProducts);
+router.get("/:id", getProductById);
+
+// Admin routes (protected)
 router.post(
   "/",
-  protect,
+  adminProtect,
   upload.array("images", 5),
-  handleMulterError, // <-- added here
+  handleMulterError,
   createProduct
 );
 
-// ✅ Get all products
-router.get("/", getProducts);
-
-// ✅ Get product by ID
-router.get("/:id", getProductById);
-
-// ✅ Update product (max 5 images, handle multer errors)
 router.put(
   "/:id",
-  protect,
+  adminProtect,
   upload.array("images", 5),
-  handleMulterError, // <-- added here
+  handleMulterError,
   updateProduct
 );
 
-// ✅ Delete product by ID
-router.delete("/:id", protect, deleteProduct);
+router.delete("/:id", adminProtect, deleteProduct);
 
 module.exports = router;

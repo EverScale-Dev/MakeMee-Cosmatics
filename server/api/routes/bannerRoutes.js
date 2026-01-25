@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const adminProtect = require("../../middlewares/adminProtect");
 
 const {
   getBannersByLocation,
@@ -13,11 +14,11 @@ const {
 // Public routes
 router.get("/:location", getBannersByLocation);
 
-// Admin routes
-router.get("/admin/all", getAllBanners);
-router.post("/", createBanner);
-router.put("/:id", updateBanner);
-router.delete("/:id", deleteBanner);
-router.patch("/:id/toggle", toggleBannerStatus);
+// Admin routes (protected)
+router.get("/admin/all", adminProtect, getAllBanners);
+router.post("/", adminProtect, createBanner);
+router.put("/:id", adminProtect, updateBanner);
+router.delete("/:id", adminProtect, deleteBanner);
+router.patch("/:id/toggle", adminProtect, toggleBannerStatus);
 
 module.exports = router;
