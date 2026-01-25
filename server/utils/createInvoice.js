@@ -28,40 +28,57 @@ const FONTS = {
   devanagariBold: path.join(__dirname, "../public/fonts/NotoSansDevanagari-Bold.ttf"),
 };
 
+// Track if custom fonts are available
+let fontsLoaded = false;
+
 // Register fonts
 function registerFonts(doc) {
-  if (fs.existsSync(FONTS.regular)) {
-    doc.registerFont("NotoSans", FONTS.regular);
-  }
-  if (fs.existsSync(FONTS.bold)) {
-    doc.registerFont("NotoSans-Bold", FONTS.bold);
-  }
-  if (fs.existsSync(FONTS.devanagariRegular)) {
-    doc.registerFont("NotoDevanagari", FONTS.devanagariRegular);
-  }
-  if (fs.existsSync(FONTS.devanagariBold)) {
-    doc.registerFont("NotoDevanagari-Bold", FONTS.devanagariBold);
+  try {
+    if (fs.existsSync(FONTS.regular) && fs.existsSync(FONTS.bold)) {
+      doc.registerFont("NotoSans", FONTS.regular);
+      doc.registerFont("NotoSans-Bold", FONTS.bold);
+      fontsLoaded = true;
+    }
+    if (fs.existsSync(FONTS.devanagariRegular)) {
+      doc.registerFont("NotoDevanagari", FONTS.devanagariRegular);
+    }
+    if (fs.existsSync(FONTS.devanagariBold)) {
+      doc.registerFont("NotoDevanagari-Bold", FONTS.devanagariBold);
+    }
+  } catch (err) {
+    console.error("Font registration error:", err);
+    fontsLoaded = false;
   }
 }
 
 // Check if text contains Devanagari characters
 function hasDevanagari(text) {
   if (!text) return false;
-  // Devanagari Unicode range: 0900-097F
   return /[\u0900-\u097F]/.test(text);
 }
 
-// Get appropriate font based on text content
+// Get appropriate font based on text content (with Helvetica fallback)
 function getFont(text, isBold = false) {
+  if (!fontsLoaded) {
+    return isBold ? "Helvetica-Bold" : "Helvetica";
+  }
   if (hasDevanagari(text)) {
     return isBold ? "NotoDevanagari-Bold" : "NotoDevanagari";
   }
   return isBold ? "NotoSans-Bold" : "NotoSans";
 }
 
-// Format currency with ₹ symbol
+// Get safe font (always available - uses Helvetica fallback if custom fonts not loaded)
+function getSafeFont(isBold = false) {
+  if (!fontsLoaded) {
+    return isBold ? "Helvetica-Bold" : "Helvetica";
+  }
+  return isBold ? "NotoSans-Bold" : "NotoSans";
+}
+
+// Format currency with Rs. (safe for all fonts)
 function formatCurrency(amount) {
-  return `₹${(amount || 0).toFixed(2)}`;
+  return `Rs. ${(amount || 0).toFixed(2)}`;
 }
 
 // === HEADER ===
@@ -74,19 +91,19 @@ function generateHeader(doc, order, logoPath) {
   }
 
   // Company name and details
-  doc.fontSize(20).fillColor(COLORS.accent).font("NotoSans-Bold")
+  doc.fontSize(20).fillColor(COLORS.accent).font(getSafeFont(true))
     .text("MakeMee Cosmetics", PAGE.left + 70, startY);
 
-  doc.fontSize(9).fillColor(COLORS.muted).font("NotoSans")
+  doc.fontSize(9).fillColor(COLORS.muted).font(getSafeFont())
     .text("Derde Korhale, Kopargaon, Ahilyanagar", PAGE.left + 70, startY + 22)
     .text("Maharashtra 423601, India", PAGE.left + 70, startY + 33)
     .text("support@makemee.in | +91 98765 43210", PAGE.left + 70, startY + 44);
 
   // Invoice title and order info (right aligned)
-  doc.fontSize(24).fillColor(COLORS.accent).font("NotoSans-Bold")
+  doc.fontSize(24).fillColor(COLORS.accent).font(getSafeFont(true))
     .text("INVOICE", PAGE.right - 120, startY, { width: 120, align: "right" });
 
-  doc.fontSize(10).fillColor(COLORS.text).font("NotoSans")
+  doc.fontSize(10).fillColor(COLORS.text).font(getSafeFont())
     .text(`Order #${order.orderId}`, PAGE.right - 150, startY + 28, { width: 150, align: "right" })
     .text(`Date: ${new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`, PAGE.right - 150, startY + 42, { width: 150, align: "right" });
 
@@ -101,59 +118,57 @@ function generateCustomerSection(doc, order, startY) {
   const customer = order.customer;
   const addr = customer.shippingAddress || {};
 
-  // Column widths to prevent overlap
-  const leftColWidth = 200;
-  const rightColStart = PAGE.left + 280;
-  const rightColWidth = PAGE.right - rightColStart;
+  // Two-column layout - left for address, right for contact
+  const rightColStart = PAGE.left + 260;
 
-  // Bill To section (left column)
-  doc.fontSize(11).fillColor(COLORS.accent).font("NotoSans-Bold")
+  // BILL TO section (left column)
+  doc.fontSize(11).fillColor(COLORS.accent).font(getSafeFont(true))
     .text("BILL TO:", PAGE.left, startY);
 
-  // Customer name (may contain Devanagari)
+  let y = startY + 18;
+
+  // Customer name
   const customerName = customer.fullName || "Customer";
   doc.fontSize(10).fillColor(COLORS.text).font(getFont(customerName, true))
-    .text(customerName, PAGE.left, startY + 16, { width: leftColWidth, lineBreak: true });
+    .text(customerName, PAGE.left, y, { width: 220 });
+  y += 16;
 
+  // Address lines
   doc.fontSize(9).fillColor(COLORS.muted);
 
-  let addressY = startY + 32;
   if (addr.apartment_address) {
-    const aptText = String(addr.apartment_address).substring(0, 50);
-    doc.font(getFont(aptText))
-      .text(aptText, PAGE.left, addressY, { width: leftColWidth, lineBreak: true });
-    addressY += 14;
+    doc.font(getFont(addr.apartment_address))
+      .text(addr.apartment_address, PAGE.left, y, { width: 220 });
+    y += 12;
   }
   if (addr.street_address1) {
-    const streetText = String(addr.street_address1).substring(0, 50);
-    doc.font(getFont(streetText))
-      .text(streetText, PAGE.left, addressY, { width: leftColWidth, lineBreak: true });
-    addressY += 14;
+    doc.font(getFont(addr.street_address1))
+      .text(addr.street_address1, PAGE.left, y, { width: 220 });
+    y += 12;
   }
   if (addr.city || addr.state || addr.pincode) {
-    const cityLine = `${addr.city || ""}, ${addr.state || ""} - ${addr.pincode || ""}`;
+    const cityLine = `${addr.city || ""}, ${addr.state || ""} ${addr.pincode || ""}`;
     doc.font(getFont(cityLine))
-      .text(cityLine, PAGE.left, addressY, { width: leftColWidth, lineBreak: true });
-    addressY += 14;
+      .text(cityLine, PAGE.left, y, { width: 220 });
+    y += 12;
   }
 
-  // Contact info (right column)
-  doc.fontSize(11).fillColor(COLORS.accent).font("NotoSans-Bold")
-    .text("CONTACT:", rightColStart, startY, { width: rightColWidth });
+  // CONTACT section (right column - fixed position)
+  doc.fontSize(11).fillColor(COLORS.accent).font(getSafeFont(true))
+    .text("CONTACT:", rightColStart, startY);
 
-  doc.fontSize(9).fillColor(COLORS.muted).font("NotoSans")
-    .text(customer.email || "", rightColStart, startY + 16, { width: rightColWidth })
-    .text(customer.phone || "", rightColStart, startY + 28, { width: rightColWidth });
+  doc.fontSize(9).fillColor(COLORS.muted).font(getSafeFont())
+    .text(customer.email || "-", rightColStart, startY + 18)
+    .text(customer.phone || "-", rightColStart, startY + 30);
 
-  // Payment method (right column)
-  doc.fontSize(11).fillColor(COLORS.accent).font("NotoSans-Bold")
-    .text("PAYMENT:", rightColStart, startY + 48, { width: rightColWidth });
+  // PAYMENT section (right column)
+  doc.fontSize(11).fillColor(COLORS.accent).font(getSafeFont(true))
+    .text("PAYMENT:", rightColStart, startY + 50);
 
-  doc.fontSize(9).fillColor(COLORS.muted).font("NotoSans")
-    .text(order.paymentMethod === "onlinePayment" ? "Online Payment" : "Cash on Delivery", rightColStart, startY + 62, { width: rightColWidth });
+  doc.fontSize(9).fillColor(COLORS.muted).font(getSafeFont())
+    .text(order.paymentMethod === "onlinePayment" ? "Online Payment" : "Cash on Delivery", rightColStart, startY + 68);
 
-  // Return the greater of addressY or the right column end
-  return Math.max(addressY, startY + 80) + 10;
+  return Math.max(y + 10, startY + 90);
 }
 
 // === ORDER TABLE ===
@@ -172,7 +187,7 @@ function generateTable(doc, order, startY) {
   // Table Header
   doc.rect(PAGE.left, tableTop, PAGE.width, rowHeight).fill(COLORS.accent);
 
-  doc.fontSize(10).fillColor(COLORS.white).font("NotoSans-Bold");
+  doc.fontSize(10).fillColor(COLORS.white).font(getSafeFont(true));
   doc.text("Product", cols.product + 10, tableTop + 9);
   doc.text("Qty", cols.qty, tableTop + 9, { width: 60, align: "center" });
   doc.text("Price", cols.price, tableTop + 9, { width: 70, align: "right" });
@@ -196,7 +211,7 @@ function generateTable(doc, order, startY) {
       .text(name, cols.product + 10, y + 9, { width: 230 });
 
     // Quantity (centered)
-    doc.font("NotoSans").text(String(quantity), cols.qty, y + 9, { width: 60, align: "center" });
+    doc.font(getSafeFont()).text(String(quantity), cols.qty, y + 9, { width: 60, align: "center" });
 
     // Price (right aligned)
     doc.text(formatCurrency(price), cols.price, y + 9, { width: 70, align: "right" });
@@ -229,24 +244,24 @@ function generateTotals(doc, order, y) {
   let currentY = y;
 
   // Subtotal row
-  doc.fontSize(10).fillColor(COLORS.muted).font("NotoSans")
+  doc.fontSize(10).fillColor(COLORS.muted).font(getSafeFont())
     .text("Subtotal:", labelX, currentY);
-  doc.fontSize(10).fillColor(COLORS.text).font("NotoSans")
+  doc.fontSize(10).fillColor(COLORS.text).font(getSafeFont())
     .text(formatCurrency(order.subtotal), valueX - 80, currentY, { width: 80, align: "right" });
   currentY += 18;
 
   // Delivery row
-  doc.fontSize(10).fillColor(COLORS.muted).font("NotoSans")
+  doc.fontSize(10).fillColor(COLORS.muted).font(getSafeFont())
     .text("Delivery:", labelX, currentY);
-  doc.fontSize(10).fillColor(COLORS.text).font("NotoSans")
+  doc.fontSize(10).fillColor(COLORS.text).font(getSafeFont())
     .text(formatCurrency(order.deliveryCharge), valueX - 80, currentY, { width: 80, align: "right" });
   currentY += 18;
 
   // Coupon discount row (if applied)
   if (order.couponCode && order.couponDiscount > 0) {
-    doc.fontSize(10).fillColor("#2E7D32").font("NotoSans")
+    doc.fontSize(10).fillColor("#2E7D32").font(getSafeFont())
       .text(`Discount (${order.couponCode}):`, labelX, currentY);
-    doc.fontSize(10).fillColor("#2E7D32").font("NotoSans")
+    doc.fontSize(10).fillColor("#2E7D32").font(getSafeFont())
       .text(`-${formatCurrency(order.couponDiscount)}`, valueX - 80, currentY, { width: 80, align: "right" });
     currentY += 18;
   }
@@ -256,9 +271,9 @@ function generateTotals(doc, order, y) {
 
   // Grand Total row (highlighted)
   doc.rect(boxX, currentY + 9, boxWidth, 30).fill(COLORS.accent);
-  doc.fontSize(11).fillColor(COLORS.white).font("NotoSans-Bold")
+  doc.fontSize(11).fillColor(COLORS.white).font(getSafeFont(true))
     .text("Grand Total:", labelX, currentY + 18);
-  doc.fontSize(14).fillColor(COLORS.white).font("NotoSans-Bold")
+  doc.fontSize(14).fillColor(COLORS.white).font(getSafeFont(true))
     .text(formatCurrency(order.totalAmount), valueX - 90, currentY + 16, { width: 90, align: "right" });
 
   return currentY + 54;
@@ -270,10 +285,10 @@ function generateThankYouMessage(doc, y) {
 
   doc.rect(PAGE.left, messageY, PAGE.width, 70).fill(COLORS.background);
 
-  doc.fontSize(11).fillColor(COLORS.accent).font("NotoSans-Bold")
+  doc.fontSize(11).fillColor(COLORS.accent).font(getSafeFont(true))
     .text("Thank you for your order!", PAGE.left + 15, messageY + 12);
 
-  doc.fontSize(9).fillColor(COLORS.muted).font("NotoSans")
+  doc.fontSize(9).fillColor(COLORS.muted).font(getSafeFont())
     .text(
       "Your order has been confirmed and is being prepared with care. " +
       "We'll notify you when it ships. Get ready to enhance your glow!",
@@ -293,14 +308,14 @@ function generateFooter(doc) {
   doc.moveTo(PAGE.left, footerY).lineTo(PAGE.right, footerY).strokeColor(COLORS.accent).lineWidth(1).stroke();
 
   // Footer content
-  doc.fontSize(9).fillColor(COLORS.accent).font("NotoSans-Bold")
+  doc.fontSize(9).fillColor(COLORS.accent).font(getSafeFont(true))
     .text("MakeMee Cosmetics", PAGE.left, footerY + 12);
 
-  doc.fontSize(8).fillColor(COLORS.muted).font("NotoSans")
+  doc.fontSize(8).fillColor(COLORS.muted).font(getSafeFont())
     .text("Be your own kind of beautiful.", PAGE.left, footerY + 24);
 
   // Support info on right
-  doc.fontSize(8).fillColor(COLORS.muted).font("NotoSans")
+  doc.fontSize(8).fillColor(COLORS.muted).font(getSafeFont())
     .text("Questions? Contact us:", PAGE.right - 150, footerY + 12, { width: 150, align: "right" })
     .text("support@makemee.in", PAGE.right - 150, footerY + 24, { width: 150, align: "right" });
 }

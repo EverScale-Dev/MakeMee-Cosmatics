@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { cartService } from '../services';
+import LoginPromptModal from '../components/LoginPromptModal';
 
 const CartContext = createContext(undefined);
 
@@ -7,6 +8,7 @@ export const CartProvider = ({ children }) => {
   const [items, setItems] = useState([]);
   const [syncing, setSyncing] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const pendingSync = useRef(null);
 
   // Check if user is logged in
@@ -114,6 +116,12 @@ export const CartProvider = ({ children }) => {
   };
 
   const addToCart = useCallback((product, quantity = 1) => {
+    // Require login to add to cart
+    if (!isLoggedIn()) {
+      setShowLoginPrompt(true);
+      return false;
+    }
+
     const productId = getProductId(product);
     const sizeML = product.selectedSize?.ml;
     // Use quantity from product object if provided, else use parameter
@@ -143,6 +151,7 @@ export const CartProvider = ({ children }) => {
       saveToBackend(newItems);
       return newItems;
     });
+    return true;
   }, [saveToBackend]);
 
   const removeFromCart = useCallback((productId, sizeML = null) => {
@@ -256,6 +265,9 @@ export const CartProvider = ({ children }) => {
       }}
     >
       {children}
+      {showLoginPrompt && (
+        <LoginPromptModal onClose={() => setShowLoginPrompt(false)} />
+      )}
     </CartContext.Provider>
   );
 };
