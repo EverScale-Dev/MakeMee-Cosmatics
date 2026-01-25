@@ -13,10 +13,10 @@ import { useHeroAnimation } from "../animations/useHeroAnimation";
 import pcbanner from "../assets/banner-desktop.gif";
 import pcbannerMobile from "../assets/banner-mobile.gif";
 
-import Hero1 from "../assets/hero/HERO1.png"
-import Hero2 from "../assets/hero/HERO2.png"
-import Hero3 from "../assets/hero/HERO3.png"
-import Hero4 from "../assets/hero/HERO4.png"
+import Hero1 from "../assets/hero/HERO1.png";
+import Hero2 from "../assets/hero/HERO2.png";
+import Hero3 from "../assets/hero/HERO3.png";
+import Hero4 from "../assets/hero/HERO4.png";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -28,13 +28,15 @@ const transformProduct = (p) => {
   return {
     ...p,
     id: p._id || p.id,
-    sizes: [{
-      ml: parseInt(p.weight) || 30,
-      originalPrice: p.regularPrice || p.salePrice || 0,
-      sellingPrice: p.salePrice || p.regularPrice || 0,
-      inStock: true,
-    }],
-    images: p.images || ['/placeholder.png'],
+    sizes: [
+      {
+        ml: parseInt(p.weight) || 30,
+        originalPrice: p.regularPrice || p.salePrice || 0,
+        sellingPrice: p.salePrice || p.regularPrice || 0,
+        inStock: true,
+      },
+    ],
+    images: p.images || ["/placeholder.png"],
     rating: p.rating || 4.5,
   };
 };
@@ -67,8 +69,6 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
     };
     fetchFeatured();
   }, []);
-
-
 
   const heroImages = [Hero1, Hero2, Hero3, Hero4];
 
@@ -122,7 +122,7 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
             backgroundImage: `url(${heroImages[currentSlide]})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            filter: "blur(2px)"
+            filter: "blur(2px)",
           }}
         />
 
@@ -240,7 +240,9 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
         />
       </section>
 
-      <StorySection />
+      <div className="hidden md:block">
+        <StorySection />
+      </div>
 
       {/* ================= TESTIMONIALS ================= */}
       <AnimatedSection className="py-20 bg-[#FC6CB4]/5 ">
