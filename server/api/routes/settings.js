@@ -7,15 +7,16 @@ const {
   updateSettings,
   getPublicSettings,
 } = require("../controllers/settingsController");
-const { protect, admin } = require("../middleware/auth");
+const protect = require("../../middlewares/protect");
+const adminProtect = require("../../middlewares/adminProtect");
 
 // Public settings (no auth required)
 router.get("/public", getPublicSettings);
 
 // Admin routes (require authentication)
-router.get("/", protect, admin, getAllSettings);
-router.get("/:key", protect, admin, getSetting);
-router.put("/:key", protect, admin, updateSetting);
-router.put("/", protect, admin, updateSettings);
+router.get("/", adminProtect, getAllSettings);
+router.get("/:key", adminProtect, getSetting);
+router.put("/:key", adminProtect, updateSetting);
+router.put("/", adminProtect, updateSettings);
 
 module.exports = router;
