@@ -3,9 +3,9 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import AnimatedSection from "./AnimatedSection";
 
-import heroImg from "../assets/img1.jpg";
-import serumImg from "../assets/img2.jpg";
-import lifestyleImg from "../assets/img3.jpg";
+import heroImg from "../assets/img1.jpeg";
+import serumImg from "../assets/img2.jpeg";
+import lifestyleImg from "../assets/img3.jpeg";
 
 gsap.registerPlugin(ScrollTrigger);
 
