@@ -25,7 +25,9 @@ export default function OrderDetailsModal({ order, onClose }) {
   const handleDownloadInvoice = async () => {
     setDownloading(true);
     try {
-      await orderService.downloadInvoice(order.orderId);
+      // Use orderId if available, fallback to _id
+      const id = order.orderId || order._id || order.id;
+      await orderService.downloadInvoice(id);
     } catch (error) {
       console.error("Failed to download invoice:", error);
       alert("Failed to download invoice");

@@ -163,6 +163,11 @@ const productSchema = new mongoose.Schema({
     default: "Ingredients sourced globally. 100% vegan and cruelty-free."
   },
 
+  howToUse: { // Instructions on how to use the product
+    type: String,
+    trim: true
+  },
+
   // --- REVIEWS & RATINGS ---
   rating: {
     type: Number,

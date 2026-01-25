@@ -184,14 +184,24 @@ const ProductDetails = () => {
   // Related products - will be empty until we fetch from API
   const relatedProducts = [];
 
+  // Format ingredients for display
+  const formatIngredients = () => {
+    if (!product.ingredients || product.ingredients.length === 0) return null;
+    // Check if ingredients is array of objects or array of strings
+    if (typeof product.ingredients[0] === 'object') {
+      return product.ingredients.map(ing => `${ing.name}: ${ing.benefit}`).join("\n\n");
+    }
+    return product.ingredients.join(", ");
+  };
+
   const tabs = [
-    { id: "description", label: "Description", content: product.shortDescription},
+    { id: "description", label: "Description", content: product.shortDescription || product.description },
     {
       id: "ingredients",
       label: "Ingredients",
-      content: product.ingredients?.join(", "),
+      content: formatIngredients(),
     },
-    { id: "usage", label: "How to Use", content: product.usage },
+    { id: "usage", label: "How to Use", content: product.howToUse || product.usage },
   ];
 
   return (

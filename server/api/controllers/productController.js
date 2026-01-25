@@ -26,7 +26,7 @@ exports.createProduct = async (req, res) => {
             name, brand, regularPrice, salePrice, description,
             shortDescription, badge, weight,
             rating, reviews,
-            features: featuresStr, ingredients: ingredientsStr, sourcingInfo,
+            features: featuresStr, ingredients: ingredientsStr, sourcingInfo, howToUse,
             sizes: sizesStr
         } = req.body;
 
@@ -73,6 +73,7 @@ exports.createProduct = async (req, res) => {
             features,
             ingredients,
             sourcingInfo,
+            howToUse,
         });
 
         await newProduct.save();
@@ -173,7 +174,7 @@ exports.updateProduct = async (req, res) => {
         const productId = req.params.id;
         const {
             name, brand, description, shortDescription, regularPrice, salePrice,
-            badge, weight, sourcingInfo, rating, reviews,
+            badge, weight, sourcingInfo, howToUse, rating, reviews,
             features: featuresStr, ingredients: ingredientsStr, existingImages,
             sizes: sizesStr
         } = req.body;
@@ -247,6 +248,7 @@ exports.updateProduct = async (req, res) => {
         product.rating = rating || product.rating;
         product.reviews = reviews || product.reviews;
         product.sourcingInfo = sourcingInfo || product.sourcingInfo;
+        product.howToUse = howToUse || product.howToUse;
 
         // Update arrays (requires merging/replacing)
         product.features = parseArrayField(featuresStr, product.features);

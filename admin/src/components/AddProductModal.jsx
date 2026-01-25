@@ -11,6 +11,7 @@ const emptyProduct = {
   shortDescription: "",
   description: "",
   sourcingInfo: "",
+  howToUse: "",
   regularPrice: "",
   salePrice: "",
   weight: "",
@@ -38,6 +39,7 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
         shortDescription: initialData.shortDescription || "",
         description: initialData.description || "",
         sourcingInfo: initialData.sourcingInfo || "",
+        howToUse: initialData.howToUse || "",
         regularPrice: initialData.regularPrice || "",
         salePrice: initialData.salePrice || "",
         weight: initialData.weight || "",
@@ -170,6 +172,7 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
       formData.append("shortDescription", data.shortDescription);
       formData.append("description", data.description);
       formData.append("sourcingInfo", data.sourcingInfo);
+      formData.append("howToUse", data.howToUse);
       formData.append("regularPrice", data.regularPrice || 0);
       formData.append("salePrice", data.salePrice || 0);
       formData.append("weight", data.weight);
@@ -292,6 +295,14 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
                 onChange={handleOnChange}
                 placeholder="Sourcing & Ingredients Info"
                 className="input col-span-2"
+              />
+
+              <textarea
+                name="howToUse"
+                value={data.howToUse}
+                onChange={handleOnChange}
+                placeholder="How to Use (application instructions)"
+                className="input col-span-2 h-24"
               />
             </div>
           </section>
