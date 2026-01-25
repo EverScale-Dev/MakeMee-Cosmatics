@@ -76,16 +76,7 @@ const ProductDetails = () => {
         return;
       }
 
-      // Try mock data first (for development with mock IDs like "1", "4")
-      const mockProduct = getProductById(id);
-      if (mockProduct) {
-        setProduct(mockProduct);
-        setSelectedSize(mockProduct.sizes?.[0]);
-        setLoading(false);
-        return;
-      }
-
-      // If not in mock, try API
+      // Try API first (real products from database)
       try {
         const data = await productService.getById(id);
         const transformed = transformBackendProduct(data);
@@ -93,7 +84,14 @@ const ProductDetails = () => {
         setSelectedSize(transformed.sizes?.[0]);
       } catch (err) {
         console.error("Failed to fetch product:", err);
-        setError("Product not found");
+        // Fallback to mock data only for development
+        const mockProduct = getProductById(id);
+        if (mockProduct) {
+          setProduct(mockProduct);
+          setSelectedSize(mockProduct.sizes?.[0]);
+        } else {
+          setError("Product not found");
+        }
       } finally {
         setLoading(false);
       }
@@ -111,7 +109,7 @@ const ProductDetails = () => {
       setReviewsLoading(true);
       try {
         const data = await productService.getReviews(productId);
-        setReviews(data.reviews || data || []);
+        setReviews(data.data || []);
       } catch (err) {
         console.error("Failed to fetch reviews:", err);
       } finally {

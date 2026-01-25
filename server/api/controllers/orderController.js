@@ -61,12 +61,10 @@ exports.createOrder = async (req, res) => {
     const discount = Number(couponDiscount) || 0;
 
     // Calculate total: subtotal + delivery - discount
-    // Rules:
-    // 1. For free_delivery coupons: deliveryCharge=0, discount=0 → total=subtotal
-    // 2. For other coupons: discount applies but total >= subtotal always
-    // 3. Total can never go below subtotal (customer pays at least product cost)
+    // Discount can reduce below subtotal (e.g., 100% discount = just delivery charge)
+    // Total can never go below 0
     const rawTotal = subtotal + deliveryCharge - discount;
-    const finalTotal = Math.max(subtotal, rawTotal);
+    const finalTotal = Math.max(0, rawTotal);
 
     // ✅ Create new order (link to logged-in user if available)
     const order = await Order.create({
@@ -164,6 +162,8 @@ exports.getAllOrders = async (req, res) => {
         products: order.products,
         subtotal: order.subtotal,
         deliveryCharge: order.deliveryCharge,
+        couponCode: order.couponCode || null,
+        couponDiscount: order.couponDiscount || 0,
         totalAmount: order.totalAmount,
         paymentMethod: order.paymentMethod,
         status: order.status,
@@ -188,9 +188,19 @@ exports.getOrderById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const order = await Order.findById(id)
-      .populate("customer", "fullName email phone shippingAddress")
-      .populate("products.product");
+    // Support both MongoDB _id and numeric orderId
+    let order;
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      // Valid MongoDB ObjectId format
+      order = await Order.findById(id)
+        .populate("customer", "fullName email phone shippingAddress")
+        .populate("products.product");
+    } else {
+      // Try as numeric orderId
+      order = await Order.findOne({ orderId: parseInt(id) })
+        .populate("customer", "fullName email phone shippingAddress")
+        .populate("products.product");
+    }
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -216,6 +226,8 @@ exports.getOrderById = async (req, res) => {
       products: order.products,
       subtotal: order.subtotal,
       deliveryCharge: order.deliveryCharge,
+      couponCode: order.couponCode || null,
+      couponDiscount: order.couponDiscount || 0,
       totalAmount: order.totalAmount,
       paymentMethod: order.paymentMethod,
       status: order.status,

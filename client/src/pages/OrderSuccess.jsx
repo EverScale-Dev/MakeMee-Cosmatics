@@ -182,6 +182,13 @@ const OrderSuccess = () => {
               </span>
             </div>
 
+            {order.couponCode && (
+              <div className="flex justify-between text-green-600">
+                <span>Discount ({order.couponCode})</span>
+                <span>-{formatPrice(order.couponDiscount || 0)}</span>
+              </div>
+            )}
+
             <div className="flex justify-between text-lg font-semibold pt-2 border-t border-black/10">
               <span>Total</span>
               <span>{formatPrice(order.totalAmount)}</span>

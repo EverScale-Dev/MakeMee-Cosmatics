@@ -20,6 +20,50 @@ const PAGE = {
   width: 495,
 };
 
+// Font paths
+const FONTS = {
+  regular: path.join(__dirname, "../public/fonts/NotoSans-Regular.ttf"),
+  bold: path.join(__dirname, "../public/fonts/NotoSans-Bold.ttf"),
+  devanagariRegular: path.join(__dirname, "../public/fonts/NotoSansDevanagari-Regular.ttf"),
+  devanagariBold: path.join(__dirname, "../public/fonts/NotoSansDevanagari-Bold.ttf"),
+};
+
+// Register fonts
+function registerFonts(doc) {
+  if (fs.existsSync(FONTS.regular)) {
+    doc.registerFont("NotoSans", FONTS.regular);
+  }
+  if (fs.existsSync(FONTS.bold)) {
+    doc.registerFont("NotoSans-Bold", FONTS.bold);
+  }
+  if (fs.existsSync(FONTS.devanagariRegular)) {
+    doc.registerFont("NotoDevanagari", FONTS.devanagariRegular);
+  }
+  if (fs.existsSync(FONTS.devanagariBold)) {
+    doc.registerFont("NotoDevanagari-Bold", FONTS.devanagariBold);
+  }
+}
+
+// Check if text contains Devanagari characters
+function hasDevanagari(text) {
+  if (!text) return false;
+  // Devanagari Unicode range: 0900-097F
+  return /[\u0900-\u097F]/.test(text);
+}
+
+// Get appropriate font based on text content
+function getFont(text, isBold = false) {
+  if (hasDevanagari(text)) {
+    return isBold ? "NotoDevanagari-Bold" : "NotoDevanagari";
+  }
+  return isBold ? "NotoSans-Bold" : "NotoSans";
+}
+
+// Format currency with ₹ symbol
+function formatCurrency(amount) {
+  return `₹${(amount || 0).toFixed(2)}`;
+}
+
 // === HEADER ===
 function generateHeader(doc, order, logoPath) {
   const startY = 40;
@@ -30,19 +74,19 @@ function generateHeader(doc, order, logoPath) {
   }
 
   // Company name and details
-  doc.fontSize(20).fillColor(COLORS.accent).font("Helvetica-Bold")
+  doc.fontSize(20).fillColor(COLORS.accent).font("NotoSans-Bold")
     .text("MakeMee Cosmetics", PAGE.left + 70, startY);
 
-  doc.fontSize(9).fillColor(COLORS.muted).font("Helvetica")
+  doc.fontSize(9).fillColor(COLORS.muted).font("NotoSans")
     .text("Derde Korhale, Kopargaon, Ahilyanagar", PAGE.left + 70, startY + 22)
     .text("Maharashtra 423601, India", PAGE.left + 70, startY + 33)
     .text("support@makemee.in | +91 98765 43210", PAGE.left + 70, startY + 44);
 
   // Invoice title and order info (right aligned)
-  doc.fontSize(24).fillColor(COLORS.accent).font("Helvetica-Bold")
+  doc.fontSize(24).fillColor(COLORS.accent).font("NotoSans-Bold")
     .text("INVOICE", PAGE.right - 120, startY, { width: 120, align: "right" });
 
-  doc.fontSize(10).fillColor(COLORS.text).font("Helvetica")
+  doc.fontSize(10).fillColor(COLORS.text).font("NotoSans")
     .text(`Order #${order.orderId}`, PAGE.right - 150, startY + 28, { width: 150, align: "right" })
     .text(`Date: ${new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`, PAGE.right - 150, startY + 42, { width: 150, align: "right" });
 
@@ -57,45 +101,57 @@ function generateCustomerSection(doc, order, startY) {
   const customer = order.customer;
   const addr = customer.shippingAddress || {};
 
-  // Bill To section
-  doc.fontSize(11).fillColor(COLORS.accent).font("Helvetica-Bold")
+  // Column widths to prevent overlap
+  const leftColWidth = 220;
+  const rightColStart = PAGE.left + 260;
+  const rightColWidth = 200;
+
+  // Bill To section (left column)
+  doc.fontSize(11).fillColor(COLORS.accent).font("NotoSans-Bold")
     .text("BILL TO:", PAGE.left, startY);
 
-  doc.fontSize(10).fillColor(COLORS.text).font("Helvetica-Bold")
-    .text(customer.fullName || "Customer", PAGE.left, startY + 16);
+  // Customer name (may contain Devanagari)
+  const customerName = customer.fullName || "Customer";
+  doc.fontSize(10).fillColor(COLORS.text).font(getFont(customerName, true))
+    .text(customerName, PAGE.left, startY + 16, { width: leftColWidth });
 
-  doc.fontSize(9).fillColor(COLORS.muted).font("Helvetica");
+  doc.fontSize(9).fillColor(COLORS.muted);
 
   let addressY = startY + 30;
   if (addr.apartment_address) {
-    doc.text(addr.apartment_address, PAGE.left, addressY);
-    addressY += 12;
+    doc.font(getFont(addr.apartment_address))
+      .text(addr.apartment_address, PAGE.left, addressY, { width: leftColWidth });
+    addressY += 14;
   }
   if (addr.street_address1) {
-    doc.text(addr.street_address1, PAGE.left, addressY);
-    addressY += 12;
+    doc.font(getFont(addr.street_address1))
+      .text(addr.street_address1, PAGE.left, addressY, { width: leftColWidth });
+    addressY += 14;
   }
   if (addr.city || addr.state || addr.pincode) {
-    doc.text(`${addr.city || ""}, ${addr.state || ""} - ${addr.pincode || ""}`, PAGE.left, addressY);
-    addressY += 12;
+    const cityLine = `${addr.city || ""}, ${addr.state || ""} - ${addr.pincode || ""}`;
+    doc.font(getFont(cityLine))
+      .text(cityLine, PAGE.left, addressY, { width: leftColWidth });
+    addressY += 14;
   }
 
-  // Contact info on the right
-  doc.fontSize(11).fillColor(COLORS.accent).font("Helvetica-Bold")
-    .text("CONTACT:", PAGE.left + 280, startY);
+  // Contact info (right column)
+  doc.fontSize(11).fillColor(COLORS.accent).font("NotoSans-Bold")
+    .text("CONTACT:", rightColStart, startY, { width: rightColWidth });
 
-  doc.fontSize(9).fillColor(COLORS.muted).font("Helvetica")
-    .text(customer.email || "", PAGE.left + 280, startY + 16)
-    .text(customer.phone || "", PAGE.left + 280, startY + 28);
+  doc.fontSize(9).fillColor(COLORS.muted).font("NotoSans")
+    .text(customer.email || "", rightColStart, startY + 16, { width: rightColWidth })
+    .text(customer.phone || "", rightColStart, startY + 28, { width: rightColWidth });
 
-  // Payment method
-  doc.fontSize(11).fillColor(COLORS.accent).font("Helvetica-Bold")
-    .text("PAYMENT:", PAGE.left + 280, startY + 48);
+  // Payment method (right column)
+  doc.fontSize(11).fillColor(COLORS.accent).font("NotoSans-Bold")
+    .text("PAYMENT:", rightColStart, startY + 48, { width: rightColWidth });
 
-  doc.fontSize(9).fillColor(COLORS.muted).font("Helvetica")
-    .text(order.paymentMethod === "onlinePayment" ? "Online Payment" : "Cash on Delivery", PAGE.left + 280, startY + 62);
+  doc.fontSize(9).fillColor(COLORS.muted).font("NotoSans")
+    .text(order.paymentMethod === "onlinePayment" ? "Online Payment" : "Cash on Delivery", rightColStart, startY + 62, { width: rightColWidth });
 
-  return startY + 90;
+  // Return the greater of addressY or the right column end
+  return Math.max(addressY, startY + 80) + 10;
 }
 
 // === ORDER TABLE ===
@@ -114,7 +170,7 @@ function generateTable(doc, order, startY) {
   // Table Header
   doc.rect(PAGE.left, tableTop, PAGE.width, rowHeight).fill(COLORS.accent);
 
-  doc.fontSize(10).fillColor(COLORS.white).font("Helvetica-Bold");
+  doc.fontSize(10).fillColor(COLORS.white).font("NotoSans-Bold");
   doc.text("Product", cols.product + 10, tableTop + 9);
   doc.text("Qty", cols.qty, tableTop + 9, { width: 60, align: "center" });
   doc.text("Price", cols.price, tableTop + 9, { width: 70, align: "right" });
@@ -133,18 +189,18 @@ function generateTable(doc, order, startY) {
     // Draw borders
     doc.rect(PAGE.left, y, PAGE.width, rowHeight).stroke(COLORS.border);
 
-    // Product name
-    doc.fontSize(9).fillColor(COLORS.text).font("Helvetica")
+    // Product name (may contain Devanagari)
+    doc.fontSize(9).fillColor(COLORS.text).font(getFont(name))
       .text(name, cols.product + 10, y + 9, { width: 230 });
 
     // Quantity (centered)
-    doc.text(String(quantity), cols.qty, y + 9, { width: 60, align: "center" });
+    doc.font("NotoSans").text(String(quantity), cols.qty, y + 9, { width: 60, align: "center" });
 
     // Price (right aligned)
-    doc.text(`₹${price.toFixed(2)}`, cols.price, y + 9, { width: 70, align: "right" });
+    doc.text(formatCurrency(price), cols.price, y + 9, { width: 70, align: "right" });
 
     // Total (right aligned)
-    doc.text(`₹${(price * quantity).toFixed(2)}`, cols.total, y + 9, { width: 85, align: "right" });
+    doc.text(formatCurrency(price * quantity), cols.total, y + 9, { width: 85, align: "right" });
 
     y += rowHeight;
   });
@@ -171,25 +227,25 @@ function generateTotals(doc, order, y) {
   let currentY = y;
 
   // Subtotal row
-  doc.fontSize(10).fillColor(COLORS.muted).font("Helvetica")
+  doc.fontSize(10).fillColor(COLORS.muted).font("NotoSans")
     .text("Subtotal:", labelX, currentY);
-  doc.fontSize(10).fillColor(COLORS.text).font("Helvetica")
-    .text(`₹${(order.subtotal || 0).toFixed(2)}`, valueX - 80, currentY, { width: 80, align: "right" });
+  doc.fontSize(10).fillColor(COLORS.text).font("NotoSans")
+    .text(formatCurrency(order.subtotal), valueX - 80, currentY, { width: 80, align: "right" });
   currentY += 18;
 
   // Delivery row
-  doc.fontSize(10).fillColor(COLORS.muted).font("Helvetica")
+  doc.fontSize(10).fillColor(COLORS.muted).font("NotoSans")
     .text("Delivery:", labelX, currentY);
-  doc.fontSize(10).fillColor(COLORS.text).font("Helvetica")
-    .text(`₹${(order.deliveryCharge || 0).toFixed(2)}`, valueX - 80, currentY, { width: 80, align: "right" });
+  doc.fontSize(10).fillColor(COLORS.text).font("NotoSans")
+    .text(formatCurrency(order.deliveryCharge), valueX - 80, currentY, { width: 80, align: "right" });
   currentY += 18;
 
   // Coupon discount row (if applied)
   if (order.couponCode && order.couponDiscount > 0) {
-    doc.fontSize(10).fillColor("#2E7D32").font("Helvetica")
+    doc.fontSize(10).fillColor("#2E7D32").font("NotoSans")
       .text(`Discount (${order.couponCode}):`, labelX, currentY);
-    doc.fontSize(10).fillColor("#2E7D32").font("Helvetica")
-      .text(`-₹${(order.couponDiscount).toFixed(2)}`, valueX - 80, currentY, { width: 80, align: "right" });
+    doc.fontSize(10).fillColor("#2E7D32").font("NotoSans")
+      .text(`-${formatCurrency(order.couponDiscount)}`, valueX - 80, currentY, { width: 80, align: "right" });
     currentY += 18;
   }
 
@@ -198,10 +254,10 @@ function generateTotals(doc, order, y) {
 
   // Grand Total row (highlighted)
   doc.rect(boxX, currentY + 9, boxWidth, 30).fill(COLORS.accent);
-  doc.fontSize(11).fillColor(COLORS.white).font("Helvetica-Bold")
+  doc.fontSize(11).fillColor(COLORS.white).font("NotoSans-Bold")
     .text("Grand Total:", labelX, currentY + 18);
-  doc.fontSize(14).fillColor(COLORS.white).font("Helvetica-Bold")
-    .text(`₹${(order.totalAmount || 0).toFixed(2)}`, valueX - 90, currentY + 16, { width: 90, align: "right" });
+  doc.fontSize(14).fillColor(COLORS.white).font("NotoSans-Bold")
+    .text(formatCurrency(order.totalAmount), valueX - 90, currentY + 16, { width: 90, align: "right" });
 
   return currentY + 54;
 }
@@ -212,10 +268,10 @@ function generateThankYouMessage(doc, y) {
 
   doc.rect(PAGE.left, messageY, PAGE.width, 70).fill(COLORS.background);
 
-  doc.fontSize(11).fillColor(COLORS.accent).font("Helvetica-Bold")
+  doc.fontSize(11).fillColor(COLORS.accent).font("NotoSans-Bold")
     .text("Thank you for your order!", PAGE.left + 15, messageY + 12);
 
-  doc.fontSize(9).fillColor(COLORS.muted).font("Helvetica")
+  doc.fontSize(9).fillColor(COLORS.muted).font("NotoSans")
     .text(
       "Your order has been confirmed and is being prepared with care. " +
       "We'll notify you when it ships. Get ready to enhance your glow!",
@@ -235,14 +291,14 @@ function generateFooter(doc) {
   doc.moveTo(PAGE.left, footerY).lineTo(PAGE.right, footerY).strokeColor(COLORS.accent).lineWidth(1).stroke();
 
   // Footer content
-  doc.fontSize(9).fillColor(COLORS.accent).font("Helvetica-Bold")
+  doc.fontSize(9).fillColor(COLORS.accent).font("NotoSans-Bold")
     .text("MakeMee Cosmetics", PAGE.left, footerY + 12);
 
-  doc.fontSize(8).fillColor(COLORS.muted).font("Helvetica")
+  doc.fontSize(8).fillColor(COLORS.muted).font("NotoSans")
     .text("Be your own kind of beautiful.", PAGE.left, footerY + 24);
 
   // Support info on right
-  doc.fontSize(8).fillColor(COLORS.muted).font("Helvetica")
+  doc.fontSize(8).fillColor(COLORS.muted).font("NotoSans")
     .text("Questions? Contact us:", PAGE.right - 150, footerY + 12, { width: 150, align: "right" })
     .text("support@makemee.in", PAGE.right - 150, footerY + 24, { width: 150, align: "right" });
 }
@@ -252,6 +308,9 @@ const createInvoice = (order) => {
   const doc = new PDFDocument({ margin: 50, size: "A4" });
   const buffers = [];
   const logoPath = path.join(__dirname, "../public/logo.png");
+
+  // Register custom fonts for Unicode/Devanagari support
+  registerFonts(doc);
 
   doc.on("data", buffers.push.bind(buffers));
 

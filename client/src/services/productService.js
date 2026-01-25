@@ -9,7 +9,10 @@ export const productService = {
     if (options.featured) params.featured = options.featured;
     if (options.limit) params.limit = options.limit;
 
-    const response = await api.get('/products', { params });
+    const response = await api.get('/products', {
+      params,
+      headers: { 'Cache-Control': 'no-cache' }
+    });
     return response.data;
   },
 
@@ -22,7 +25,9 @@ export const productService = {
   },
 
   async getById(id) {
-    const response = await api.get(`/products/${id}`);
+    const response = await api.get(`/products/${id}`, {
+      headers: { 'Cache-Control': 'no-cache' }
+    });
     return response.data;
   },
 

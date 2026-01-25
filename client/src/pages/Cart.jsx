@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { Minus, Plus, Trash } from "lucide-react";
 import { useCart } from "@/context/CartContext";
@@ -14,30 +14,7 @@ const Cart = () => {
     getItemCount,
   } = useCart();
 
-  /* PROMO STATE */
-  const [promoCode, setPromoCode] = useState("");
-  const [discount, setDiscount] = useState(0);
-  const [promoError, setPromoError] = useState("");
-
-  /* PROMO LOGIC (mock) */
-  const applyPromo = () => {
-    const code = promoCode.trim().toUpperCase();
-
-    if (code === "SAVE10") {
-      setDiscount(0.1);
-      setPromoError("");
-    } else if (code === "SAVE20") {
-      setDiscount(0.2);
-      setPromoError("");
-    } else {
-      setDiscount(0);
-      setPromoError("Invalid promo code");
-    }
-  };
-
   const subtotal = getTotal();
-  const discountAmount = subtotal * discount;
-  const finalTotal = subtotal - discountAmount;
 
   /* EMPTY CART */
   if (items.length === 0) {
@@ -155,55 +132,14 @@ const Cart = () => {
               <span>{formatPrice(subtotal)}</span>
             </div>
 
-            <div className="flex justify-between text-black/70">
-              <span>Shipping</span>
-              <span>Free</span>
-            </div>
-
-            {/* PROMO CODE */}
-            <div className="pt-6 space-y-3">
-              <label className="text-sm font-medium text-black">
-                Promo Code
-              </label>
-
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  placeholder="Enter code"
-                  className="flex-1 px-4 py-3 rounded-xl border border-black/10 focus:outline-none"
-                />
-                <button
-                  onClick={applyPromo}
-                  className="px-6 rounded-xl bg-black text-white"
-                >
-                  Apply
-                </button>
-              </div>
-
-              {promoError && (
-                <p className="text-sm text-red-500">{promoError}</p>
-              )}
-
-              {discount > 0 && (
-                <p className="text-sm text-green-600">
-                  Promo applied: {discount * 100}% off
-                </p>
-              )}
-            </div>
-
-            {discount > 0 && (
-              <div className="flex justify-between text-green-600 pt-2">
-                <span>Discount</span>
-                <span>-{formatPrice(discountAmount)}</span>
-              </div>
-            )}
-
             <div className="flex justify-between text-lg font-semibold text-black pt-4 border-t border-black/10">
               <span>Total</span>
-              <span>{formatPrice(finalTotal)}</span>
+              <span>{formatPrice(subtotal)}</span>
             </div>
+
+            <p className="text-sm text-black/50 pt-2">
+              Shipping calculated at checkout. Apply coupons at checkout.
+            </p>
           </div>
 
           <Link to="/checkout">
