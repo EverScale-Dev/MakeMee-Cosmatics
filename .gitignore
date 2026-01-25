@@ -45,5 +45,8 @@ coverage/
 *.crt
 *.p12
 
-# 
+# Project docs (local only)
 CLAUDE.md
+CLAUDE_ARCHIVE.md
+CLAUDE_archive_*.md
+DEPLOY.md
