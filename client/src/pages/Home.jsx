@@ -2,7 +2,6 @@ import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import ProductCard from "../components/ProductCard";
 import AnimatedSection from "../components/AnimatedSection";
@@ -18,71 +17,57 @@ import Hero2 from "../assets/hero/HERO2.png";
 import Hero3 from "../assets/hero/HERO3.png";
 import Hero4 from "../assets/hero/HERO4.png";
 
-gsap.registerPlugin(ScrollTrigger);
-
-// Transform backend product to frontend format
-const transformProduct = (p) => {
-  if (p.sizes && p.sizes.length > 0) {
-    return { ...p, id: p._id || p.id };
-  }
-  return {
-    ...p,
-    id: p._id || p.id,
-    sizes: [
-      {
-        ml: parseInt(p.weight) || 30,
-        originalPrice: p.regularPrice || p.salePrice || 0,
-        sellingPrice: p.salePrice || p.regularPrice || 0,
-        inStock: true,
-      },
-    ],
-    images: p.images || ["/placeholder.png"],
-    rating: p.rating || 4.5,
-  };
-};
+// ---------------- utils ----------------
+const transformProduct = (p) => ({
+  ...p,
+  id: p._id || p.id,
+  images: p.images || ["/placeholder.png"],
+  rating: p.rating || 4.5,
+});
 
 const Home = ({ onAddToCart, onAddToWishlist }) => {
   const titleRef = useRef(null);
   const subtitleRef = useRef(null);
   const ctaRef = useRef(null);
 
-  // 🔥 Hero background refs
-  const bgRef1 = useRef(null);
-  const bgRef2 = useRef(null);
-  const activeBg = useRef(0);
-
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
+  // 🔥 two image layers
+  const bg1 = useRef(null);
+  const bg2 = useRef(null);
+  const active = useRef(0);
 
   const heroImages = [Hero1, Hero2, Hero3, Hero4];
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  const [featuredProducts, setFeaturedProducts] = useState([]);
 
   useHeroAnimation({ titleRef, subtitleRef, ctaRef });
 
-  // Auto slide
+  // autoplay
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+    const id = setInterval(() => {
+      setCurrentSlide((p) => (p + 1) % heroImages.length);
     }, 5000);
-    return () => clearInterval(interval);
+    return () => clearInterval(id);
   }, []);
 
-  // Smooth cross-fade background animation
+  // ✅ smooth image cross-fade (NO background color)
   useEffect(() => {
-    const current =
-      activeBg.current === 0 ? bgRef1.current : bgRef2.current;
-    const next =
-      activeBg.current === 0 ? bgRef2.current : bgRef1.current;
+    const current = active.current === 0 ? bg1.current : bg2.current;
+    const next = active.current === 0 ? bg2.current : bg1.current;
 
     if (!current || !next) return;
 
     next.style.backgroundImage = `url(${heroImages[currentSlide]})`;
 
-    gsap.fromTo(
-      next,
-      { opacity: 0, scale: 1.05 },
-      { opacity: 0.25, scale: 1, duration: 1.2, ease: "power2.out" }
-    );
+    gsap.set(next, { opacity: 0, scale: 1.05 });
+
+    gsap.to(next, {
+      opacity: 1,
+      scale: 1,
+      duration: 1.2,
+      ease: "power2.out",
+    });
 
     gsap.to(current, {
       opacity: 0,
@@ -90,50 +75,42 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
       ease: "power2.out",
     });
 
-    activeBg.current = activeBg.current === 0 ? 1 : 0;
+    active.current = active.current === 0 ? 1 : 0;
   }, [currentSlide]);
 
-  // Fetch featured products
-  useEffect(() => {
-    const fetchFeatured = async () => {
-      try {
-        const products = await productService.getFeatured(4);
-        setFeaturedProducts(products.map(transformProduct));
-      } catch (e) {
-        setFeaturedProducts([]);
-      } finally {
-        setLoadingProducts(false);
-      }
-    };
-    fetchFeatured();
-  }, []);
+  // products
+ useEffect(() => {
+  const fetchFeatured = async () => {
+    try {
+      setLoadingProducts(true);
+      const products = await productService.getFeatured(4);
 
-  const testimonials = [
-    {
-      name: "Ananya Sharma",
-      text: "These products have completely transformed my skincare routine.",
-      rating: 4,
-    },
-    {
-      name: "Riya Mehta",
-      text: "Cruelty-free, natural, and incredibly effective.",
-      rating: 5,
-    },
-    {
-      name: "Priya Iyer",
-      text: "Premium quality and visible results.",
-      rating: 4,
-    },
-  ];
+      if (products?.length > 0) {
+        setFeaturedProducts(products.map(transformProduct));
+      } else {
+        setFeaturedProducts([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch featured products:", error);
+      setFeaturedProducts([]);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  fetchFeatured();
+}, []);
+
+  
 
   return (
     <div className="bg-white text-black">
       {/* ================= HERO ================= */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-[#731162]">
-        {/* Background layers */}
+      <section className="relative h-screen overflow-hidden">
+        {/* image layer 1 (always present initially) */}
         <div
-          ref={bgRef1}
-          className="absolute inset-0 opacity-25"
+          ref={bg1}
+          className="absolute inset-0 opacity-100"
           style={{
             backgroundImage: `url(${heroImages[0]})`,
             backgroundSize: "cover",
@@ -141,8 +118,10 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
             filter: "blur(2px)",
           }}
         />
+
+        {/* image layer 2 */}
         <div
-          ref={bgRef2}
+          ref={bg2}
           className="absolute inset-0 opacity-0"
           style={{
             backgroundSize: "cover",
@@ -151,140 +130,83 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
           }}
         />
 
-        {/* Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 text-center">
-          <h1
-            ref={titleRef}
-            className="text-5xl md:text-7xl font-bold text-white mb-6"
-          >
-            Natural Beauty,
-            <br />
-            Redefined
-          </h1>
+        {/* content */}
+        <div className="relative z-10 h-full flex items-center justify-center text-center px-4">
+          <div className="max-w-7xl mx-auto">
+            <h1
+              ref={titleRef}
+              className="text-5xl md:text-7xl font-bold text-white mb-6"
+            >
+              Natural Beauty,
+              <br />
+              Redefined
+            </h1>
 
-          <p
-            ref={subtitleRef}
-            className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto"
-          >
-            Premium skincare crafted with nature's finest ingredients.
-          </p>
+            <p
+              ref={subtitleRef}
+              className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto"
+            >
+              Premium skincare crafted with nature's finest ingredients.
+            </p>
 
-          <div
-            ref={ctaRef}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
-          >
-            <Link to="/shop">
-              <button className="px-8 py-4 text-lg font-semibold rounded-full bg-[#FC6CB4] text-white hover:bg-[#F0A400] transition">
-                Shop Now
-              </button>
-            </Link>
+            <div
+              ref={ctaRef}
+              className="flex flex-col sm:flex-row gap-4 justify-center"
+            >
+              <Link to="/shop">
+                <button className="px-8 py-4 text-lg font-semibold rounded-full bg-[#FC6CB4] text-white hover:bg-[#F0A400] transition">
+                  Shop Now
+                </button>
+              </Link>
 
-            <Link to="/about">
-              <button className="px-8 py-4 text-lg font-semibold rounded-full border-2 border-white text-white hover:bg-white hover:text-[#731162] transition">
-                Our Story
-              </button>
-            </Link>
+              <Link to="/about">
+                <button className="px-8 py-4 text-lg font-semibold rounded-full border-2 border-white text-white hover:bg-white hover:text-[#731162] transition">
+                  Our Story
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
 
-        {/* Slider dots */}
+        {/* dots */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-          {heroImages.map((_, index) => (
+          {heroImages.map((_, i) => (
             <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
+              key={i}
+              onClick={() => setCurrentSlide(i)}
               className={`h-2 rounded-full transition-all ${
-                currentSlide === index
-                  ? "bg-[#F0A400] w-8"
-                  : "bg-white/50 w-2"
+                currentSlide === i ? "bg-[#F0A400] w-8" : "bg-white/50 w-2"
               }`}
             />
           ))}
         </div>
       </section>
 
-      {/* ================= FEATURED PRODUCTS ================= */}
+      {/* ================= FEATURED ================= */}
       {featuredProducts.length > 0 && (
-        <AnimatedSection className="py-20 bg-base">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-[#731162] mb-4">
-                Bestselling Products
-              </h2>
-              <p className="text-black/70 text-lg">
-                Our most loved skincare essentials.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {featuredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onAddToCart={onAddToCart}
-                  onAddToWishlist={onAddToWishlist}
-                />
-              ))}
-            </div>
-
-            <div className="text-center mt-12">
-              <Link to="/shop">
-                <button className="inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold rounded-full border-2 border-[#731162] text-[#731162] hover:bg-[#731162] hover:text-white transition">
-                  View All Products
-                  <ArrowRight size={20} />
-                </button>
-              </Link>
-            </div>
+        <AnimatedSection className="py-20">
+          <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {featuredProducts.map((p) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                onAddToCart={onAddToCart}
+                onAddToWishlist={onAddToWishlist}
+              />
+            ))}
           </div>
         </AnimatedSection>
       )}
 
       {/* ================= BANNER ================= */}
-      <section className="w-full">
-        <img
-          src={pcbanner}
-          alt="Promotional Banner"
-          className="hidden md:block w-full object-cover"
-        />
-        <img
-          src={pcbannerMobile}
-          alt="Promotional Banner"
-          className="block md:hidden w-full object-cover"
-        />
+      <section>
+        <img src={pcbanner} className="hidden md:block w-full" />
+        <img src={pcbannerMobile} className="md:hidden w-full" />
       </section>
 
       <div className="hidden md:block">
         <StorySection />
       </div>
-
-      {/* ================= TESTIMONIALS ================= */}
-      <AnimatedSection className="py-20 bg-[#FC6CB4]/5">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold text-[#731162] mb-4">
-            What Our Customers Say
-          </h2>
-          <p className="text-black/70 mb-12 text-lg">
-            Trusted by thousands worldwide.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((t, i) => (
-              <div
-                key={i}
-                className="bg-white p-8 rounded-2xl border border-[#731162]/20 hover:shadow-xl transition"
-              >
-                <div className="flex justify-center mb-4">
-                  {[...Array(t.rating)].map((_, j) => (
-                    <span key={j} className="text-[#F0A400] text-xl">★</span>
-                  ))}
-                </div>
-                <p className="text-black/70 mb-4">"{t.text}"</p>
-                <p className="font-semibold text-[#731162]">{t.name}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </AnimatedSection>
     </div>
   );
 };

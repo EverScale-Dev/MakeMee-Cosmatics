@@ -38,7 +38,7 @@ const StorySection = () => {
             opacity: 0,
           },
           {
-            y: -120,
+            y: 0,
             scale: 1,
             opacity: 1,
             stagger: 0.15,
@@ -118,7 +118,7 @@ const StorySection = () => {
       <div className="hidden lg:flex absolute inset-0 items-center justify-center pointer-events-none">
         <div className="relative w-full max-w-4xl mx-auto">
           {/* MAIN IMAGE */}
-          <div className="parallax-img absolute top-10 left-1/2 -translate-x-1/2 w-[85%] rounded-3xl overflow-hidden shadow-2xl">
+          <div className="parallax-img absolute -top-28 left-1/2 -translate-x-1/2 w-[85%] rounded-3xl overflow-hidden shadow-2xl">
             <img
               src={heroImg}
               className="w-full h-full object-cover"
@@ -128,7 +128,7 @@ const StorySection = () => {
           </div>
 
           {/* LEFT IMAGE */}
-          <div className="parallax-img absolute -left-10 top-44 w-[40%] rounded-3xl overflow-hidden shadow-xl">
+          <div className="parallax-img absolute -left-10 top-15 w-[40%] rounded-3xl overflow-hidden shadow-xl">
             <img
               src={serumImg}
               className="w-full h-full object-cover"
@@ -138,7 +138,7 @@ const StorySection = () => {
           </div>
 
           {/* RIGHT IMAGE */}
-          <div className="parallax-img absolute -right-10 top-58 w-[40%] rounded-3xl overflow-hidden shadow-xl">
+          <div className="parallax-img absolute -right-15 top-32 w-[40%] rounded-3xl overflow-hidden shadow-xl">
             <img
               src={lifestyleImg}
               className="w-full h-full object-cover"
