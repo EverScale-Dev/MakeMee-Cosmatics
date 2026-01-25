@@ -102,9 +102,9 @@ function generateCustomerSection(doc, order, startY) {
   const addr = customer.shippingAddress || {};
 
   // Column widths to prevent overlap
-  const leftColWidth = 220;
-  const rightColStart = PAGE.left + 260;
-  const rightColWidth = 200;
+  const leftColWidth = 200;
+  const rightColStart = PAGE.left + 280;
+  const rightColWidth = PAGE.right - rightColStart;
 
   // Bill To section (left column)
   doc.fontSize(11).fillColor(COLORS.accent).font("NotoSans-Bold")
@@ -113,25 +113,27 @@ function generateCustomerSection(doc, order, startY) {
   // Customer name (may contain Devanagari)
   const customerName = customer.fullName || "Customer";
   doc.fontSize(10).fillColor(COLORS.text).font(getFont(customerName, true))
-    .text(customerName, PAGE.left, startY + 16, { width: leftColWidth });
+    .text(customerName, PAGE.left, startY + 16, { width: leftColWidth, lineBreak: true });
 
   doc.fontSize(9).fillColor(COLORS.muted);
 
-  let addressY = startY + 30;
+  let addressY = startY + 32;
   if (addr.apartment_address) {
-    doc.font(getFont(addr.apartment_address))
-      .text(addr.apartment_address, PAGE.left, addressY, { width: leftColWidth });
+    const aptText = String(addr.apartment_address).substring(0, 50);
+    doc.font(getFont(aptText))
+      .text(aptText, PAGE.left, addressY, { width: leftColWidth, lineBreak: true });
     addressY += 14;
   }
   if (addr.street_address1) {
-    doc.font(getFont(addr.street_address1))
-      .text(addr.street_address1, PAGE.left, addressY, { width: leftColWidth });
+    const streetText = String(addr.street_address1).substring(0, 50);
+    doc.font(getFont(streetText))
+      .text(streetText, PAGE.left, addressY, { width: leftColWidth, lineBreak: true });
     addressY += 14;
   }
   if (addr.city || addr.state || addr.pincode) {
     const cityLine = `${addr.city || ""}, ${addr.state || ""} - ${addr.pincode || ""}`;
     doc.font(getFont(cityLine))
-      .text(cityLine, PAGE.left, addressY, { width: leftColWidth });
+      .text(cityLine, PAGE.left, addressY, { width: leftColWidth, lineBreak: true });
     addressY += 14;
   }
 
