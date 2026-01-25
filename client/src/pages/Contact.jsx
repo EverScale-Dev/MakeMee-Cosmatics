@@ -118,7 +118,7 @@ const Contact = () => {
     backdrop-blur-sm
   "
                 >
-                  📍 Mumbai, India
+                  📍 Kopergaon, Maharashtra
                 </div>
               </div>
             </div>
