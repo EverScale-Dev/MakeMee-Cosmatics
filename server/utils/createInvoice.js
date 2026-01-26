@@ -121,6 +121,7 @@ function generateCustomerSection(doc, order, startY) {
 
   // Two-column layout - left for address, right for contact
   const rightColStart = PAGE.left + 260;
+  const addressWidth = 200; // Width for address text
 
   // BILL TO section (left column)
   doc.fontSize(11).fillColor(COLORS.accent).font(getSafeFont(true))
@@ -131,28 +132,27 @@ function generateCustomerSection(doc, order, startY) {
   // Customer name
   const customerName = customer.fullName || "Customer";
   doc.fontSize(10).fillColor(COLORS.text).font(getFont(customerName, true))
-    .text(customerName, PAGE.left, y, { width: 220 });
+    .text(customerName, PAGE.left, y, { width: addressWidth });
   y += 16;
 
-  // Address lines
-  doc.fontSize(9).fillColor(COLORS.muted);
-
-  if (addr.apartment_address) {
-    doc.font(getFont(addr.apartment_address))
-      .text(addr.apartment_address, PAGE.left, y, { width: 220 });
-    y += 12;
-  }
-  if (addr.street_address1) {
-    doc.font(getFont(addr.street_address1))
-      .text(addr.street_address1, PAGE.left, y, { width: 220 });
-    y += 12;
-  }
+  // Build full address string with proper formatting
+  const addressParts = [];
+  if (addr.apartment_address) addressParts.push(addr.apartment_address);
+  if (addr.street_address1) addressParts.push(addr.street_address1);
   if (addr.city || addr.state || addr.pincode) {
-    const cityLine = `${addr.city || ""}, ${addr.state || ""} ${addr.pincode || ""}`;
-    doc.font(getFont(cityLine))
-      .text(cityLine, PAGE.left, y, { width: 220 });
-    y += 12;
+    const cityLine = [addr.city, addr.state, addr.pincode].filter(Boolean).join(", ");
+    addressParts.push(cityLine);
   }
+  addressParts.push("India");
+
+  // Render full address as single text block to handle wrapping properly
+  const fullAddress = addressParts.join("\n");
+  doc.fontSize(9).fillColor(COLORS.muted).font(getFont(fullAddress));
+
+  // Calculate actual height the text will take
+  const addressHeight = doc.heightOfString(fullAddress, { width: addressWidth });
+  doc.text(fullAddress, PAGE.left, y, { width: addressWidth });
+  y += addressHeight + 5;
 
   // CONTACT section (right column - fixed position)
   doc.fontSize(11).fillColor(COLORS.accent).font(getSafeFont(true))

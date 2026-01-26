@@ -55,7 +55,11 @@ exports.mergeCart = async (req, res) => {
       });
 
       if (existingItemIndex > -1) {
-        cart.items[existingItemIndex].quantity += guestItem.quantity;
+        // Use MAX of the two quantities instead of adding (prevents duplication on re-login)
+        cart.items[existingItemIndex].quantity = Math.max(
+          cart.items[existingItemIndex].quantity,
+          guestItem.quantity
+        );
       } else {
         cart.items.push({
           productId: guestItem.id,
