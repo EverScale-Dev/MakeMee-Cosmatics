@@ -333,10 +333,39 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
             </div>
           </section>
 
+          {/* Base Pricing (for products without size variants) */}
+          <section>
+            <h3 className="text-blue-600 font-semibold mb-3">Base Pricing</h3>
+            <p className="text-sm text-gray-500 mb-3">Set base prices for products without size variants (e.g., combos, kits)</p>
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                type="number"
+                name="regularPrice"
+                value={data.regularPrice}
+                onChange={handleOnChange}
+                placeholder="MRP (Regular Price)"
+                className="input"
+                min="0"
+              />
+              <input
+                type="number"
+                name="salePrice"
+                value={data.salePrice}
+                onChange={handleOnChange}
+                placeholder="Selling Price"
+                className="input"
+                min="0"
+              />
+            </div>
+            <p className="text-xs text-amber-600 mt-2">
+              Note: If you add size variants below, those prices will be used instead.
+            </p>
+          </section>
+
           {/* Size Variants with Stock */}
           <section>
-            <h3 className="text-blue-600 font-semibold mb-3">Size Variants & Pricing</h3>
-            <p className="text-sm text-gray-500 mb-3">Add at least one size variant with pricing and stock</p>
+            <h3 className="text-blue-600 font-semibold mb-3">Size Variants & Pricing (Optional)</h3>
+            <p className="text-sm text-gray-500 mb-3">Add size variants only if this product comes in multiple sizes</p>
             {data.sizes.map((size, i) => (
               <div key={i} className="flex flex-wrap gap-2 mb-3 items-center p-3 bg-gray-50 rounded-lg">
                 <input

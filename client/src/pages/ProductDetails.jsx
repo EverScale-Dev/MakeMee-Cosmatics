@@ -22,25 +22,17 @@ import { trackEvent } from "@/utils/metaPixel";
 
 // Transform backend product to expected format
 const transformBackendProduct = (p) => {
-  // If product already has sizes array, use it
-  if (p.sizes && p.sizes.length > 0) {
-    return {
-      ...p,
-      id: p._id || p.id,
-    };
-  }
-  // Otherwise, create sizes from regularPrice/salePrice
+  // Check if product has actual size variants
+  const hasSizes = p.sizes && p.sizes.length > 0;
+
   return {
     ...p,
     id: p._id || p.id,
-    sizes: [
-      {
-        ml: parseInt(p.weight) || 30,
-        originalPrice: p.regularPrice || p.salePrice || 0,
-        sellingPrice: p.salePrice || p.regularPrice || 0,
-        inStock: true,
-      },
-    ],
+    // Keep sizes as-is (don't create synthetic sizes for simple products)
+    sizes: hasSizes ? p.sizes : [],
+    // For products without sizes, use root prices
+    regularPrice: p.regularPrice || 0,
+    salePrice: p.salePrice || p.regularPrice || 0,
     images: p.images || ["/placeholder.png"],
     rating: p.rating || 4.5,
     shortDescription: p.description || p.shortDescription || "",
@@ -86,7 +78,13 @@ const ProductDetails = () => {
         const data = await productService.getById(id);
         const transformed = transformBackendProduct(data);
         setProduct(transformed);
-        setSelectedSize(transformed.sizes?.[0]);
+        // Only set selectedSize if product has size variants
+        if (transformed.sizes && transformed.sizes.length > 0) {
+          setSelectedSize(transformed.sizes[0]);
+        } else {
+          // For products without sizes, selectedSize remains null
+          setSelectedSize(null);
+        }
       } catch (err) {
         console.error("Failed to fetch product:", err);
         setError("Product not found");
@@ -155,7 +153,7 @@ const ProductDetails = () => {
     );
   }
 
-  if (!product || !selectedSize || error) {
+  if (!product || error) {
     return (
       <main className="pt-28 pb-20 min-h-screen bg-white text-center">
         <h1 className="text-3xl font-semibold mb-6">Product Not Found</h1>
@@ -168,27 +166,38 @@ const ProductDetails = () => {
     );
   }
 
-  const totalSellingPrice = selectedSize.sellingPrice * quantity;
-  const totalOriginalPrice = selectedSize.originalPrice * quantity;
+  // Check if product has size variants
+  const hasSizes = product.sizes && product.sizes.length > 0;
+
+  // Get prices: from selectedSize if available, otherwise from root product prices
+  const sellingPrice = selectedSize?.sellingPrice || product.salePrice || product.regularPrice || 0;
+  const originalPrice = selectedSize?.originalPrice || product.regularPrice || product.salePrice || 0;
+
+  const totalSellingPrice = sellingPrice * quantity;
+  const totalOriginalPrice = originalPrice * quantity;
 
   const handleAddToCart = () => {
-    addToCart({
+    // For products without sizes, don't pass selectedSize
+    const cartItem = {
       ...product,
-      selectedSize,
       quantity,
-    });
+    };
+    if (selectedSize) {
+      cartItem.selectedSize = selectedSize;
+    }
+    addToCart(cartItem);
 
     trackEvent("AddToCart", {
       content_ids: [product._id || product.id],
       content_name: product.name,
       content_type: "product",
-      value: selectedSize.sellingPrice * quantity,
+      value: sellingPrice * quantity,
       currency: "INR",
     });
 
-    toast.success(
-      `${quantity} × ${product.name} (${selectedSize.ml} ${selectedSize.unit || "ml"}) added to cart`,
-    );
+    // Show appropriate toast message
+    const sizeInfo = selectedSize ? ` (${selectedSize.ml} ${selectedSize.unit || "ml"})` : "";
+    toast.success(`${quantity} × ${product.name}${sizeInfo} added to cart`);
   };
 
   const handleBuyNow = () => {
@@ -196,7 +205,7 @@ const ProductDetails = () => {
       content_ids: [product._id || product.id],
       content_name: product.name,
       content_type: "product",
-      value: selectedSize.sellingPrice * quantity,
+      value: sellingPrice * quantity,
       currency: "INR",
       num_items: quantity,
     });
@@ -304,43 +313,50 @@ const ProductDetails = () => {
                 <span className="font-medium">{product.rating}</span>
               </div>
 
-              {/* Size Selector */}
-              <div>
-                <p className="font-medium mb-2">Select Size</p>
-                <div className="flex flex-wrap gap-3">
-                  {product.sizes.map((size) => {
-                    const isOutOfStock =
-                      size.inStock === false ||
-                      (size.stock !== undefined && size.stock <= 0);
-                    return (
-                      <button
-                        key={`${size.ml}-${size.unit || "ml"}`}
-                        onClick={() => {
-                          if (!isOutOfStock) {
-                            setSelectedSize(size);
-                            setQuantity(1);
-                          }
-                        }}
-                        disabled={isOutOfStock}
-                        className={`px-4 py-2 rounded-full border relative ${
-                          isOutOfStock
-                            ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-                            : selectedSize?.ml === size.ml
-                              ? "border-[#FC6CB4] bg-[#FC6CB4]/20"
-                              : "border-black/20"
-                        }`}
-                      >
-                        {size.ml} {size.unit || "ml"}
-                        {isOutOfStock && (
-                          <span className="absolute -top-2 -right-2 text-[10px] bg-red-500 text-white px-1 rounded">
-                            Out
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
+              {/* Size Selector - Only show if product has size variants */}
+              {hasSizes && (
+                <div>
+                  <p className="font-medium mb-2">Select Size</p>
+                  <div className="flex flex-wrap gap-3">
+                    {product.sizes.map((size) => {
+                      const isOutOfStock =
+                        size.inStock === false ||
+                        (size.stock !== undefined && size.stock <= 0);
+                      return (
+                        <button
+                          key={`${size.ml}-${size.unit || "ml"}`}
+                          onClick={() => {
+                            if (!isOutOfStock) {
+                              setSelectedSize(size);
+                              setQuantity(1);
+                            }
+                          }}
+                          disabled={isOutOfStock}
+                          className={`px-4 py-2 rounded-full border relative ${
+                            isOutOfStock
+                              ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                              : selectedSize?.ml === size.ml
+                                ? "border-[#FC6CB4] bg-[#FC6CB4]/20"
+                                : "border-black/20"
+                          }`}
+                        >
+                          {size.ml} {size.unit || "ml"}
+                          {isOutOfStock && (
+                            <span className="absolute -top-2 -right-2 text-[10px] bg-red-500 text-white px-1 rounded">
+                              Out
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Weight display for products without sizes */}
+              {!hasSizes && product.weight && (
+                <p className="text-gray-600">{product.weight}</p>
+              )}
 
               {/* Price */}
               <div className="flex items-center gap-3">
@@ -348,18 +364,17 @@ const ProductDetails = () => {
                   ₹{totalSellingPrice}
                 </span>
 
-                <span className="text-lg line-through text-black/40">
-                  ₹{totalOriginalPrice}
-                </span>
+                {originalPrice > sellingPrice && (
+                  <>
+                    <span className="text-lg line-through text-black/40">
+                      ₹{totalOriginalPrice}
+                    </span>
 
-                <span className="text-sm bg-[#F0A400]/20 px-2 rounded">
-                  {Math.round(
-                    (1 -
-                      selectedSize.sellingPrice / selectedSize.originalPrice) *
-                      100,
-                  )}
-                  % OFF
-                </span>
+                    <span className="text-sm bg-[#F0A400]/20 px-2 rounded">
+                      {Math.round((1 - sellingPrice / originalPrice) * 100)}% OFF
+                    </span>
+                  </>
+                )}
               </div>
 
               {/* Key Features */}

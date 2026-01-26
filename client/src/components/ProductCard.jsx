@@ -18,14 +18,16 @@ const ProductCard = ({ product }) => {
   // Handle both sizes array and single price (backward compatibility)
   const hasSizes = product.sizes && product.sizes.length > 0;
   const [selectedSize] = useState(
-    hasSizes
-      ? product.sizes[0]
-      : {
-          ml: null,
-          originalPrice: product.regularPrice,
-          sellingPrice: product.salePrice,
-        },
+    hasSizes ? product.sizes[0] : null,
   );
+
+  // Get display price (from size if available, otherwise from root product)
+  const displayPrice = hasSizes
+    ? (selectedSize?.sellingPrice || selectedSize?.originalPrice || 0)
+    : (product.salePrice || product.regularPrice || 0);
+  const displayOriginalPrice = hasSizes
+    ? (selectedSize?.originalPrice || selectedSize?.sellingPrice || 0)
+    : (product.regularPrice || product.salePrice || 0);
 
   const { addToCart, isInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
@@ -98,17 +100,21 @@ const ProductCard = ({ product }) => {
   const inCart = isInCart(productId, selectedSize?.ml);
 
   const handleAddToCart = () => {
-    addToCart({
+    const cartItem = {
       ...product,
       id: productId,
-      selectedSize,
-      quantity: 1, // Explicitly set quantity to 1
-    });
+      quantity: 1,
+    };
+    // Only include selectedSize if product has sizes
+    if (selectedSize) {
+      cartItem.selectedSize = selectedSize;
+    }
+    addToCart(cartItem);
     trackEvent("AddToCart", {
       content_ids: [productId],
       content_name: product.name,
       content_type: "product",
-      value: selectedSize.sellingPrice,
+      value: displayPrice,
       currency: "INR",
     });
   };
@@ -150,7 +156,7 @@ const ProductCard = ({ product }) => {
                 content_ids: [productId],
                 content_name: product.name,
                 content_type: "product",
-                value: selectedSize.sellingPrice,
+                value: displayPrice,
                 currency: "INR",
               });
             }}
@@ -196,20 +202,20 @@ const ProductCard = ({ product }) => {
         {/* PRICE */}
         <div className="flex items-center justify-between">
           <div>
-            {selectedSize.originalPrice > selectedSize.sellingPrice && (
+            {displayOriginalPrice > displayPrice && (
               <span className="text-sm text-gray-400 line-through mr-2">
-                ₹{selectedSize.originalPrice}
+                ₹{displayOriginalPrice}
               </span>
             )}
             <span className="text-lg font-bold text-gray-900">
-              ₹{selectedSize.sellingPrice}
+              ₹{displayPrice}
             </span>
-            {selectedSize.ml && (
+            {selectedSize?.ml && (
               <p className="text-xs text-gray-500">
                 {selectedSize.ml} {selectedSize.unit || "ml"}
               </p>
             )}
-            {!selectedSize.ml && product.weight && (
+            {!selectedSize?.ml && product.weight && (
               <p className="text-xs text-gray-500">{product.weight}</p>
             )}
           </div>
