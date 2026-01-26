@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { cartService } from '../services';
 import LoginPromptModal from '../components/LoginPromptModal';
+import { trackAddToCart } from '../utils/metaPixel';
 
 const CartContext = createContext(undefined);
 
@@ -157,6 +158,9 @@ export const CartProvider = ({ children }) => {
     const sizeML = product.selectedSize?.ml;
     // Always use explicit quantity (from product.quantity or parameter), ensure it's at least 1
     const qty = Math.max(1, Number(product.quantity) || Number(quantity) || 1);
+
+    // Track Meta Pixel AddToCart event
+    trackAddToCart(product, qty);
 
     setItems(prev => {
       const existingIndex = prev.findIndex(item =>

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { trackAddToWishlist } from '../utils/metaPixel';
 
 const WishlistContext = createContext(undefined);
 
@@ -15,6 +16,8 @@ export const WishlistProvider = ({ children }) => {
   const addToWishlist = (product) => {
     setItems(prev => {
       if (prev.some(item => item.id === product.id)) return prev;
+      // Track Meta Pixel AddToWishlist event
+      trackAddToWishlist(product);
       return [...prev, product];
     });
   };

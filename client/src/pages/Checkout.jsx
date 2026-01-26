@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check } from "lucide-react";
 import { useCart } from "@/context/CartContext";
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import SavedAddressSelector from "@/components/SavedAddressSelector";
 import AddressFormModal from "@/components/AddressFormModal";
 import PhoneVerificationModal from "@/components/PhoneVerificationModal";
+import { trackInitiateCheckout, trackPurchase } from "@/utils/metaPixel";
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat("en-IN", {
@@ -51,6 +52,24 @@ const Checkout = () => {
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [phoneVerificationRequired, setPhoneVerificationRequired] = useState(false);
   const [codEnabled, setCodEnabled] = useState(true);
+
+  // Track InitiateCheckout once when page loads with items
+  const hasTrackedCheckout = useRef(false);
+  useEffect(() => {
+    if (items.length > 0 && !hasTrackedCheckout.current) {
+      const total = items.reduce((sum, item) => {
+        const price = Number(
+          item.selectedSize?.sellingPrice ||
+          item.product?.salePrice ||
+          item.product?.price ||
+          0
+        );
+        return sum + price * item.quantity;
+      }, 0);
+      trackInitiateCheckout(items, total);
+      hasTrackedCheckout.current = true;
+    }
+  }, [items]);
 
   // Login guard
   useEffect(() => {
@@ -306,6 +325,9 @@ const Checkout = () => {
       // Create order
       const order = await createOrder(customerId);
 
+      // Track Meta Pixel Purchase event
+      trackPurchase(order.orderId || order._id, items, total);
+
       toast.success("Order placed successfully!");
       clearCart();
       navigate(`/order-success?orderId=${order._id}`);
@@ -391,6 +413,13 @@ const Checkout = () => {
               });
 
               if (verifyResult.success && verifyResult.order) {
+                // Track Meta Pixel Purchase event
+                trackPurchase(
+                  verifyResult.order.orderId || verifyResult.order._id,
+                  items,
+                  total
+                );
+
                 toast.success("Payment successful! Order placed.");
                 clearCart();
                 navigate(`/order-success?orderId=${verifyResult.order._id}`);
