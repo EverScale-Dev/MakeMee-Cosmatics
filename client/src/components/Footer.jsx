@@ -90,12 +90,12 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/faq" className="text-gray-400 hover:text-white text-sm transition-colors">
+                <Link to="/terms/faq" className="text-gray-400 hover:text-white text-sm transition-colors">
                   FAQ
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-gray-400 hover:text-white text-sm transition-colors">
+                <Link to="/terms/shipping" className="text-gray-400 hover:text-white text-sm transition-colors">
                   Shipping Policy
                 </Link>
               </li>
@@ -107,17 +107,17 @@ const Footer = () => {
             <h4 className="font-semibold text-lg mb-4">Legal</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/terms" className="text-gray-400 hover:text-white text-sm transition-colors">
+                <Link to="/terms/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-gray-400 hover:text-white text-sm transition-colors">
+                <Link to="/terms/terms-and-conditions" className="text-gray-400 hover:text-white text-sm transition-colors">
                   Terms & Conditions
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-gray-400 hover:text-white text-sm transition-colors">
+                <Link to="/terms/refund" className="text-gray-400 hover:text-white text-sm transition-colors">
                   Refund Policy
                 </Link>
               </li>

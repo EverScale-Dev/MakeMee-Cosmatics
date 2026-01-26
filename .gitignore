@@ -50,3 +50,7 @@ CLAUDE.md
 CLAUDE_ARCHIVE.md
 CLAUDE_archive_*.md
 DEPLOY.md
+
+# Policy source documents (converted to HTML in client/public/policies/)
+*.docx
+*.pdf
