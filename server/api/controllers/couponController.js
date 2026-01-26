@@ -74,16 +74,12 @@ exports.getVisibleCoupons = async (req, res) => {
     const coupons = await Coupon.find({
       isActive: true,
       visible: true,
-      $or: [
-        { expiryDate: null },
-        { expiryDate: { $gt: now } }
-      ],
-      $or: [
-        { startDate: null },
-        { startDate: { $lte: now } }
+      $and: [
+        { $or: [{ expiryDate: null }, { expiryDate: { $gt: now } }] },
+        { $or: [{ startDate: null }, { startDate: { $lte: now } }] }
       ]
     })
-      .select("code description discountType discountValue minOrderAmount maxDiscount buyQuantity freeQuantity expiryDate")
+      .select("code description discountType discountValue minOrderAmount maxDiscount buyQuantity freeQuantity expiryDate maxUses usedCount")
       .sort({ createdAt: -1 });
 
     // Filter out coupons that have reached their usage limit
