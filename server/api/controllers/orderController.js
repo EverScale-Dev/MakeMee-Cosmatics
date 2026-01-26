@@ -61,13 +61,31 @@ exports.createOrder = async (req, res) => {
       }
 
       // Determine price from product (not from client for security)
-      // If size is selected, use that price; otherwise fall back to salePrice/regularPrice
-      let productPrice = existingProduct.salePrice || existingProduct.regularPrice || 0;
+      // Priority: selectedSize price > product salePrice > product regularPrice > first size price
+      let productPrice = 0;
+
+      // First, try to get price from selected size
       if (item.selectedSize?.ml && existingProduct.sizes?.length > 0) {
         const matchingSize = existingProduct.sizes.find(s => s.ml === item.selectedSize.ml);
         if (matchingSize) {
-          productPrice = matchingSize.sellingPrice || matchingSize.originalPrice || productPrice;
+          productPrice = matchingSize.sellingPrice || matchingSize.originalPrice || 0;
         }
+      }
+
+      // If no size price found, try root product prices
+      if (!productPrice) {
+        productPrice = existingProduct.salePrice || existingProduct.regularPrice || 0;
+      }
+
+      // If still no price and product has sizes, use first size's price
+      if (!productPrice && existingProduct.sizes?.length > 0) {
+        const firstSize = existingProduct.sizes[0];
+        productPrice = firstSize.sellingPrice || firstSize.originalPrice || 0;
+      }
+
+      // Final validation - log warning if price is still 0
+      if (!productPrice) {
+        console.warn(`[Order] Product ${existingProduct.name} has no price set!`);
       }
 
       validatedProducts.push({

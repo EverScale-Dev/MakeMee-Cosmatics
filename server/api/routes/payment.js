@@ -109,12 +109,26 @@ router.post("/razorpay/initiate", protect, paymentLimiter, async (req, res) => {
       }
 
       // Get price from DB (security: never trust client price)
-      let price = product.salePrice || product.regularPrice || 0;
+      // Priority: selectedSize price > product salePrice > product regularPrice > first size price
+      let price = 0;
+
+      // First, try to get price from selected size
       if (item.selectedSize?.ml && product.sizes?.length > 0) {
         const matchingSize = product.sizes.find(s => s.ml === item.selectedSize.ml);
         if (matchingSize) {
-          price = matchingSize.sellingPrice || matchingSize.originalPrice || price;
+          price = matchingSize.sellingPrice || matchingSize.originalPrice || 0;
         }
+      }
+
+      // If no size price found, try root product prices
+      if (!price) {
+        price = product.salePrice || product.regularPrice || 0;
+      }
+
+      // If still no price and product has sizes, use first size's price
+      if (!price && product.sizes?.length > 0) {
+        const firstSize = product.sizes[0];
+        price = firstSize.sellingPrice || firstSize.originalPrice || 0;
       }
 
       validatedProducts.push({

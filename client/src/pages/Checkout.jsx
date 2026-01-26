@@ -242,6 +242,11 @@ const Checkout = () => {
           0
         ),
         name: item.product.name,
+        // Send selectedSize so backend can verify price from product sizes
+        selectedSize: item.selectedSize ? {
+          ml: item.selectedSize.ml,
+          unit: item.selectedSize.unit || 'ml',
+        } : null,
       })),
       subtotal,
       deliveryCharge,
