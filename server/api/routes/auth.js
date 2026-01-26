@@ -18,6 +18,7 @@ const {
   updateAddress,
   deleteAddress,
   setDefaultAddress,
+  deleteAccount,
 } = require('../controllers/authController');
 const protect = require('../../middlewares/protect');
 
@@ -64,5 +65,8 @@ router.post('/addresses', protect, addAddress);                    // Add new ad
 router.put('/addresses/:addressId', protect, updateAddress);       // Update address
 router.delete('/addresses/:addressId', protect, deleteAddress);    // Delete address
 router.put('/addresses/:addressId/default', protect, setDefaultAddress); // Set default
+
+// Account deletion (soft delete)
+router.delete('/account', protect, deleteAccount);                 // Delete user account
 
 module.exports = router;

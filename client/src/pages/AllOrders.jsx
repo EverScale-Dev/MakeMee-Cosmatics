@@ -62,6 +62,8 @@ export default function AllOrders() {
           paymentMethod: order.paymentMethod,
           paymentStatus: order.paymentStatus || "pending",
           customer: order.customer,
+          refundStatus: order.refundStatus || "not_applicable",
+          cancelledAt: order.cancelledAt,
         }));
         setOrders(transformed);
       } catch (error) {
@@ -224,6 +226,16 @@ export default function AllOrders() {
                     ? "Payment Failed"
                     : "Payment Pending"}
                 </span>
+                {/* Refund status for cancelled orders */}
+                {order.status === "cancelled" && order.refundStatus && order.refundStatus !== "not_applicable" && (
+                  <span className={`text-xs px-2 py-0.5 rounded ${
+                    order.refundStatus === "completed" ? "bg-green-100 text-green-700" :
+                    order.refundStatus === "failed" ? "bg-red-100 text-red-700" :
+                    "bg-yellow-100 text-yellow-700"
+                  }`}>
+                    Refund: {order.refundStatus}
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center gap-4">

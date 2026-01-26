@@ -104,6 +104,24 @@ const orderSchema = new mongoose.Schema({
     default: "pending payment",
   },
 
+  // Cancellation tracking
+  cancelledAt: { type: Date },
+  cancellationReason: { type: String },
+  cancelledBy: {
+    type: String,
+    enum: ["user", "admin", "system"],
+  },
+
+  // Refund tracking (for online payments that were paid)
+  refundStatus: {
+    type: String,
+    enum: ["not_applicable", "pending", "processing", "completed", "failed"],
+    default: "not_applicable",
+  },
+  refundAmount: { type: Number },
+  refundId: { type: String }, // Razorpay refund ID
+  refundedAt: { type: Date },
+
   createdAt: { type: Date, default: Date.now },
 });
 

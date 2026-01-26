@@ -80,6 +80,11 @@ export const authService = {
     return response.data;
   },
 
+  async deleteAccount(reason = '') {
+    const response = await api.delete('/auth/account', { data: { reason } });
+    return response.data;
+  },
+
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');

@@ -5,7 +5,8 @@ const {
   getOrderById,
   updateOrder,
   deleteOrder,
-  getMyOrders
+  getMyOrders,
+  cancelOrder
 } = require('../controllers/orderController');
 
 const { generateInvoice, downloadInvoice } = require('../controllers/invoiceController');
@@ -20,6 +21,7 @@ router.get('/my', protect, getMyOrders);                   // Get user's own ord
 router.get('/:id', protect, getOrderById);                 // Get order by ID (controller checks ownership)
 router.post('/generate-invoice', protect, generateInvoice); // Generate & send invoice
 router.get('/:orderId/download-invoice', protect, downloadInvoice); // Download invoice PDF
+router.post('/:id/cancel', protect, cancelOrder);                 // Cancel order (user or admin)
 
 // Admin routes (admin only)
 router.get('/', adminProtect, getAllOrders);              // Get all orders

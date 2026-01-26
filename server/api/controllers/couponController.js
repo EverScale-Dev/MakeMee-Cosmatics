@@ -63,6 +63,55 @@ exports.getAllCoupons = async (req, res) => {
   }
 };
 
+// @desc    Get visible coupons for customers
+// @route   GET /api/coupons/visible
+// @access  Public
+exports.getVisibleCoupons = async (req, res) => {
+  try {
+    const now = new Date();
+
+    // Get active and visible coupons that haven't expired
+    const coupons = await Coupon.find({
+      isActive: true,
+      visible: true,
+      $or: [
+        { expiryDate: null },
+        { expiryDate: { $gt: now } }
+      ],
+      $or: [
+        { startDate: null },
+        { startDate: { $lte: now } }
+      ]
+    })
+      .select("code description discountType discountValue minOrderAmount maxDiscount buyQuantity freeQuantity expiryDate")
+      .sort({ createdAt: -1 });
+
+    // Filter out coupons that have reached their usage limit
+    const validCoupons = coupons.filter(coupon => {
+      if (coupon.maxUses === null) return true;
+      return coupon.usedCount < coupon.maxUses;
+    });
+
+    res.status(200).json({
+      success: true,
+      coupons: validCoupons.map(c => ({
+        code: c.code,
+        description: c.description,
+        discountType: c.discountType,
+        discountValue: c.discountValue,
+        minOrderAmount: c.minOrderAmount,
+        maxDiscount: c.maxDiscount,
+        buyQuantity: c.buyQuantity,
+        freeQuantity: c.freeQuantity,
+        expiryDate: c.expiryDate,
+      })),
+    });
+  } catch (error) {
+    console.error("Error fetching visible coupons:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 // @desc    Create coupon (admin)
 // @route   POST /api/coupons
 // @access  Admin
@@ -81,6 +130,7 @@ exports.createCoupon = async (req, res) => {
       buyQuantity,
       freeQuantity,
       uniqueProducts,
+      visible,
     } = req.body;
 
     // Check if code already exists
@@ -102,6 +152,7 @@ exports.createCoupon = async (req, res) => {
       buyQuantity: buyQuantity || 3,
       freeQuantity: freeQuantity || 1,
       uniqueProducts: uniqueProducts || false,
+      visible: visible || false,
     });
 
     res.status(201).json({ success: true, coupon });

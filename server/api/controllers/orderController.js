@@ -6,6 +6,7 @@ const Settings = require("../../models/Settings");
 const createInvoice = require("../../utils/createInvoice");
 const sendEmail = require("../../utils/sendMail");
 const { incrementCouponUsage } = require("./couponController");
+const shiprocket = require("../../utils/shiprocket");
 
 // =========================================================
 // @desc    Create a new order
@@ -191,6 +192,10 @@ exports.getMyOrders = async (req, res) => {
         status: order.status,
         createdAt: order.createdAt,
         note: order.note,
+        // Cancellation fields
+        cancelledAt: order.cancelledAt || null,
+        cancellationReason: order.cancellationReason || null,
+        refundStatus: order.refundStatus || "not_applicable",
       })),
     });
   } catch (error) {
@@ -236,6 +241,12 @@ exports.getAllOrders = async (req, res) => {
         createdAt: order.createdAt,
         note: order.note,
         isViewed: order.isViewed,
+        // Cancellation fields
+        cancelledAt: order.cancelledAt || null,
+        cancellationReason: order.cancellationReason || null,
+        cancelledBy: order.cancelledBy || null,
+        refundStatus: order.refundStatus || "not_applicable",
+        refundAmount: order.refundAmount || null,
       })),
     });
   } catch (error) {
@@ -303,6 +314,13 @@ exports.getOrderById = async (req, res) => {
       isViewed: order.isViewed,
       razorpayOrderId: order.razorpayOrderId || null,
       razorpayPaymentId: order.razorpayPaymentId || null,
+      // Cancellation fields
+      cancelledAt: order.cancelledAt || null,
+      cancellationReason: order.cancellationReason || null,
+      cancelledBy: order.cancelledBy || null,
+      refundStatus: order.refundStatus || "not_applicable",
+      refundAmount: order.refundAmount || null,
+      refundedAt: order.refundedAt || null,
     });
   } catch (error) {
     console.error("Error fetching order:", error.message);
@@ -378,5 +396,123 @@ exports.deleteOrder = async (req, res) => {
   } catch (error) {
     console.error("Error deleting order:", error.message);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// =========================================================
+// @desc    Cancel an order (user-facing)
+// @route   POST /api/orders/:id/cancel
+// =========================================================
+
+exports.cancelOrder = async (req, res) => {
+  const { id } = req.params;
+  const { reason } = req.body;
+
+  try {
+    // Find the order
+    let order;
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      order = await Order.findById(id);
+    } else {
+      order = await Order.findOne({ orderId: parseInt(id) });
+    }
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Security: User can only cancel their own orders (admin can cancel any)
+    const isOwner = order.user && order.user.toString() === req.User._id.toString();
+    const isAdmin = req.User.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    // Check if order can be cancelled
+    // Cannot cancel if: shipped, in transit, out for delivery, delivered, completed, already cancelled
+    const nonCancellableStatuses = [
+      "shipped",
+      "in transit",
+      "out for delivery",
+      "delivered",
+      "completed",
+      "cancelled",
+    ];
+
+    if (nonCancellableStatuses.includes(order.status)) {
+      return res.status(400).json({
+        message: `Cannot cancel order with status: ${order.status}`,
+        code: "ORDER_NOT_CANCELLABLE"
+      });
+    }
+
+    // If Shiprocket shipment exists, try to cancel it
+    let shiprocketCancelled = false;
+    if (order.shiprocket?.awb) {
+      try {
+        // Only cancel if shipment is not already shipped/delivered
+        const shiprocketNonCancellable = ["shipped", "delivered"];
+        if (!shiprocketNonCancellable.includes(order.shiprocket.status)) {
+          await shiprocket.cancelShipment([order.shiprocket.awb]);
+          shiprocketCancelled = true;
+          console.log(`[Order] Shiprocket shipment cancelled for order ${order.orderId}`);
+        }
+      } catch (shiprocketError) {
+        console.error(`[Order] Failed to cancel Shiprocket shipment:`, shiprocketError.message);
+        // Continue with order cancellation even if Shiprocket fails
+        // Admin can manually handle Shiprocket cancellation
+      }
+    }
+
+    // Determine refund status for online payments
+    let refundStatus = "not_applicable";
+    let refundAmount = null;
+
+    if (order.paymentMethod === "onlinePayment" && order.paymentStatus === "paid") {
+      refundStatus = "pending";
+      refundAmount = order.totalAmount;
+    }
+
+    // Update order
+    order.status = "cancelled";
+    order.cancelledAt = new Date();
+    order.cancellationReason = reason || "Cancelled by user";
+    order.cancelledBy = isAdmin ? "admin" : "user";
+    order.refundStatus = refundStatus;
+    order.refundAmount = refundAmount;
+
+    // Update Shiprocket status if cancelled
+    if (shiprocketCancelled && order.shiprocket) {
+      order.shiprocket.status = "cancelled";
+    }
+
+    await order.save();
+
+    // Populate for response
+    const populatedOrder = await Order.findById(order._id)
+      .populate("customer", "fullName email phone shippingAddress")
+      .populate("products.product");
+
+    console.log(`[Order] Order ${order.orderId} cancelled by ${order.cancelledBy}`);
+
+    res.status(200).json({
+      message: "Order cancelled successfully",
+      order: {
+        _id: populatedOrder._id,
+        orderId: populatedOrder.orderId,
+        status: populatedOrder.status,
+        cancelledAt: populatedOrder.cancelledAt,
+        cancellationReason: populatedOrder.cancellationReason,
+        refundStatus: populatedOrder.refundStatus,
+        refundAmount: populatedOrder.refundAmount,
+        paymentMethod: populatedOrder.paymentMethod,
+        paymentStatus: populatedOrder.paymentStatus,
+      },
+      shiprocketCancelled,
+    });
+  } catch (error) {
+    console.error("Error cancelling order:", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };

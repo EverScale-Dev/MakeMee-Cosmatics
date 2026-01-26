@@ -132,6 +132,10 @@ export default function Orders() {
 
   // Check if shipment can be created for an order
   const canCreateShipment = (order) => {
+    // Cannot ship cancelled, refunded, or failed orders
+    if (["cancelled", "refunded", "failed"].includes(order.status)) {
+      return false;
+    }
     // COD orders can always be shipped (payment on delivery)
     if (order.paymentMethod === "cashOnDelivery") {
       return true;

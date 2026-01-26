@@ -44,6 +44,8 @@ const Checkout = () => {
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [visibleCoupons, setVisibleCoupons] = useState([]);
+  const [showAvailableCoupons, setShowAvailableCoupons] = useState(false);
 
   // Phone verification state
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
@@ -123,6 +125,21 @@ const Checkout = () => {
     fetchDeliverySettings();
   }, []);
 
+  // Fetch visible coupons
+  useEffect(() => {
+    const fetchVisibleCoupons = async () => {
+      try {
+        const response = await couponService.getVisibleCoupons();
+        if (response.success) {
+          setVisibleCoupons(response.coupons || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch visible coupons:", error);
+      }
+    };
+    fetchVisibleCoupons();
+  }, []);
+
   const subtotal = getTotal();
   const baseDeliveryCharge =
     deliverySettings?.freeDeliveryAbove && subtotal >= deliverySettings.freeDeliveryAbove
@@ -143,8 +160,9 @@ const Checkout = () => {
   };
 
   // Coupon handlers
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) {
+  const handleApplyCoupon = async (codeOverride = null) => {
+    const code = codeOverride || couponCode;
+    if (!code.trim()) {
       toast.error("Please enter a coupon code");
       return;
     }
@@ -165,7 +183,7 @@ const Checkout = () => {
       }));
 
       const response = await couponService.validate(
-        couponCode.trim(),
+        code.trim(),
         subtotal,
         baseDeliveryCharge,
         cartItems
@@ -173,6 +191,8 @@ const Checkout = () => {
 
       if (response.success) {
         setAppliedCoupon(response.coupon);
+        setCouponCode(code);
+        setShowAvailableCoupons(false);
         toast.success(`Coupon "${response.coupon.code}" applied!`);
       } else {
         toast.error(response.message || "Invalid coupon");
@@ -693,21 +713,63 @@ const Checkout = () => {
                 </button>
               </div>
             ) : (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Enter code"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-black/10 focus:ring-2 focus:ring-[#FC6CB4] outline-none text-sm"
-                />
-                <button
-                  onClick={handleApplyCoupon}
-                  disabled={couponLoading}
-                  className="px-4 py-2.5 bg-[#FC6CB4] text-white rounded-xl text-sm font-medium hover:bg-[#e55a9f] disabled:opacity-50"
-                >
-                  {couponLoading ? "..." : "Apply"}
-                </button>
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-black/10 focus:ring-2 focus:ring-[#FC6CB4] outline-none text-sm"
+                  />
+                  <button
+                    onClick={() => handleApplyCoupon()}
+                    disabled={couponLoading}
+                    className="px-4 py-2.5 bg-[#FC6CB4] text-white rounded-xl text-sm font-medium hover:bg-[#e55a9f] disabled:opacity-50"
+                  >
+                    {couponLoading ? "..." : "Apply"}
+                  </button>
+                </div>
+
+                {/* Available Coupons */}
+                {visibleCoupons.length > 0 && (
+                  <div>
+                    <button
+                      onClick={() => setShowAvailableCoupons(!showAvailableCoupons)}
+                      className="text-xs text-[#FC6CB4] hover:underline"
+                    >
+                      {showAvailableCoupons ? "Hide" : "View"} available coupons ({visibleCoupons.length})
+                    </button>
+
+                    {showAvailableCoupons && (
+                      <div className="mt-2 space-y-2 max-h-[200px] overflow-y-auto">
+                        {visibleCoupons.map((coupon) => (
+                          <button
+                            key={coupon.code}
+                            onClick={() => handleApplyCoupon(coupon.code)}
+                            disabled={couponLoading}
+                            className="w-full text-left bg-white border border-black/10 rounded-lg px-3 py-2 hover:border-[#FC6CB4] transition disabled:opacity-50"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-mono font-medium text-sm">{coupon.code}</span>
+                              <span className="text-xs text-[#FC6CB4]">Apply</span>
+                            </div>
+                            {coupon.description && (
+                              <p className="text-xs text-black/60 mt-0.5">{coupon.description}</p>
+                            )}
+                            <p className="text-xs text-black/50 mt-1">
+                              {coupon.discountType === "percentage" && `${coupon.discountValue}% off`}
+                              {coupon.discountType === "fixed" && `Flat ₹${coupon.discountValue} off`}
+                              {coupon.discountType === "free_delivery" && "Free delivery"}
+                              {coupon.discountType === "buy_x_get_y_free" && `Buy ${coupon.buyQuantity} Get ${coupon.freeQuantity} Free`}
+                              {coupon.minOrderAmount > 0 && ` • Min. ₹${coupon.minOrderAmount}`}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

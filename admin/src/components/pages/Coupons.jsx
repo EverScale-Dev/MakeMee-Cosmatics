@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, Pencil, Trash2, X, Percent, Truck, IndianRupee, Gift } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, X, Percent, Truck, IndianRupee, Gift, Eye } from "lucide-react";
 import couponService from "../../services/couponService";
 
 const ITEMS_PER_PAGE = 10;
@@ -190,6 +190,7 @@ export default function Coupons() {
               <th className="text-center">Max Discount</th>
               <th className="text-center">Used</th>
               <th className="text-center">Expiry</th>
+              <th className="text-center">Visible</th>
               <th className="text-center">Status</th>
               <th className="text-center">Actions</th>
             </tr>
@@ -198,7 +199,7 @@ export default function Coupons() {
           <tbody>
             {paginatedCoupons.length === 0 ? (
               <tr>
-                <td colSpan="9" className="p-8 text-center text-gray-400">
+                <td colSpan="10" className="p-8 text-center text-gray-400">
                   No coupons found
                 </td>
               </tr>
@@ -250,6 +251,17 @@ export default function Coupons() {
 
                     <td className="text-center text-gray-500 text-xs">
                       {formatDate(coupon.expiryDate)}
+                    </td>
+
+                    <td className="text-center">
+                      {coupon.visible ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                          <Eye size={12} />
+                          Yes
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-xs">No</span>
+                      )}
                     </td>
 
                     <td className="text-center">
@@ -359,6 +371,7 @@ function CouponModal({ coupon, onClose, onSave }) {
     maxUses: coupon?.maxUses || "",
     expiryDate: coupon?.expiryDate ? coupon.expiryDate.split("T")[0] : "",
     isActive: coupon?.isActive ?? true,
+    visible: coupon?.visible || false,
     buyQuantity: coupon?.buyQuantity || 3,
     freeQuantity: coupon?.freeQuantity || 1,
     uniqueProducts: coupon?.uniqueProducts || false,
@@ -385,6 +398,7 @@ function CouponModal({ coupon, onClose, onSave }) {
         buyQuantity: Number(form.buyQuantity) || 3,
         freeQuantity: Number(form.freeQuantity) || 1,
         uniqueProducts: form.uniqueProducts,
+        visible: form.visible,
       });
     } finally {
       setSaving(false);
@@ -559,16 +573,31 @@ function CouponModal({ coupon, onClose, onSave }) {
             </div>
           </div>
 
-          {/* Active Toggle */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isActive"
-              checked={form.isActive}
-              onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-              className="rounded"
-            />
-            <label htmlFor="isActive" className="text-sm">Active</label>
+          {/* Active & Visible Toggles */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isActive"
+                checked={form.isActive}
+                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                className="rounded"
+              />
+              <label htmlFor="isActive" className="text-sm">Active</label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="visible"
+                checked={form.visible}
+                onChange={(e) => setForm({ ...form, visible: e.target.checked })}
+                className="rounded"
+              />
+              <label htmlFor="visible" className="text-sm flex items-center gap-1">
+                <Eye size={14} />
+                Visible to customers
+              </label>
+            </div>
           </div>
 
           {/* Actions */}

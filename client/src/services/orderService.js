@@ -47,6 +47,11 @@ export const orderService = {
     window.URL.revokeObjectURL(url);
     return true;
   },
+
+  async cancelOrder(orderId, reason = '') {
+    const response = await api.post(`/orders/${orderId}/cancel`, { reason });
+    return response.data;
+  },
 };
 
 export default orderService;

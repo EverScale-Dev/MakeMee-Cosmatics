@@ -143,14 +143,20 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // console.log("User logged in:", user);
+    // Block login for deleted accounts
+    if (user.isDeleted) {
+      return res.status(403).json({
+        message: "This account has been deleted",
+        code: "ACCOUNT_DELETED"
+      });
+    }
 
     // Generate JWT token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "24h",
     });
 
-    res.status(200).json({   
+    res.status(200).json({
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
@@ -332,6 +338,14 @@ exports.userLogin = async (req, res) => {
 
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Block login for deleted accounts
+    if (user.isDeleted) {
+      return res.status(403).json({
+        message: "This account has been deleted",
+        code: "ACCOUNT_DELETED"
+      });
     }
 
     // Check if user registered with Google
@@ -745,6 +759,14 @@ exports.googleAuth = async (req, res) => {
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
     if (user) {
+      // Block login for deleted accounts
+      if (user.isDeleted) {
+        return res.status(403).json({
+          message: "This account has been deleted",
+          code: "ACCOUNT_DELETED"
+        });
+      }
+
       // Update googleId if user exists with email but no googleId
       if (!user.googleId) {
         user.googleId = googleId;
@@ -780,5 +802,52 @@ exports.googleAuth = async (req, res) => {
   } catch (error) {
     console.error('Google auth error:', error.message);
     res.status(401).json({ message: 'Invalid Google credential' });
+  }
+};
+
+// =========================================================
+// @desc    Soft delete user account
+// @route   DELETE /api/auth/account
+// @access  Protected
+// =========================================================
+exports.deleteAccount = async (req, res) => {
+  try {
+    const userId = req.User._id;
+    const { reason } = req.body;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Already deleted
+    if (user.isDeleted) {
+      return res.status(400).json({ message: "Account already deleted" });
+    }
+
+    // Soft delete - preserve user record for order history/accounting
+    user.isDeleted = true;
+    user.deletedAt = new Date();
+    user.deletionReason = reason || "User requested deletion";
+
+    // Clear sensitive data but keep email for records
+    user.phone = null;
+    user.phoneVerified = false;
+    user.addresses = [];
+    user.avatar = null;
+
+    await user.save();
+
+    console.log(`[Auth] Account soft-deleted: ${user.email}`);
+
+    res.status(200).json({
+      message: "Account deleted successfully",
+      // Signal frontend to logout
+      shouldLogout: true,
+    });
+  } catch (error) {
+    console.error("Error deleting account:", error.message);
+    res.status(500).json({ message: "Server error" });
   }
 };

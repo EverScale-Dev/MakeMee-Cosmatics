@@ -224,6 +224,18 @@ exports.shipOrder = async (req, res) => {
       });
     }
 
+    // Block shipment creation for cancelled/refunded/failed orders
+    const nonShippableStatuses = ["cancelled", "refunded", "failed"];
+    if (nonShippableStatuses.includes(order.status)) {
+      console.log(`[Shiprocket] Blocked shipment for ${order.status} order ${order.orderId}`);
+      return res.status(400).json({
+        success: false,
+        error: `Cannot create shipment for ${order.status} order`,
+        details: "This order cannot be shipped due to its current status",
+        orderStatus: order.status,
+      });
+    }
+
     // Validate order data
     const validationErrors = validateOrderForShipping(order);
     if (validationErrors.length > 0) {

@@ -10,6 +10,11 @@ const couponService = {
     });
     return response.data;
   },
+
+  async getVisibleCoupons() {
+    const response = await api.get('/coupons/visible');
+    return response.data;
+  },
 };
 
 export default couponService;

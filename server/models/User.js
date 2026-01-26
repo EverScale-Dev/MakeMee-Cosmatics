@@ -36,6 +36,11 @@ const userSchema = new mongoose.Schema({
     pincode: { type: String },
   },
   createdAt: { type: Date, default: Date.now },
+
+  // Soft delete fields (preserves user for order history/accounting)
+  isDeleted: { type: Boolean, default: false },
+  deletedAt: { type: Date },
+  deletionReason: { type: String },
 });
 
 // Hash password before saving user

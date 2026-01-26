@@ -5,13 +5,15 @@ const adminProtect = require("../../middlewares/adminProtect");
 const {
   validateCoupon,
   getAllCoupons,
+  getVisibleCoupons,
   createCoupon,
   updateCoupon,
   deleteCoupon,
 } = require("../controllers/couponController");
 
-// Public route - validate coupon at checkout
+// Public routes
 router.post("/validate", validateCoupon);
+router.get("/visible", getVisibleCoupons); // Get coupons visible to customers
 
 // Admin routes (admin only)
 router.get("/", adminProtect, getAllCoupons);

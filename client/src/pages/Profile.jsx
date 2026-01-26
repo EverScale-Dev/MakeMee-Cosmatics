@@ -45,6 +45,8 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [verifyPhoneOpen, setVerifyPhoneOpen] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!authUser) {
@@ -117,6 +119,22 @@ export default function Profile() {
     toast.success("Logged out successfully");
   };
 
+  const handleDeleteAccount = async (reason) => {
+    try {
+      setDeleting(true);
+      const result = await authService.deleteAccount(reason);
+      toast.success("Account deleted successfully");
+      setDeleteAccountOpen(false);
+      // Logout the user
+      logout();
+      navigate("/");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete account");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-base flex items-center justify-center">
@@ -159,7 +177,7 @@ export default function Profile() {
               onVerifyPhone={() => setVerifyPhoneOpen(true)}
             />
             <NotificationCard />
-            <LegalCard />
+            <LegalCard onDeleteAccount={() => setDeleteAccountOpen(true)} />
           </div>
 
           {/* RIGHT COLUMN */}
@@ -183,6 +201,14 @@ export default function Profile() {
           currentPhone={user.phone}
           onClose={() => setVerifyPhoneOpen(false)}
           onVerified={handlePhoneVerified}
+        />
+      )}
+
+      {deleteAccountOpen && (
+        <DeleteAccountModal
+          onClose={() => setDeleteAccountOpen(false)}
+          onConfirm={handleDeleteAccount}
+          deleting={deleting}
         />
       )}
     </div>
@@ -326,12 +352,18 @@ function NotificationCard() {
   );
 }
 
-function LegalCard() {
+function LegalCard({ onDeleteAccount }) {
   return (
     <Card title="Security & Legal" icon={Shield}>
-      <ActionRow label="Privacy Policy" />
-      <ActionRow label="Terms & Conditions" />
-      <ActionRow label="Delete Account" danger icon={Trash2} />
+      <Link to="/terms/privacy" className="block">
+        <ActionRow label="Privacy Policy" />
+      </Link>
+      <Link to="/terms/terms-and-conditions" className="block">
+        <ActionRow label="Terms & Conditions" />
+      </Link>
+      <div onClick={onDeleteAccount} className="cursor-pointer">
+        <ActionRow label="Delete Account" danger icon={Trash2} />
+      </div>
     </Card>
   );
 }
@@ -468,5 +500,87 @@ function ActionRow({ label, danger, icon: Icon }) {
       {Icon && <Icon size={14} />}
       {label}
     </button>
+  );
+}
+
+/* ======================
+   DELETE ACCOUNT MODAL
+====================== */
+
+function DeleteAccountModal({ onClose, onConfirm, deleting }) {
+  const [reason, setReason] = useState("");
+  const [confirmText, setConfirmText] = useState("");
+
+  const canDelete = confirmText.toLowerCase() === "delete";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+            <AlertCircle className="text-red-600" size={24} />
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg">Delete Account</h3>
+            <p className="text-sm text-gray-500">This action cannot be undone</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <h4 className="font-medium text-red-800 mb-2">Warning:</h4>
+            <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+              <li>Your account will be permanently deactivated</li>
+              <li>You will be logged out immediately</li>
+              <li>You won't be able to login with this email again</li>
+              <li>Your order history will be preserved for records</li>
+            </ul>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Reason for leaving (optional)
+            </label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Let us know why you're leaving..."
+              className="w-full border rounded-lg p-3 text-sm resize-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              rows={2}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Type "delete" to confirm
+            </label>
+            <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="delete"
+              className="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <button
+            onClick={onClose}
+            disabled={deleting}
+            className="flex-1 py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onConfirm(reason)}
+            disabled={!canDelete || deleting}
+            className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {deleting ? "Deleting..." : "Delete Account"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
