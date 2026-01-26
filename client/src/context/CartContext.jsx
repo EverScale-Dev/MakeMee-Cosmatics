@@ -155,8 +155,8 @@ export const CartProvider = ({ children }) => {
 
     const productId = getProductId(product);
     const sizeML = product.selectedSize?.ml;
-    // Use quantity from product object if provided, else use parameter
-    const qty = product.quantity || quantity;
+    // Always use explicit quantity (from product.quantity or parameter), ensure it's at least 1
+    const qty = Math.max(1, Number(product.quantity) || Number(quantity) || 1);
 
     setItems(prev => {
       const existingIndex = prev.findIndex(item =>

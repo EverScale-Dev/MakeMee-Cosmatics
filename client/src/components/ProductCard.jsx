@@ -102,6 +102,7 @@ const ProductCard = ({ product }) => {
       ...product,
       id: productId,
       selectedSize,
+      quantity: 1, // Explicitly set quantity to 1
     });
     trackEvent("AddToCart", {
       content_ids: [productId],

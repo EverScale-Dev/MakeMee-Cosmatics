@@ -70,6 +70,17 @@ export default function Wishlist() {
 ========================= */
 
 function WishlistCard({ product, onRemove, onView }) {
+  // Get image - products use images array, not image
+  const productImage = product.images?.[0] || product.image || '/placeholder.png';
+
+  // Get price with fallbacks
+  const productPrice = product.salePrice ||
+    product.regularPrice ||
+    product.sizes?.[0]?.sellingPrice ||
+    product.sizes?.[0]?.originalPrice ||
+    product.price ||
+    0;
+
   return (
     <div className="bg-white rounded-2xl border border-[#731162]/20 hover:shadow-lg transition overflow-hidden flex flex-col">
 
@@ -79,7 +90,7 @@ function WishlistCard({ product, onRemove, onView }) {
         onClick={onView}
       >
         <img
-          src={product.image}
+          src={productImage}
           alt={product.name}
           className="w-full h-full object-cover"
         />
@@ -92,7 +103,7 @@ function WishlistCard({ product, onRemove, onView }) {
         </h3>
 
         <p className="text-lg font-semibold mt-2 text-[#731162]">
-          ₹{product.price}
+          ₹{productPrice}
         </p>
 
         <div className="mt-auto flex gap-3 pt-4">
