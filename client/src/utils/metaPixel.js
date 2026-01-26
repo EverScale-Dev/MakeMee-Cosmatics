@@ -1,18 +1,21 @@
-// Check if fbq is available
-const fbq = (...args) => {
+// Check if fbq is available and fire event
+const fireFbq = (...args) => {
   if (typeof window !== "undefined" && window.fbq) {
+    console.log("[Meta Pixel] Firing event:", args);
     window.fbq(...args);
+  } else {
+    console.warn("[Meta Pixel] fbq not available");
   }
 };
 
 // Basic PageView tracking
 export const trackPageView = () => {
-  fbq("track", "PageView");
+  fireFbq("track", "PageView");
 };
 
 // Generic event tracking
 export const trackEvent = (event, params = {}) => {
-  fbq("track", event, params);
+  fireFbq("track", event, params);
 };
 
 // AddToCart event
@@ -26,7 +29,7 @@ export const trackAddToCart = (product, quantity = 1) => {
     0
   );
 
-  fbq("track", "AddToCart", {
+  fireFbq("track", "AddToCart", {
     content_name: product.name,
     content_ids: [product._id || product.id],
     content_type: "product",
@@ -43,7 +46,7 @@ export const trackAddToCart = (product, quantity = 1) => {
 // InitiateCheckout event
 // Fires when a user begins the checkout process
 export const trackInitiateCheckout = (items, totalValue) => {
-  fbq("track", "InitiateCheckout", {
+  fireFbq("track", "InitiateCheckout", {
     content_ids: items.map(item => item.product?._id || item.product?.id || item.id),
     content_type: "product",
     num_items: items.reduce((sum, item) => sum + (item.quantity || 1), 0),
@@ -55,7 +58,7 @@ export const trackInitiateCheckout = (items, totalValue) => {
 // Purchase event
 // Fires when a user completes a purchase
 export const trackPurchase = (orderId, items, totalValue) => {
-  fbq("track", "Purchase", {
+  fireFbq("track", "Purchase", {
     content_ids: items.map(item => item.product || item.productId || item.id),
     content_type: "product",
     num_items: items.reduce((sum, item) => sum + (item.quantity || 1), 0),
@@ -76,7 +79,7 @@ export const trackAddToWishlist = (product) => {
     0
   );
 
-  fbq("track", "AddToWishlist", {
+  fireFbq("track", "AddToWishlist", {
     content_name: product.name,
     content_ids: [product._id || product.id],
     content_type: "product",
@@ -95,7 +98,7 @@ export const trackViewContent = (product) => {
     0
   );
 
-  fbq("track", "ViewContent", {
+  fireFbq("track", "ViewContent", {
     content_name: product.name,
     content_ids: [product._id || product.id],
     content_type: "product",
