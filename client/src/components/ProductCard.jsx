@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, ShoppingCart } from "lucide-react";
 import { gsap } from "gsap";
+import { trackEvent } from "@/utils/metaPixel";
 
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
@@ -23,7 +24,7 @@ const ProductCard = ({ product }) => {
           ml: null,
           originalPrice: product.regularPrice,
           sellingPrice: product.salePrice,
-        }
+        },
   );
 
   const { addToCart, isInCart } = useCart();
@@ -38,7 +39,9 @@ const ProductCard = ({ product }) => {
 
     // Optimize images for card display (400px width)
     const optimizedImage0 = optimizeImage(product.images?.[0], { width: 400 });
-    const optimizedImage1 = hasHoverImage ? optimizeImage(product.images[1], { width: 400 }) : null;
+    const optimizedImage1 = hasHoverImage
+      ? optimizeImage(product.images[1], { width: 400 })
+      : null;
 
     const handleMouseEnter = () => {
       gsap.to(card, {
@@ -100,6 +103,13 @@ const ProductCard = ({ product }) => {
       id: productId,
       selectedSize,
     });
+    trackEvent("AddToCart", {
+      content_ids: [productId],
+      content_name: product.name,
+      content_type: "product",
+      value: selectedSize.sellingPrice,
+      currency: "INR",
+    });
   };
 
   return (
@@ -112,7 +122,10 @@ const ProductCard = ({ product }) => {
         <Link to={`/product/${productId}`}>
           <img
             ref={imageRef}
-            src={optimizeImage(product.images?.[0], { width: 400 }) || "/placeholder.png"}
+            src={
+              optimizeImage(product.images?.[0], { width: 400 }) ||
+              "/placeholder.png"
+            }
             alt={product.name}
             loading="lazy"
             className="w-full h-full object-cover"
@@ -129,7 +142,17 @@ const ProductCard = ({ product }) => {
         {/* ACTION BUTTONS */}
         <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
-            onClick={() => toggleWishlist({ ...product, id: productId })}
+            onClick={() => {
+              toggleWishlist({ ...product, id: productId });
+
+              trackEvent("AddToWishlist", {
+                content_ids: [productId],
+                content_name: product.name,
+                content_type: "product",
+                value: selectedSize.sellingPrice,
+                currency: "INR",
+              });
+            }}
             className={`p-2 rounded-full shadow-lg
               ${
                 isInWishlist(productId)
@@ -181,7 +204,9 @@ const ProductCard = ({ product }) => {
               ₹{selectedSize.sellingPrice}
             </span>
             {selectedSize.ml && (
-              <p className="text-xs text-gray-500">{selectedSize.ml} {selectedSize.unit || 'ml'}</p>
+              <p className="text-xs text-gray-500">
+                {selectedSize.ml} {selectedSize.unit || "ml"}
+              </p>
             )}
             {!selectedSize.ml && product.weight && (
               <p className="text-xs text-gray-500">{product.weight}</p>

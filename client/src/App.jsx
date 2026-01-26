@@ -26,9 +26,9 @@ import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import TermsAndConditions from "./pages/TermsAndConditions";
 
-if ("scrollRestoration" in window.history) {
-  window.history.scrollRestoration = "manual";
-}
+import { trackPageView } from "./utils/metaPixel";
+
+
 
 // Auth redirect wrapper - redirects logged-in users away from login/signup
 function AuthRoute({ children }) {
@@ -65,6 +65,10 @@ function AppLayout() {
     setCartSyncCallback(syncWithBackend);
   }, [syncWithBackend]);
 
+    useEffect(() => {
+    trackPageView();
+  }, [location.pathname]);
+
   const hideNavbarRoutes = [
     "/account",
   ];
@@ -75,13 +79,6 @@ function AppLayout() {
 
   return (
     <div className="flex flex-col min-h-screen">
-       <Toaster
-        position="bottom-right"
-        richColors
-        closeButton
-        duration={3000}
-      />
-      
       {!shouldHideNavbar && (
         <Navbar
           isAuthenticated={isLoggedIn}

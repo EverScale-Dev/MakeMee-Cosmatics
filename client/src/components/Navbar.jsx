@@ -119,7 +119,7 @@ const Navbar = ({ isAuthenticated = false }) => {
         <div className="flex items-center justify-between h-16">
           {/* LOGO */}
           <Link to="/" className="flex items-center">
-            <img src={makemee} alt="MAKEMEE" className="h-12 object-contain" />
+            <img src={makemee} alt="MAKEMEE" className="h-18 object-contain" />
           </Link>
 
           {/* DESKTOP NAV */}

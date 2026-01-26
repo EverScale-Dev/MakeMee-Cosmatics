@@ -18,6 +18,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import { usePageTransition } from "@/hooks/useGSAP";
 import { toast } from "sonner";
 import { optimizeImage, getThumbnail } from "@/utils/cloudinaryUrl";
+import { trackEvent } from "@/utils/metaPixel";
 
 // Transform backend product to expected format
 const transformBackendProduct = (p) => {
@@ -32,15 +33,17 @@ const transformBackendProduct = (p) => {
   return {
     ...p,
     id: p._id || p.id,
-    sizes: [{
-      ml: parseInt(p.weight) || 30,
-      originalPrice: p.regularPrice || p.salePrice || 0,
-      sellingPrice: p.salePrice || p.regularPrice || 0,
-      inStock: true,
-    }],
-    images: p.images || ['/placeholder.png'],
+    sizes: [
+      {
+        ml: parseInt(p.weight) || 30,
+        originalPrice: p.regularPrice || p.salePrice || 0,
+        sellingPrice: p.salePrice || p.regularPrice || 0,
+        inStock: true,
+      },
+    ],
+    images: p.images || ["/placeholder.png"],
     rating: p.rating || 4.5,
-    shortDescription: p.description || p.shortDescription || '',
+    shortDescription: p.description || p.shortDescription || "",
   };
 };
 
@@ -64,7 +67,11 @@ const ProductDetails = () => {
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [reviewForm, setReviewForm] = useState({ name: '', rating: 5, message: '' });
+  const [reviewForm, setReviewForm] = useState({
+    name: "",
+    rating: 5,
+    message: "",
+  });
   const [submittingReview, setSubmittingReview] = useState(false);
 
   // Fetch product on mount
@@ -131,7 +138,7 @@ const ProductDetails = () => {
         message: reviewForm.message,
       });
       toast.success("Review submitted! It will appear after admin approval.");
-      setReviewForm({ name: '', rating: 5, message: '' });
+      setReviewForm({ name: "", rating: 5, message: "" });
       setShowReviewForm(false);
     } catch (err) {
       toast.error("Failed to submit review");
@@ -171,12 +178,28 @@ const ProductDetails = () => {
       quantity,
     });
 
+    trackEvent("AddToCart", {
+      content_ids: [product._id || product.id],
+      content_name: product.name,
+      content_type: "product",
+      value: selectedSize.sellingPrice * quantity,
+      currency: "INR",
+    });
+
     toast.success(
-      `${quantity} × ${product.name} (${selectedSize.ml} ${selectedSize.unit || 'ml'}) added to cart`
+      `${quantity} × ${product.name} (${selectedSize.ml} ${selectedSize.unit || "ml"}) added to cart`,
     );
   };
 
   const handleBuyNow = () => {
+    trackEvent("InitiateCheckout", {
+      content_ids: [product._id || product.id],
+      content_name: product.name,
+      content_type: "product",
+      value: selectedSize.sellingPrice * quantity,
+      currency: "INR",
+      num_items: quantity,
+    });
     handleAddToCart();
     navigate("/cart");
   };
@@ -188,16 +211,30 @@ const ProductDetails = () => {
   const formatIngredients = () => {
     if (!product.ingredients || product.ingredients.length === 0) return null;
     // Check if ingredients is array of objects or array of strings
-    if (typeof product.ingredients[0] === 'object') {
-      return product.ingredients.map(ing => `${ing.name}: ${ing.benefit}`).join("\n\n");
+    if (typeof product.ingredients[0] === "object") {
+      return product.ingredients
+        .map((ing) => `${ing.name}: ${ing.benefit}`)
+        .join("\n\n");
     }
     return product.ingredients.join(", ");
   };
 
   const tabs = [
-    { id: "description", label: "Description", content: product.shortDescription || product.description },
-    { id: "usage", label: "How to Use", content: product.howToUse || product.usage },
-    { id: "sourcing", label: "Ingredients & Sourcing Info", content: product.sourcingInfo },
+    {
+      id: "description",
+      label: "Description",
+      content: product.shortDescription || product.description,
+    },
+    {
+      id: "usage",
+      label: "How to Use",
+      content: product.howToUse || product.usage,
+    },
+    {
+      id: "sourcing",
+      label: "Ingredients & Sourcing Info",
+      content: product.sourcingInfo,
+    },
   ];
 
   return (
@@ -218,7 +255,9 @@ const ProductDetails = () => {
             <AnimatedSection>
               <div className="aspect-square rounded-3xl overflow-hidden bg-black/5">
                 <img
-                  src={optimizeImage(product.images[selectedImage], { width: 800 })}
+                  src={optimizeImage(product.images[selectedImage], {
+                    width: 800,
+                  })}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
@@ -270,10 +309,12 @@ const ProductDetails = () => {
                 <p className="font-medium mb-2">Select Size</p>
                 <div className="flex flex-wrap gap-3">
                   {product.sizes.map((size) => {
-                    const isOutOfStock = size.inStock === false || (size.stock !== undefined && size.stock <= 0);
+                    const isOutOfStock =
+                      size.inStock === false ||
+                      (size.stock !== undefined && size.stock <= 0);
                     return (
                       <button
-                        key={`${size.ml}-${size.unit || 'ml'}`}
+                        key={`${size.ml}-${size.unit || "ml"}`}
                         onClick={() => {
                           if (!isOutOfStock) {
                             setSelectedSize(size);
@@ -285,11 +326,11 @@ const ProductDetails = () => {
                           isOutOfStock
                             ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
                             : selectedSize?.ml === size.ml
-                            ? "border-[#FC6CB4] bg-[#FC6CB4]/20"
-                            : "border-black/20"
+                              ? "border-[#FC6CB4] bg-[#FC6CB4]/20"
+                              : "border-black/20"
                         }`}
                       >
-                        {size.ml} {size.unit || 'ml'}
+                        {size.ml} {size.unit || "ml"}
                         {isOutOfStock && (
                           <span className="absolute -top-2 -right-2 text-[10px] bg-red-500 text-white px-1 rounded">
                             Out
@@ -314,9 +355,8 @@ const ProductDetails = () => {
                 <span className="text-sm bg-[#F0A400]/20 px-2 rounded">
                   {Math.round(
                     (1 -
-                      selectedSize.sellingPrice /
-                        selectedSize.originalPrice) *
-                      100
+                      selectedSize.sellingPrice / selectedSize.originalPrice) *
+                      100,
                   )}
                   % OFF
                 </span>
@@ -325,7 +365,9 @@ const ProductDetails = () => {
               {/* Key Features */}
               {product.features && product.features.length > 0 && (
                 <div className="bg-[#FDE6F1] rounded-2xl p-4">
-                  <h3 className="font-semibold text-[#731162] mb-3">Why You'll Love It</h3>
+                  <h3 className="font-semibold text-[#731162] mb-3">
+                    Why You'll Love It
+                  </h3>
                   <ul className="space-y-2">
                     {product.features.map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-sm">
@@ -340,12 +382,19 @@ const ProductDetails = () => {
               {/* Key Ingredients */}
               {product.ingredients && product.ingredients.length > 0 && (
                 <div className="bg-gray-50 rounded-2xl p-4">
-                  <h3 className="font-semibold text-[#731162] mb-3">Key Ingredients</h3>
+                  <h3 className="font-semibold text-[#731162] mb-3">
+                    Key Ingredients
+                  </h3>
                   <div className="space-y-2">
                     {product.ingredients.map((ing, idx) => (
                       <div key={idx} className="text-sm">
                         <span className="font-medium">{ing.name || ing}</span>
-                        {ing.benefit && <span className="text-gray-600"> — {ing.benefit}</span>}
+                        {ing.benefit && (
+                          <span className="text-gray-600">
+                            {" "}
+                            — {ing.benefit}
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -354,33 +403,44 @@ const ProductDetails = () => {
 
               {/* Quantity */}
               {(() => {
-                const isOutOfStock = selectedSize?.inStock === false || (selectedSize?.stock !== undefined && selectedSize?.stock <= 0);
-                const maxQty = selectedSize?.stock > 0 ? selectedSize.stock : 10;
-                return !isOutOfStock && (
-                  <div className="flex items-center gap-4">
-                    <span className="font-medium">Quantity</span>
-                    <div className="flex items-center bg-black/5 rounded-lg">
-                      <button
-                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="p-3"
-                      >
-                        <Minus />
-                      </button>
-                      <span className="w-12 text-center">{quantity}</span>
-                      <button
-                        onClick={() => setQuantity(Math.min(maxQty, quantity + 1))}
-                        className="p-3"
-                      >
-                        <Plus />
-                      </button>
+                const isOutOfStock =
+                  selectedSize?.inStock === false ||
+                  (selectedSize?.stock !== undefined &&
+                    selectedSize?.stock <= 0);
+                const maxQty =
+                  selectedSize?.stock > 0 ? selectedSize.stock : 10;
+                return (
+                  !isOutOfStock && (
+                    <div className="flex items-center gap-4">
+                      <span className="font-medium">Quantity</span>
+                      <div className="flex items-center bg-black/5 rounded-lg">
+                        <button
+                          onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                          className="p-3"
+                        >
+                          <Minus />
+                        </button>
+                        <span className="w-12 text-center">{quantity}</span>
+                        <button
+                          onClick={() =>
+                            setQuantity(Math.min(maxQty, quantity + 1))
+                          }
+                          className="p-3"
+                        >
+                          <Plus />
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )
                 );
               })()}
 
               {/* Actions */}
               {(() => {
-                const isOutOfStock = selectedSize?.inStock === false || (selectedSize?.stock !== undefined && selectedSize?.stock <= 0);
+                const isOutOfStock =
+                  selectedSize?.inStock === false ||
+                  (selectedSize?.stock !== undefined &&
+                    selectedSize?.stock <= 0);
                 return (
                   <div className="flex gap-3">
                     <button
@@ -406,7 +466,19 @@ const ProductDetails = () => {
                       Buy Now
                     </button>
 
-                    <button onClick={() => toggleWishlist(product)}>
+                    <button
+                      onClick={() => {
+                        toggleWishlist(product);
+
+                        trackEvent("AddToWishlist", {
+                          content_ids: [product._id || product.id],
+                          content_name: product.name,
+                          content_type: "product",
+                          value: selectedSize.sellingPrice,
+                          currency: "INR",
+                        });
+                      }}
+                    >
                       <Heart
                         className={`w-6 h-6 ${
                           isInWishlist(product.id)
@@ -459,27 +531,38 @@ const ProductDetails = () => {
 
           {/* Review Form */}
           {showReviewForm && (
-            <form onSubmit={handleSubmitReview} className="mb-8 p-6 bg-gray-50 rounded-xl">
+            <form
+              onSubmit={handleSubmitReview}
+              className="mb-8 p-6 bg-gray-50 rounded-xl"
+            >
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Your Name</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Your Name
+                  </label>
                   <input
                     type="text"
                     value={reviewForm.name}
-                    onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
+                    onChange={(e) =>
+                      setReviewForm({ ...reviewForm, name: e.target.value })
+                    }
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FC6CB4] outline-none"
                     placeholder="Enter your name"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Rating</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Rating
+                  </label>
                   <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
                         type="button"
-                        onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                        onClick={() =>
+                          setReviewForm({ ...reviewForm, rating: star })
+                        }
                         className="text-2xl"
                       >
                         <Star
@@ -494,10 +577,14 @@ const ProductDetails = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Your Review</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Your Review
+                  </label>
                   <textarea
                     value={reviewForm.message}
-                    onChange={(e) => setReviewForm({ ...reviewForm, message: e.target.value })}
+                    onChange={(e) =>
+                      setReviewForm({ ...reviewForm, message: e.target.value })
+                    }
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FC6CB4] outline-none resize-none"
                     rows={4}
                     placeholder="Share your experience with this product..."
@@ -523,7 +610,10 @@ const ProductDetails = () => {
           ) : reviews.length > 0 ? (
             <div className="space-y-6">
               {reviews.map((review, idx) => (
-                <div key={review._id || idx} className="border-b pb-6 last:border-0">
+                <div
+                  key={review._id || idx}
+                  className="border-b pb-6 last:border-0"
+                >
                   <div className="flex items-center gap-3 mb-2">
                     <span className="font-semibold">{review.name}</span>
                     <div className="flex">
