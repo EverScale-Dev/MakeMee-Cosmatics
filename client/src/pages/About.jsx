@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { ArrowLeft } from "lucide-react";
-import productImg from "../assets/fasewash.png";
-import { LiquidGlass } from "@/components/liquid-glass";
 
+import productImg from "../assets/fasewash.png";
 import herobg from "../assets/about/hero.png";
 import aftervsbefore from "../assets/about/aftervsbefore.jpg";
 import guidebynature from "../assets/about/guidebynature.jpg";
 import aboutside from "../assets/about/about-side.png";
+
+import { LiquidGlass } from "@/components/liquid-glass";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -50,14 +51,14 @@ export default function About() {
     });
   }, []);
 
-  /* PARALLAX SCROLL */
+  /* PARALLAX */
   useEffect(() => {
     gsap.utils.toArray(".parallax").forEach((el) => {
       gsap.fromTo(
         el,
-        { y: 80 },
+        { y: 60 },
         {
-          y: -80,
+          y: -60,
           scrollTrigger: {
             trigger: el,
             start: "top bottom",
@@ -71,25 +72,25 @@ export default function About() {
 
   /* STORY OPEN */
   useEffect(() => {
-    if (showStory) {
-      gsap.fromTo(
-        storyRef.current,
-        { y: "100%" },
-        { y: 0, duration: 1, ease: "power4.out" },
-      );
+    if (!showStory) return;
 
-      gsap.fromTo(
-        imageRef.current,
-        { x: 80, opacity: 0 },
-        { x: 0, opacity: 1, delay: 0.6, duration: 1.2 },
-      );
+    gsap.fromTo(
+      storyRef.current,
+      { y: "100%" },
+      { y: 0, duration: 1, ease: "power4.out" },
+    );
 
-      gsap.fromTo(
-        storyTextRef.current,
-        { x: -60, opacity: 0 },
-        { x: 0, opacity: 1, delay: 0.4, duration: 1.2 },
-      );
-    }
+    gsap.fromTo(
+      imageRef.current,
+      { x: 60, opacity: 0 },
+      { x: 0, opacity: 1, delay: 0.6, duration: 1.2 },
+    );
+
+    gsap.fromTo(
+      storyTextRef.current,
+      { x: -40, opacity: 0 },
+      { x: 0, opacity: 1, delay: 0.4, duration: 1.2 },
+    );
   }, [showStory]);
 
   const closeStory = () => {
@@ -101,8 +102,8 @@ export default function About() {
     });
   };
 
+  /* IMAGE + TEXT SCROLL */
   useEffect(() => {
-    // IMAGE FADE-IN
     gsap.utils.toArray(".fade-image").forEach((img) => {
       const section = img.closest(".story-section");
 
@@ -116,18 +117,16 @@ export default function About() {
           ease: "power3.out",
           scrollTrigger: {
             trigger: section,
-            start: "top 0%",
-            end: "bottom 40%",
+            start: "top 80%",
             once: true,
           },
         },
       );
     });
 
-    // TEXT SLIDE-IN
     gsap.utils.toArray(".slide-text").forEach((text) => {
       const section = text.closest(".story-section");
-      const direction = text.dataset.direction === "right" ? 80 : -80;
+      const direction = text.dataset.direction === "right" ? 60 : -60;
 
       gsap.fromTo(
         text,
@@ -149,7 +148,7 @@ export default function About() {
 
   return (
     <>
-      {/* HERO SECTION */}
+      {/* HERO */}
       <section className="relative min-h-screen bg-black overflow-hidden">
         <div
           ref={bgRef}
@@ -165,7 +164,7 @@ export default function About() {
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-24 grid lg:grid-cols-2 gap-20 items-center">
           <div ref={textRef}>
-            <h1 className="font-serif text-white text-5xl lg:text-6xl">
+            <h1 className="font-serif text-white text-4xl sm:text-5xl lg:text-6xl">
               Essentiality
               <br />
               of Beauty
@@ -187,15 +186,16 @@ export default function About() {
 
           <div
             ref={cardRef}
-            className="bg-[#FFF1F7] rounded-xl p-10 max-w-md ml-auto shadow-2xl flex flex-col items-center gap-4 mt-10"
+            className="bg-[#FFF1F7] rounded-xl p-8 max-w-md ml-auto shadow-2xl flex flex-col items-center gap-4 mt-10"
           >
             <h3 className="text-center text-xs tracking-widest mb-3">
               WHEN CARE MEETS SCIENCE
             </h3>
+
             <img
               src={aboutside}
               alt="art"
-              className="w-40 h-52 object-cover rounded-md shadow-md"
+              className="w-36 h-48 object-cover rounded-md shadow-md"
             />
 
             <p className="text-xs text-gray-600 leading-relaxed text-center">
@@ -206,52 +206,48 @@ export default function About() {
         </div>
       </section>
 
-      {/* PARALLAX CONTENT */}
+      {/* STORY */}
       {showStory && (
         <section
           ref={storyRef}
-          className="fixed inset-0 z-50 bg-primary overflow-y-auto pt-20 sm:pt-0 no-scrollbar"
+          className="fixed inset-0 z-50 bg-primary overflow-y-auto overscroll-contain pt-16 sm:pt-0 no-scrollbar"
         >
-          {/* BACK BUTTON */}
           <button
             onClick={closeStory}
-            className="fixed top-6 left-6 z-50 text-black flex items-center gap-2"
+            className="fixed top-4 left-4 z-50 flex items-center gap-2"
           >
             <ArrowLeft size={22} />
             Back
           </button>
 
-          {/* LIQUID GLASS WRAPPER */}
-          <div className="relative w-full min-h-screen p-10 mt-10 cursor-none overflow-hidden">
-            {/* MAIN GLASS CARD */}
+          <div className="relative w-full min-h-screen p-4 sm:p-8 lg:p-12">
             <div
-              className="relative w-full min-h-ful rounded-xl bg-white/20
-                    backdrop-blur-[28px]
-                    border border-white
-                    rounded-2xl
-                    shadow-[inset_0_1px_150px_rgba(252, 108, 180, 0.05),inset_0_-20px_40px_rgba(252,108,180,0.15),0_20px_50px_rgba(252,108,180,0.25)]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(180deg, rgba(255,255,255,0.3), rgba(255,255,255,0.3))",
-              }}
+              className="
+                relative w-full min-h-full
+                bg-white/20
+                backdrop-blur-[28px]
+                border border-white
+                rounded-xl sm:rounded-2xl
+                px-4 sm:px-8 lg:px-14
+                py-8 sm:py-12
+                shadow-[inset_0_1px_150px_rgba(252,108,180,0.05),inset_0_-20px_40px_rgba(252,108,180,0.15),0_20px_50px_rgba(252,108,180,0.25)]
+              "
             >
-              {/* LIQUID GLASS EFFECT */}
               <div className="hidden lg:block">
                 <LiquidGlass borderRadius={60} />
               </div>
 
               {/* STORY HERO */}
-              <div className="min-h-screen flex items-center ml-10 mr-10">
-                <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-24 items-center">
-                  {/* TEXT */}
+              <div className="min-h-screen flex items-center">
+                <div className="max-w-7xl mx-auto grid gap-16 lg:grid-cols-2 items-center">
                   <div ref={storyTextRef}>
-                    <h2 className="font-serif text-main text-6xl text-left lg:text-7xl leading-tight mb-8">
+                    <h2 className="font-serif text-main text-4xl sm:text-5xl lg:text-7xl leading-tight mb-8">
                       How MakeMee
                       <br />
                       Began
                     </h2>
 
-                    <p className="text-[#444] text-lg leading-relaxed max-w-xl">
+                    <p className="text-[#444] text-base sm:text-lg leading-relaxed max-w-full sm:max-w-xl">
                       MakeMee was founded with a clear purpose — to create
                       skincare that feels balanced, reliable, and easy to trust.
                       <br />
@@ -261,12 +257,11 @@ export default function About() {
                     </p>
                   </div>
 
-                  {/* PRODUCT IMAGE */}
                   <div ref={imageRef} className="flex justify-center">
                     <img
                       src={productImg}
                       alt="product"
-                      className="w-[420px] lg:w-[520px]"
+                      className="w-[240px] sm:w-[320px] lg:w-[520px]"
                       style={{
                         filter:
                           "drop-shadow(0 35px 50px rgba(115, 17, 98, 0.8))",
@@ -276,35 +271,34 @@ export default function About() {
                 </div>
               </div>
 
-              {/* STORY PARALLAX SECTIONS */}
-              <section className="py-40">
-                <div className="max-w-7xl mx-auto px-6 space-y-40">
-                  {/* SECTION 1 */}
-                  <div className="story-section grid lg:grid-cols-2 gap-20 items-center parallax">
+              {/* STORY SECTIONS */}
+              <section className="py-25">
+                <div className="max-w-7xl mx-auto space-y-32">
+                  <div className="story-section grid lg:grid-cols-2 gap-16 items-center parallax">
                     <div className="slide-text" data-direction="left">
-                      <h3 className="font-serif text-5xl text-main mb-6">
+                      <h3 className="font-serif text-main text-3xl sm:text-4xl lg:text-5xl mb-6">
                         A Thoughtful
                         <br />
                         Approach to Skincare
                       </h3>
-                      <p className="text-[#444] text-lg max-w-xl leading-relaxed">
+                      <p className="text-[#444] text-base sm:text-lg max-w-xl leading-relaxed">
                         From the outset, MakeMee has followed a considered
                         approach to product development.
                       </p>
                     </div>
 
-                    <div className="bg-white p-6 rounded-2xl shadow-xl fade-image">
+                    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xl fade-image">
                       <img
                         src={aftervsbefore}
                         alt="formulation"
-                        className="rounded-xl w-full object-cover"
+                        className="rounded-xl w-full object-cover "
                       />
                     </div>
                   </div>
 
-                  {/* SECTION 2 */}
-                  <div className="story-section grid lg:grid-cols-2 gap-20 items-center parallax">
-                    <div className="order-2 lg:order-1 bg-white p-6 rounded-2xl shadow-xl fade-image">
+                  <div className="story-section grid lg:grid-cols-2 gap-16 items-center parallax">
+                    {/* IMAGE – LEFT ON DESKTOP */}
+                    <div className="order-2 lg:order-1 bg-white p-4 sm:p-6 rounded-xl shadow-xl fade-image">
                       <img
                         src={guidebynature}
                         alt="nature"
@@ -312,16 +306,17 @@ export default function About() {
                       />
                     </div>
 
+                    {/* TEXT – RIGHT ON DESKTOP */}
                     <div
                       className="order-1 lg:order-2 slide-text"
                       data-direction="right"
                     >
-                      <h3 className="font-serif text-5xl text-main mb-6">
+                      <h3 className="font-serif text-main text-3xl sm:text-4xl lg:text-5xl mb-6">
                         Guided by Nature,
                         <br />
                         Refined by Care
                       </h3>
-                      <p className="text-[#444] text-lg max-w-xl leading-relaxed">
+                      <p className="text-[#444] text-base sm:text-lg max-w-xl leading-relaxed">
                         Ingredients are chosen for effectiveness, safety, and
                         long-term skin health.
                       </p>

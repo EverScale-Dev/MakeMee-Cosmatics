@@ -82,7 +82,7 @@ function AppLayout() {
     <div className="flex flex-col min-h-screen">
       {!shouldHideNavbar && (
         <Navbar
-          isAuthenticated={isLoggedIn}
+          isAuthenticated={true}
         />
       )}
 

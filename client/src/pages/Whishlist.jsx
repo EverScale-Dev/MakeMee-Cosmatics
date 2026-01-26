@@ -86,7 +86,7 @@ function WishlistCard({ product, onRemove, onView }) {
 
       {/* IMAGE */}
       <div
-        className="h-48 bg-[#FC6CB4]/10 cursor-pointer"
+        className="h-55 bg-[#FC6CB4]/10 cursor-pointer"
         onClick={onView}
       >
         <img

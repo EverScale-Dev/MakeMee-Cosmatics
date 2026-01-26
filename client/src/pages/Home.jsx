@@ -9,8 +9,8 @@ import StorySection from "../components/StorySection";
 import { productService } from "../services";
 import { useHeroAnimation } from "../animations/useHeroAnimation";
 
-import pcbanner from "../assets/banner-desktop.gif";
-import pcbannerMobile from "../assets/banner-mobile.gif";
+import pcbanner from "../assets/banner-desktop.jpeg";
+import pcbannerMobile from "../assets/banner-mobile.jpeg";
 
 import Hero1 from "../assets/hero/HERO1.png";
 import Hero2 from "../assets/hero/HERO2.png";
@@ -199,7 +199,7 @@ const Home = ({ onAddToCart, onAddToWishlist }) => {
       )}
 
       {/* ================= BANNER ================= */}
-      <section>
+      <section className="mt-10">
         <img src={pcbanner} className="hidden md:block w-full" />
         <img src={pcbannerMobile} className="md:hidden w-full" />
       </section>
