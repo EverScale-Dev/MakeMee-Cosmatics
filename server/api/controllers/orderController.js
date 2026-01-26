@@ -16,6 +16,19 @@ exports.createOrder = async (req, res) => {
   const { customer, products, totalAmount, paymentMethod, note, couponCode, couponDiscount } = req.body;
 
   try {
+    // CRITICAL: Online payment orders MUST NOT be created directly
+    // They must go through the payment verification flow
+    // Only COD orders can be created directly
+    if (paymentMethod === "onlinePayment") {
+      // Check if this is an internal call from payment verification (has verified flag)
+      if (!req._internalPaymentVerified) {
+        return res.status(400).json({
+          message: "Online payment orders must be created through the payment flow",
+          code: "PAYMENT_REQUIRED"
+        });
+      }
+    }
+
     // Check if phone verification is required (from admin settings)
     const phoneVerificationRequired = await Settings.get("phoneVerificationRequired", false);
 
@@ -81,6 +94,16 @@ exports.createOrder = async (req, res) => {
     const rawTotal = subtotal + deliveryCharge - discount;
     const finalTotal = Math.max(0, rawTotal);
 
+    // Determine payment status based on payment method
+    // COD orders: paymentStatus = "pending" (will be paid on delivery)
+    // Online orders (coming through payment flow): paymentStatus = "paid"
+    const paymentStatus = paymentMethod === "onlinePayment" ? "paid" : "pending";
+
+    // Determine initial order status
+    // COD orders: "pending payment" (misleading name, but keeping for compatibility)
+    // Online paid orders: "processing" (payment confirmed, ready to process)
+    const initialStatus = paymentMethod === "onlinePayment" ? "processing" : "pending payment";
+
     // ✅ Create new order (link to logged-in user if available)
     const order = await Order.create({
       user: req.User?._id,  // Link to logged-in user
@@ -92,7 +115,14 @@ exports.createOrder = async (req, res) => {
       couponDiscount: discount,
       totalAmount: finalTotal,
       paymentMethod,
+      paymentStatus,
+      status: initialStatus,
       note,
+      // Include Razorpay details if provided (from payment verification flow)
+      ...(req._razorpayDetails && {
+        razorpayOrderId: req._razorpayDetails.razorpayOrderId,
+        razorpayPaymentId: req._razorpayDetails.razorpayPaymentId,
+      }),
     });
 
     // ✅ Increment coupon usage if a coupon was applied
@@ -139,6 +169,7 @@ exports.getMyOrders = async (req, res) => {
         deliveryCharge: order.deliveryCharge,
         totalAmount: order.totalAmount,
         paymentMethod: order.paymentMethod,
+        paymentStatus: order.paymentStatus || "pending",
         status: order.status,
         createdAt: order.createdAt,
         note: order.note,
@@ -181,6 +212,7 @@ exports.getAllOrders = async (req, res) => {
         couponDiscount: order.couponDiscount || 0,
         totalAmount: order.totalAmount,
         paymentMethod: order.paymentMethod,
+        paymentStatus: order.paymentStatus || "pending",
         status: order.status,
         shiprocket: order.shiprocket || null,
         createdAt: order.createdAt,
@@ -245,11 +277,14 @@ exports.getOrderById = async (req, res) => {
       couponDiscount: order.couponDiscount || 0,
       totalAmount: order.totalAmount,
       paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus || "pending",
       status: order.status,
       shiprocket: order.shiprocket || null,
       createdAt: order.createdAt,
       note: order.note,
       isViewed: order.isViewed,
+      razorpayOrderId: order.razorpayOrderId || null,
+      razorpayPaymentId: order.razorpayPaymentId || null,
     });
   } catch (error) {
     console.error("Error fetching order:", error.message);

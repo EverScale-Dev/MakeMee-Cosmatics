@@ -60,6 +60,7 @@ export default function AllOrders() {
           items: order.products?.reduce((sum, p) => sum + (p.quantity || 1), 0) || 0,
           products: order.products,
           paymentMethod: order.paymentMethod,
+          paymentStatus: order.paymentStatus || "pending",
           customer: order.customer,
         }));
         setOrders(transformed);
@@ -206,8 +207,22 @@ export default function AllOrders() {
                 >
                   {order.status}
                 </span>
-                <span className="text-xs text-black/50">
-                  {order.paymentMethod === "cashOnDelivery" ? "COD" : "Paid Online"}
+                <span className={`text-xs ${
+                  order.paymentMethod === "cashOnDelivery"
+                    ? "text-orange-600"
+                    : order.paymentStatus === "paid"
+                    ? "text-green-600"
+                    : order.paymentStatus === "failed"
+                    ? "text-red-500"
+                    : "text-yellow-600"
+                }`}>
+                  {order.paymentMethod === "cashOnDelivery"
+                    ? "COD"
+                    : order.paymentStatus === "paid"
+                    ? "Paid Online"
+                    : order.paymentStatus === "failed"
+                    ? "Payment Failed"
+                    : "Payment Pending"}
                 </span>
               </div>
 

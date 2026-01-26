@@ -45,6 +45,17 @@ const orderSchema = new mongoose.Schema({
     required: true,
   },
 
+  // Payment status tracking (critical for online payments)
+  paymentStatus: {
+    type: String,
+    enum: ["pending", "paid", "failed", "refunded"],
+    default: "pending",
+  },
+
+  // Razorpay payment details (only for online payments)
+  razorpayOrderId: { type: String },
+  razorpayPaymentId: { type: String },
+
   porterOrderId: { type: String },
   note: { type: String },
 

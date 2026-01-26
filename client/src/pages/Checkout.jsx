@@ -288,7 +288,7 @@ const Checkout = () => {
     try {
       const selectedAddress = getSelectedAddress();
 
-      // Create customer
+      // Create customer first
       const customerData = {
         fullName: form.fullName,
         email: form.email,
@@ -299,15 +299,33 @@ const Checkout = () => {
       const customerResponse = await customerService.create(customerData);
       const customerId = customerResponse.customer._id;
 
-      // Create order first
-      const order = await createOrder(customerId);
+      // Prepare order data for payment initiation
+      // NOTE: Order is NOT created yet - only after payment verification
+      const orderData = {
+        customer: customerId,
+        products: items.map((item) => ({
+          product: item.product._id || item.product.id,
+          quantity: item.quantity,
+          selectedSize: item.selectedSize,
+        })),
+        subtotal,
+        deliveryCharge,
+        couponCode: appliedCoupon?.code || null,
+        couponDiscount: appliedCoupon
+          ? appliedCoupon.discountType === "free_delivery"
+            ? 0
+            : appliedCoupon.discount
+          : 0,
+        totalAmount: total,
+        note: form.note,
+      };
 
-      // Create Razorpay order
-      const razorpayResponse = await paymentService.createRazorpayOrder(
-        total * 100,
-        "INR",
-        `order_${order._id}`
-      );
+      // Initiate payment - this creates Razorpay order but NOT our order
+      const paymentResponse = await paymentService.initiatePayment(orderData);
+
+      if (!paymentResponse.success) {
+        throw new Error(paymentResponse.message || "Failed to initiate payment");
+      }
 
       // Load Razorpay script
       const script = document.createElement("script");
@@ -317,26 +335,35 @@ const Checkout = () => {
 
       script.onload = () => {
         const options = {
-          key: razorpayResponse.key,
-          amount: total * 100,
+          key: paymentResponse.key,
+          amount: paymentResponse.amount * 100,
           currency: "INR",
           name: "MakeMee Cosmetics",
           description: "Order Payment",
-          order_id: razorpayResponse.orderId,
+          order_id: paymentResponse.orderId,
           handler: async (response) => {
             try {
-              await paymentService.verifyPayment({
+              // Verify payment AND create order in one step
+              // Order is created ONLY after successful verification
+              const verifyResult = await paymentService.verifyPayment({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                orderId: order._id,
               });
 
-              toast.success("Payment successful!");
-              clearCart();
-              navigate(`/order-success?orderId=${order._id}`);
+              if (verifyResult.success && verifyResult.order) {
+                toast.success("Payment successful! Order placed.");
+                clearCart();
+                navigate(`/order-success?orderId=${verifyResult.order._id}`);
+              } else {
+                toast.error("Payment verification failed. Please contact support.");
+              }
             } catch (err) {
-              toast.error("Payment verification failed. Please contact support.");
+              console.error("Payment verification error:", err);
+              toast.error(
+                err.response?.data?.message ||
+                "Payment verification failed. Please contact support."
+              );
             }
           },
           prefill: {
@@ -349,13 +376,12 @@ const Checkout = () => {
           },
           modal: {
             ondismiss: () => {
-              // User closed the payment modal without completing
-              toast.error(
-                "Payment cancelled. Your order is saved - you can retry payment from your orders.",
-                { duration: 5000 }
+              // User closed payment modal - NO order was created
+              // This is the correct behavior: no orphaned orders
+              toast.info(
+                "Payment cancelled. No order was placed.",
+                { duration: 4000 }
               );
-              // Order stays as "pending payment" - this is correct
-              // User can retry later from order history
             },
           },
         };
@@ -364,8 +390,9 @@ const Checkout = () => {
 
         // Handle payment failures
         razorpay.on("payment.failed", (response) => {
+          // Payment failed - NO order was created
           toast.error(
-            `Payment failed: ${response.error.description}. Please try again.`,
+            `Payment failed: ${response.error.description}. No order was placed.`,
             { duration: 5000 }
           );
         });

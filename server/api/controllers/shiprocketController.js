@@ -213,6 +213,17 @@ exports.shipOrder = async (req, res) => {
       });
     }
 
+    // CRITICAL: Block shipment creation for unpaid online orders
+    if (order.paymentMethod === "onlinePayment" && order.paymentStatus !== "paid") {
+      console.log(`[Shiprocket] Blocked shipment for unpaid online order ${order.orderId}`);
+      return res.status(400).json({
+        success: false,
+        error: "Cannot create shipment for unpaid online order",
+        details: "Online payment orders require payment verification before shipping",
+        paymentStatus: order.paymentStatus,
+      });
+    }
+
     // Validate order data
     const validationErrors = validateOrderForShipping(order);
     if (validationErrors.length > 0) {

@@ -257,17 +257,21 @@ const OrderTrackingPage = () => {
               <div className="flex justify-between">
                 <span className="text-gray-500">Payment</span>
                 <span className={`font-medium ${
-                  order.status === "pending payment"
-                    ? "text-red-500"
-                    : order.paymentMethod === "cashOnDelivery"
+                  order.paymentMethod === "cashOnDelivery"
                     ? "text-orange-600"
-                    : "text-green-600"
+                    : order.paymentStatus === "paid"
+                    ? "text-green-600"
+                    : order.paymentStatus === "failed"
+                    ? "text-red-600"
+                    : "text-yellow-600"
                 }`}>
-                  {order.status === "pending payment"
-                    ? "Payment Pending"
-                    : order.paymentMethod === "cashOnDelivery"
+                  {order.paymentMethod === "cashOnDelivery"
                     ? "COD"
-                    : "Paid Online"}
+                    : order.paymentStatus === "paid"
+                    ? "Paid Online"
+                    : order.paymentStatus === "failed"
+                    ? "Payment Failed"
+                    : "Payment Pending"}
                 </span>
               </div>
 

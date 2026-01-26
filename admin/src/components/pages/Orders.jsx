@@ -136,8 +136,8 @@ export default function Orders() {
     if (order.paymentMethod === "cashOnDelivery") {
       return true;
     }
-    // Online payment orders need payment verified (not pending payment)
-    return order.status !== "pending payment";
+    // Online payment orders need paymentStatus === "paid"
+    return order.paymentStatus === "paid";
   };
 
   const formatCurrency = (amount) => {
@@ -304,17 +304,21 @@ export default function Orders() {
                   <td className="text-center">{formatCurrency(order.totalAmount)}</td>
                   <td className="text-center">
                     <span className={`px-2 py-1 rounded text-xs ${
-                      order.status === "pending payment"
-                        ? "bg-red-100 text-red-700"
-                        : order.paymentMethod === "cashOnDelivery"
+                      order.paymentMethod === "cashOnDelivery"
                         ? "bg-orange-100 text-orange-700"
-                        : "bg-green-100 text-green-700"
+                        : order.paymentStatus === "paid"
+                        ? "bg-green-100 text-green-700"
+                        : order.paymentStatus === "failed"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-yellow-100 text-yellow-700"
                     }`}>
-                      {order.status === "pending payment"
-                        ? "Pending"
-                        : order.paymentMethod === "cashOnDelivery"
+                      {order.paymentMethod === "cashOnDelivery"
                         ? "COD"
-                        : "Paid"}
+                        : order.paymentStatus === "paid"
+                        ? "Paid"
+                        : order.paymentStatus === "failed"
+                        ? "Failed"
+                        : "Pending"}
                     </span>
                   </td>
                   <td className="text-center">
@@ -350,7 +354,7 @@ export default function Orders() {
                         onClick={() => handleCreateShipment(order._id)}
                         disabled={actionLoading === order._id || !canCreateShipment(order)}
                         className="text-lg disabled:opacity-50"
-                        title={!canCreateShipment(order) ? "Online payment pending" : "Create Shipment"}
+                        title={!canCreateShipment(order) ? "Payment not verified" : "Create Shipment"}
                       >
                         {actionLoading === order._id ? "⏳" : "🚚"}
                       </button>

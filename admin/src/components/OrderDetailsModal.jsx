@@ -181,8 +181,8 @@ export default function OrderDetailsModal({ order, onClose, onRefresh }) {
             ) : (
               <div className="text-gray-400">
                 <p>No shipment created yet</p>
-                {/* COD orders can ship anytime; Online orders need payment verified */}
-                {(order.paymentMethod === "cashOnDelivery" || order.status !== "pending payment") ? (
+                {/* COD orders can ship anytime; Online orders need paymentStatus === "paid" */}
+                {(order.paymentMethod === "cashOnDelivery" || order.paymentStatus === "paid") ? (
                   <button
                     onClick={handleCreateShipment}
                     disabled={shipmentLoading}
@@ -191,8 +191,10 @@ export default function OrderDetailsModal({ order, onClose, onRefresh }) {
                     {shipmentLoading ? "Creating..." : "Create Shipment"}
                   </button>
                 ) : (
-                  <p className="mt-2 text-sm text-orange-600">
-                    Cannot create shipment - online payment pending
+                  <p className="mt-2 text-sm text-red-600">
+                    Cannot create shipment - payment not verified
+                    {order.paymentStatus === "failed" && " (Payment Failed)"}
+                    {order.paymentStatus === "pending" && " (Payment Pending)"}
                   </p>
                 )}
               </div>
@@ -237,6 +239,20 @@ export default function OrderDetailsModal({ order, onClose, onRefresh }) {
             <h3 className="font-semibold mb-2">Order Summary</h3>
             <p><b>Order Date:</b> {formatDate(order.createdAt)}</p>
             <p><b>Payment Method:</b> {order.paymentMethod === "cashOnDelivery" ? "Cash on Delivery" : "Online Payment"}</p>
+            <p>
+              <b>Payment Status:</b>{" "}
+              <span className={
+                order.paymentStatus === "paid"
+                  ? "text-green-600 font-medium"
+                  : order.paymentStatus === "failed"
+                  ? "text-red-600 font-medium"
+                  : "text-yellow-600 font-medium"
+              }>
+                {order.paymentStatus === "paid" ? "Paid" :
+                 order.paymentStatus === "failed" ? "Failed" :
+                 order.paymentStatus === "refunded" ? "Refunded" : "Pending"}
+              </span>
+            </p>
             <div className="mt-2 pt-2 border-t">
               <p>Subtotal: {formatCurrency(order.subtotal)}</p>
               <p>Delivery: {order.deliveryCharge === 0 ? <span className="text-green-600">FREE</span> : formatCurrency(order.deliveryCharge)}</p>
