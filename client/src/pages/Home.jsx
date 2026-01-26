@@ -9,8 +9,8 @@ import StorySection from "../components/StorySection";
 import { productService } from "../services";
 import { useHeroAnimation } from "../animations/useHeroAnimation";
 
-import pcbanner from "../assets/banner-desktop.png";
-import pcbannerMobile from "../assets/banner-mobile.png";
+import pcbanner from "../assets/banner-desktop.jpeg";
+import pcbannerMobile from "../assets/banner-mobile.jpeg";
 
 import Hero1 from "../assets/hero/HERO1.png";
 import Hero2 from "../assets/hero/HERO2.png";
