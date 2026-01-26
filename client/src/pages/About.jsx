@@ -229,21 +229,23 @@ export default function About() {
                     backdrop-blur-[28px]
                     border border-white
                     rounded-2xl
-                    shadow-[inset_0_1px_150px_rgba(255,255,255,1.5),inset_0_-20px_40px_rgba(252,108,180,0.15),0_20px_50px_rgba(252,108,180,0.25)]"
-              style={{  
+                    shadow-[inset_0_1px_150px_rgba(252, 108, 180, 0.05),inset_0_-20px_40px_rgba(252,108,180,0.15),0_20px_50px_rgba(252,108,180,0.25)]"
+              style={{
                 backgroundImage:
                   "linear-gradient(180deg, rgba(255,255,255,0.3), rgba(255,255,255,0.3))",
               }}
             >
               {/* LIQUID GLASS EFFECT */}
-              <LiquidGlass borderRadius={60}  />
+              <div className="hidden lg:block">
+                <LiquidGlass borderRadius={60} />
+              </div>
 
               {/* STORY HERO */}
               <div className="min-h-screen flex items-center ml-10 mr-10">
                 <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-24 items-center">
                   {/* TEXT */}
                   <div ref={storyTextRef}>
-                    <h2 className="font-serif text-main text-6xl lg:text-7xl leading-tight mb-8">
+                    <h2 className="font-serif text-main text-6xl text-left lg:text-7xl leading-tight mb-8">
                       How MakeMee
                       <br />
                       Began
