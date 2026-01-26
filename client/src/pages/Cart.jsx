@@ -46,12 +46,17 @@ const Cart = () => {
         {/* CART ITEMS */}
         <div className="space-y-8">
           {items.map(({ product, selectedSize, quantity }) => {
-            // Get price with fallbacks to avoid NaN
-            const unitPrice = selectedSize?.sellingPrice ||
-              product.salePrice ||
-              product.price ||
-              0;
-            const totalPrice = unitPrice * (quantity || 1);
+            // Get price with comprehensive fallbacks to avoid NaN/0
+            const unitPrice = Number(
+              selectedSize?.sellingPrice ||
+              selectedSize?.price ||
+              product?.salePrice ||
+              product?.regularPrice ||
+              product?.price ||
+              0
+            );
+            const safePrice = isNaN(unitPrice) ? 0 : unitPrice;
+            const totalPrice = safePrice * (quantity || 1);
             const sizeLabel = selectedSize?.ml ? ` (${selectedSize.ml}${selectedSize.unit || 'ml'})` : '';
 
             return (
@@ -72,7 +77,7 @@ const Cart = () => {
                     {product.name}{sizeLabel}
                   </h3>
                   <p className="text-sm text-black/60">
-                    {product.shortDescription || `₹${unitPrice} each`}
+                    {product.shortDescription || `₹${safePrice} each`}
                   </p>
 
                   <div className="flex justify-between items-center mt-6">

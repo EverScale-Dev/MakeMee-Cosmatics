@@ -153,7 +153,14 @@ const Checkout = () => {
     try {
       // Build cartItems for buy_x_get_y_free validation
       const cartItems = items.map((item) => ({
-        price: item.selectedSize?.sellingPrice || item.product.salePrice || item.product.price,
+        price: Number(
+          item.selectedSize?.sellingPrice ||
+          item.selectedSize?.price ||
+          item.product?.salePrice ||
+          item.product?.regularPrice ||
+          item.product?.price ||
+          0
+        ),
         quantity: item.quantity,
       }));
 
@@ -226,7 +233,14 @@ const Checkout = () => {
       products: items.map((item) => ({
         product: item.product._id || item.product.id,
         quantity: item.quantity,
-        price: item.selectedSize?.sellingPrice || item.product.salePrice || item.product.price,
+        price: Number(
+          item.selectedSize?.sellingPrice ||
+          item.selectedSize?.price ||
+          item.product?.salePrice ||
+          item.product?.regularPrice ||
+          item.product?.price ||
+          0
+        ),
         name: item.product.name,
       })),
       subtotal,
@@ -637,9 +651,14 @@ const Checkout = () => {
                 </div>
                 <span className="font-medium text-sm sm:text-base">
                   {formatPrice(
-                    (selectedSize?.sellingPrice ||
-                      product.salePrice ||
-                      product.price) * quantity
+                    Number(
+                      selectedSize?.sellingPrice ||
+                      selectedSize?.price ||
+                      product?.salePrice ||
+                      product?.regularPrice ||
+                      product?.price ||
+                      0
+                    ) * quantity
                   )}
                 </span>
               </div>

@@ -13,6 +13,7 @@ const cartItemSchema = new mongoose.Schema({
   weight: { type: String },
   selectedSize: {
     ml: { type: Number },
+    unit: { type: String, default: 'ml' },
     originalPrice: { type: Number },
     sellingPrice: { type: Number }
   }

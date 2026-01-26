@@ -17,31 +17,62 @@ export const CartProvider = ({ children }) => {
   // Get product ID (supports both _id and id)
   const getProductId = (product) => product._id || product.id;
 
+  // Get item price with proper fallback chain
+  const getItemPrice = (item) => {
+    // Priority: selectedSize.sellingPrice > product.salePrice > product.regularPrice > product.price
+    const price = Number(
+      item.selectedSize?.sellingPrice ||
+      item.selectedSize?.price ||
+      item.product?.salePrice ||
+      item.product?.regularPrice ||
+      item.product?.price ||
+      0
+    );
+    return isNaN(price) ? 0 : price;
+  };
+
   // Transform cart item for backend
-  const transformForBackend = (item) => ({
-    id: getProductId(item.product),
-    name: item.product.name,
-    price: item.selectedSize?.sellingPrice || item.product.salePrice || item.product.price,
-    quantity: item.quantity,
-    image: item.product.images?.[0] || item.product.image || '',
-    weight: item.selectedSize?.ml ? `${item.selectedSize.ml}${item.selectedSize.unit || 'ml'}` : item.product.weight,
-    selectedSize: item.selectedSize || null,
-  });
+  const transformForBackend = (item) => {
+    const price = getItemPrice(item);
+    return {
+      id: getProductId(item.product),
+      name: item.product.name,
+      price: price,
+      quantity: item.quantity,
+      image: item.product.images?.[0] || item.product.image || '',
+      weight: item.selectedSize?.ml ? `${item.selectedSize.ml}${item.selectedSize.unit || 'ml'}` : item.product.weight,
+      selectedSize: item.selectedSize ? {
+        ml: item.selectedSize.ml,
+        unit: item.selectedSize.unit || 'ml',
+        originalPrice: item.selectedSize.originalPrice || price,
+        sellingPrice: item.selectedSize.sellingPrice || price,
+      } : null,
+    };
+  };
 
   // Transform backend item to local format
-  const transformFromBackend = (item) => ({
-    product: {
-      id: item.id,
-      _id: item.id,
-      name: item.name,
-      price: item.price,
-      salePrice: item.price,
-      images: item.image ? [item.image] : [],
-      weight: item.weight,
-    },
-    selectedSize: item.selectedSize,
-    quantity: item.quantity,
-  });
+  const transformFromBackend = (item) => {
+    const price = Number(item.price) || 0;
+    return {
+      product: {
+        id: item.id,
+        _id: item.id,
+        name: item.name,
+        price: price,
+        salePrice: price,
+        regularPrice: price,
+        images: item.image ? [item.image] : [],
+        weight: item.weight,
+      },
+      // Ensure selectedSize has sellingPrice from stored price
+      selectedSize: item.selectedSize ? {
+        ...item.selectedSize,
+        sellingPrice: item.selectedSize.sellingPrice || price,
+        originalPrice: item.selectedSize.originalPrice || price,
+      } : null,
+      quantity: item.quantity,
+    };
+  };
 
   // Initialize cart - load from localStorage first, then backend if logged in
   useEffect(() => {
@@ -192,14 +223,11 @@ export const CartProvider = ({ children }) => {
 
   const getTotal = useCallback(() => {
     return items.reduce((total, item) => {
-      const price = Number(
-        item.selectedSize?.sellingPrice ||
-        item.product?.salePrice ||
-        item.product?.price ||
-        0
-      );
+      const price = getItemPrice(item);
       const qty = Number(item.quantity) || 1;
-      return total + (price * qty);
+      const lineTotal = price * qty;
+      // Defensive: ensure we never add NaN to total
+      return total + (isNaN(lineTotal) ? 0 : lineTotal);
     }, 0);
   }, [items]);
 
