@@ -147,7 +147,7 @@ function buildShiprocketPayload(order, pickupLocation) {
 
     // Payment
     payment_method: isCOD ? "COD" : "Prepaid",
-    sub_total: order.totalAmount,
+    sub_total: order.totalAmount - (order.deliveryCharge || 0),
 
     // Package dimensions (defaults for cosmetics)
     weight: 0.5,
