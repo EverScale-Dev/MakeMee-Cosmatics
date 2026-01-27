@@ -21,29 +21,51 @@ export default function SignUp() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
 
-    try {
-      if (isLogin) {
-        await login(form.email, form.password);
-        toast.success("Login successful!");
-      } else {
-        if (!form.fullName.trim()) {
-          toast.error("Please enter your name");
-          setLoading(false);
-          return;
-        }
-        await register(form.fullName, form.email, form.password);
-        toast.success("Account created successfully!");
-      }
-      navigate("/");
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong");
-    } finally {
-      setLoading(false);
+  // ---------- Frontend Validation ----------
+  if (!isLogin && !form.fullName.trim()) {
+    toast.error("Please enter your name");
+    return;
+  }
+
+  if (!form.email.trim()) {
+    toast.error("Please enter your email");
+    return;
+  }
+
+  if (!form.password.trim()) {
+    toast.error("Please enter your password");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    if (isLogin) {
+      await login(form.email, form.password);
+      toast.success("Login successful!");
+    } else {
+      await register(
+        form.fullName.trim(),
+        form.email.trim(),
+        form.password
+      );
+      toast.success("Account created successfully!");
     }
-  };
+
+    navigate("/");
+  } catch (error) {
+    toast.error(
+      error?.response?.data?.message ||
+      error?.message ||
+      "Something went wrong"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setLoading(true);
