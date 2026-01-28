@@ -39,10 +39,10 @@ const ProductCard = ({ product }) => {
 
     const hasHoverImage = product.images && product.images.length > 1;
 
-    // Optimize images for card display (400px width)
-    const optimizedImage0 = optimizeImage(product.images?.[0], { width: 400 });
+    // Optimize images for card display
+    const optimizedImage0 = optimizeImage(product.images?.[0], { width: 1400 });
     const optimizedImage1 = hasHoverImage
-      ? optimizeImage(product.images[1], { width: 400 })
+      ? optimizeImage(product.images[1], { width: 1400 })
       : null;
 
     const handleMouseEnter = () => {
@@ -130,7 +130,7 @@ const ProductCard = ({ product }) => {
           <img
             ref={imageRef}
             src={
-              optimizeImage(product.images?.[0], { width: 400 }) ||
+              optimizeImage(product.images?.[0], { width: 1400 }) ||
               "/placeholder.png"
             }
             alt={product.name}
