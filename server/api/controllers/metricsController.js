@@ -8,7 +8,21 @@ exports.getMetrics = async (req, res) => {
     const totalProducts = await Product.countDocuments();
     const totalCustomers = await Customer.countDocuments();
 
+    // Revenue excluding cancelled/failed/refunded orders
     const totalRevenue = await Order.aggregate([
+      { $match: { status: { $nin: ['cancelled', 'failed', 'refunded'] } } },
+      { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+    ]);
+
+    const cancelledOrders = await Order.countDocuments({
+      status: { $in: ['cancelled', 'failed', 'refunded'] }
+    });
+
+    const codOrders = await Order.countDocuments({ paymentMethod: 'cashOnDelivery' });
+    const onlineOrders = await Order.countDocuments({ paymentMethod: 'onlinePayment' });
+
+    const cancelledRevenue = await Order.aggregate([
+      { $match: { status: { $in: ['cancelled', 'failed', 'refunded'] } } },
       { $group: { _id: null, total: { $sum: "$totalAmount" } } }
     ]);
 
@@ -16,7 +30,11 @@ exports.getMetrics = async (req, res) => {
       totalOrders,
       totalProducts,
       totalCustomers,
-      totalRevenue: totalRevenue[0] ? totalRevenue[0].total : 0
+      totalRevenue: totalRevenue[0] ? totalRevenue[0].total : 0,
+      cancelledOrders,
+      codOrders,
+      onlineOrders,
+      cancelledRevenue: cancelledRevenue[0] ? cancelledRevenue[0].total : 0
     });
   } catch (error) {
     console.error('Error fetching metrics:', error.message);

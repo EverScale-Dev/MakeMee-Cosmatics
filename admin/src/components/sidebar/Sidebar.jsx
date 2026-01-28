@@ -6,22 +6,30 @@ import {
   Star,
   Ticket,
   Settings,
-  Mail
+  Mail,
+  ShieldCheck
 } from "lucide-react";
 
 import SidebarItem from "./SidebarItem";
 
-export default function Sidebar({ active, setActive }) {
-  const menu = [
-    { label: "Dashboard", icon: LayoutDashboard },
-    { label: "Orders", icon: ShoppingCart },
-    { label: "Products", icon: Package },
-    { label: "Customers", icon: Users },
-    { label: "Coupons", icon: Ticket },
-    { label: "Reviews", icon: Star },
-    { label: "Messages", icon: Mail },
-    { label: "Settings", icon: Settings }
-  ];
+const allMenu = [
+  { label: "Dashboard", icon: LayoutDashboard },
+  { label: "Orders", icon: ShoppingCart },
+  { label: "Products", icon: Package },
+  { label: "Customers", icon: Users },
+  { label: "Coupons", icon: Ticket },
+  { label: "Reviews", icon: Star },
+  { label: "Messages", icon: Mail },
+  { label: "Settings", icon: Settings },
+  { label: "Admin Access", icon: ShieldCheck, superAdminOnly: true }
+];
+
+export default function Sidebar({ active, setActive, isSuperAdmin, allowedPages }) {
+  const menu = allMenu.filter((item) => {
+    if (item.superAdminOnly) return isSuperAdmin;
+    if (isSuperAdmin) return true;
+    return allowedPages && allowedPages.includes(item.label);
+  });
 
   return (
     <aside

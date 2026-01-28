@@ -105,6 +105,48 @@ exports.initializeSettings = async () => {
   }
 };
 
+// Get admin permissions (super_admin only)
+exports.getAdminPermissions = async (req, res) => {
+  try {
+    const permissions = await Settings.get(
+      "adminPermissions",
+      ["Orders", "Reviews", "Messages"]
+    );
+    res.status(200).json({ pages: permissions });
+  } catch (error) {
+    console.error("Error fetching admin permissions:", error.message);
+    res.status(500).json({ message: "Failed to fetch admin permissions" });
+  }
+};
+
+// Update admin permissions (super_admin only)
+exports.updateAdminPermissions = async (req, res) => {
+  try {
+    const { pages } = req.body;
+
+    if (!Array.isArray(pages)) {
+      return res.status(400).json({ message: "Pages must be an array" });
+    }
+
+    const validPages = [
+      "Dashboard", "Orders", "Products", "Customers",
+      "Coupons", "Reviews", "Messages", "Settings"
+    ];
+    const filtered = pages.filter(p => validPages.includes(p));
+
+    await Settings.set(
+      "adminPermissions",
+      filtered,
+      "Pages accessible to admin role users"
+    );
+
+    res.status(200).json({ pages: filtered });
+  } catch (error) {
+    console.error("Error updating admin permissions:", error.message);
+    res.status(500).json({ message: "Failed to update admin permissions" });
+  }
+};
+
 // Get public settings (no auth required)
 // Only exposes settings that frontend needs
 exports.getPublicSettings = async (req, res) => {

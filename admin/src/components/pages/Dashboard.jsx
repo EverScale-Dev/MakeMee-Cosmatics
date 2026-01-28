@@ -10,7 +10,11 @@ export default function Dashboard() {
     totalRevenue: 0,
     totalOrders: 0,
     totalCustomers: 0,
-    totalProducts: 0
+    totalProducts: 0,
+    cancelledOrders: 0,
+    codOrders: 0,
+    onlineOrders: 0,
+    cancelledRevenue: 0
   });
   const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -86,7 +90,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard
           title="Total Revenue"
           value={formatCurrency(metrics.totalRevenue)}
@@ -98,14 +102,24 @@ export default function Dashboard() {
           gradient="from-blue-400 to-blue-500"
         />
         <StatCard
-          title="Total Customers"
-          value={metrics.totalCustomers.toLocaleString()}
-          gradient="from-green-400 to-teal-400"
+          title="Cancelled Orders"
+          value={metrics.cancelledOrders.toLocaleString()}
+          gradient="from-red-400 to-red-500"
         />
         <StatCard
-          title="Total Products"
-          value={metrics.totalProducts.toLocaleString()}
-          gradient="from-purple-400 to-purple-500"
+          title="COD Orders"
+          value={metrics.codOrders.toLocaleString()}
+          gradient="from-orange-400 to-orange-500"
+        />
+        <StatCard
+          title="Online Orders"
+          value={metrics.onlineOrders.toLocaleString()}
+          gradient="from-green-400 to-green-500"
+        />
+        <StatCard
+          title="Total Customers"
+          value={metrics.totalCustomers.toLocaleString()}
+          gradient="from-teal-400 to-teal-500"
         />
       </div>
 

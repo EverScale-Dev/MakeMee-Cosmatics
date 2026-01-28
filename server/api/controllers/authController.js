@@ -397,12 +397,12 @@ exports.adminLogin = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Check if user is an admin
-    if (user.role !== 'admin') {
+    // Check if user is an admin or super_admin
+    if (user.role !== 'admin' && user.role !== 'super_admin') {
       return res.status(403).json({ message: 'Access denied. Admin only.' });
     }
 
-    const token = jwt.sign({ id: user._id, role: 'admin' }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: '24h',
     });
 

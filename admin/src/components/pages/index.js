@@ -6,6 +6,7 @@ import Reviews from "./Reviews";
 import Coupons from "./Coupons";
 import Settings from "./Settings";
 import ContactSubmissions from "./ContactSubmissions";
+import AdminAccess from "./AdminAccess";
 
 const pages = {
   Dashboard,
@@ -15,7 +16,8 @@ const pages = {
   Reviews,
   Coupons,
   Messages: ContactSubmissions,
-  Settings
+  Settings,
+  "Admin Access": AdminAccess
 };
 
 export default pages;

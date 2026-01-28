@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const adminProtect = async (req, res, next) => {
+const superAdminProtect = async (req, res, next) => {
   let token;
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -20,17 +20,16 @@ const adminProtect = async (req, res, next) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Check if user is admin or super_admin
-    if (user.role !== 'admin' && user.role !== 'super_admin') {
-      return res.status(403).json({ message: 'Access denied. Admin only.' });
+    if (user.role !== 'super_admin') {
+      return res.status(403).json({ message: 'Access denied. Super admin only.' });
     }
 
     req.User = user;
     next();
   } catch (error) {
-    console.error('Error in admin auth middleware:', error);
+    console.error('Error in super admin auth middleware:', error);
     res.status(401).json({ message: 'Not authorized' });
   }
 };
 
-module.exports = adminProtect;
+module.exports = superAdminProtect;
