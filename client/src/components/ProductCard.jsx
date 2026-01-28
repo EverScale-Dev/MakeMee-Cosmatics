@@ -6,8 +6,6 @@ import { trackEvent } from "@/utils/metaPixel";
 
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
-import { optimizeImage } from "@/utils/cloudinaryUrl";
-
 const ProductCard = ({ product }) => {
   const cardRef = useRef(null);
   const imageRef = useRef(null);
@@ -39,11 +37,8 @@ const ProductCard = ({ product }) => {
 
     const hasHoverImage = product.images && product.images.length > 1;
 
-    // Optimize images for card display
-    const optimizedImage0 = optimizeImage(product.images?.[0], { width: 1400 });
-    const optimizedImage1 = hasHoverImage
-      ? optimizeImage(product.images[1], { width: 1400 })
-      : null;
+    const optimizedImage0 = product.images?.[0];
+    const optimizedImage1 = hasHoverImage ? product.images[1] : null;
 
     const handleMouseEnter = () => {
       gsap.to(card, {
@@ -130,7 +125,7 @@ const ProductCard = ({ product }) => {
           <img
             ref={imageRef}
             src={
-              optimizeImage(product.images?.[0], { width: 1400 }) ||
+              product.images?.[0] ||
               "/placeholder.png"
             }
             alt={product.name}
