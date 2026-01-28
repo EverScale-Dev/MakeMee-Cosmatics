@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
 // Initialize multer upload middleware
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 1 * 1024 * 1024 }, // ✅ Limit file size to 1MB
+  limits: { fileSize: 10 * 1024 * 1024 }, // Limit file size to 10MB
   fileFilter: function (req, file, cb) {
     const filetypes = /jpeg|jpg|png|gif|webp|avif/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
@@ -41,7 +41,7 @@ const handleMulterError = (err, req, res, next) => {
     if (err.code === "LIMIT_FILE_SIZE") {
       return res
         .status(400)
-        .json({ message: "Product image size must be less than 1 MB." });
+        .json({ message: "Product image size must be less than 10 MB." });
     }
   } else if (err) {
     return res.status(400).json({ message: err.message || "File upload error." });

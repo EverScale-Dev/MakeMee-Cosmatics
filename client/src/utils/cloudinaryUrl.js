@@ -23,7 +23,7 @@ export function optimizeImage(url, options = {}) {
   const {
     width,
     height,
-    quality = 'auto',
+    quality = 'auto:best',
     format = 'auto',
     crop = 'fill'
   } = options;

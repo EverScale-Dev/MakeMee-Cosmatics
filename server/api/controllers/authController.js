@@ -143,12 +143,12 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // Block login for deleted accounts
+    // Reactivate previously deleted accounts on login
     if (user.isDeleted) {
-      return res.status(403).json({
-        message: "This account has been deleted",
-        code: "ACCOUNT_DELETED"
-      });
+      user.isDeleted = false;
+      user.deletedAt = null;
+      user.deletionReason = null;
+      await user.save();
     }
 
     // Generate JWT token
@@ -340,12 +340,12 @@ exports.userLogin = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Block login for deleted accounts
+    // Reactivate previously deleted accounts on login
     if (user.isDeleted) {
-      return res.status(403).json({
-        message: "This account has been deleted",
-        code: "ACCOUNT_DELETED"
-      });
+      user.isDeleted = false;
+      user.deletedAt = null;
+      user.deletionReason = null;
+      await user.save();
     }
 
     // Check if user registered with Google
@@ -759,12 +759,11 @@ exports.googleAuth = async (req, res) => {
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
     if (user) {
-      // Block login for deleted accounts
+      // Reactivate previously deleted accounts on Google login
       if (user.isDeleted) {
-        return res.status(403).json({
-          message: "This account has been deleted",
-          code: "ACCOUNT_DELETED"
-        });
+        user.isDeleted = false;
+        user.deletedAt = null;
+        user.deletionReason = null;
       }
 
       // Update googleId if user exists with email but no googleId
@@ -772,8 +771,8 @@ exports.googleAuth = async (req, res) => {
         user.googleId = googleId;
         user.authProvider = 'google';
         if (picture) user.avatar = picture;
-        await user.save();
       }
+      await user.save();
     } else {
       // Create new user
       user = await User.create({

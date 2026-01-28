@@ -216,14 +216,6 @@ exports.updateProduct = async (req, res) => {
         // Upload new files
         if (req.files && req.files.length > 0) {
 
-            // === Check for file size > 1 MB ===
-            const tooLarge = req.files.find(file => file.size > 1 * 1024 * 1024);
-            if (tooLarge) {
-                return res.status(400).json({
-                    message: "Product image size must be less than 1 MB."
-                });
-            }
-
             const uploadPromises = req.files.map(file => {
                 const slug = slugify(name || product.name, { lower: true, strict: true });
                 return cloudinary.uploader.upload(file.path, {

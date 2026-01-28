@@ -486,7 +486,7 @@ const AdminAddProduct = ({ onClose, onAdd, initialData, isEdit }) => {
           {/* Images */}
           <section>
             <h3 className="text-blue-600 font-semibold mb-3">
-              Product Images (Max 5, &lt;1MB each)
+              Product Images (Max 5, &lt;10MB each)
             </h3>
             <label className="upload-box cursor-pointer">
               <FaCloudUploadAlt className="text-4xl" />
