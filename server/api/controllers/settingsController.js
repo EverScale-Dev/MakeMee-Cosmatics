@@ -1,5 +1,8 @@
 const Settings = require("../../models/Settings");
 
+// Keys that can only be modified by super_admin via dedicated endpoints
+const SUPER_ADMIN_ONLY_KEYS = ["adminPermissions"];
+
 // Get all settings (admin only)
 exports.getAllSettings = async (req, res) => {
   try {
@@ -48,6 +51,11 @@ exports.updateSetting = async (req, res) => {
       return res.status(400).json({ message: "Value is required" });
     }
 
+    // Block protected keys from generic update
+    if (SUPER_ADMIN_ONLY_KEYS.includes(key) && req.User.role !== "super_admin") {
+      return res.status(403).json({ message: "Access denied. Super admin only." });
+    }
+
     // Validate specific settings
     if (key === "otpProvider" && !["EMAIL", "SMS"].includes(value)) {
       return res.status(400).json({ message: "OTP provider must be EMAIL or SMS" });
@@ -76,6 +84,11 @@ exports.updateSettings = async (req, res) => {
 
     const results = {};
     for (const [key, value] of Object.entries(settings)) {
+      // Block protected keys from generic update
+      if (SUPER_ADMIN_ONLY_KEYS.includes(key) && req.User.role !== "super_admin") {
+        return res.status(403).json({ message: `Access denied. Cannot modify '${key}'.` });
+      }
+
       // Validate specific settings
       if (key === "otpProvider" && !["EMAIL", "SMS"].includes(value)) {
         return res.status(400).json({ message: "OTP provider must be EMAIL or SMS" });
