@@ -4,16 +4,10 @@ node_modules/
 
 # Environment files
 .env
-.env.local
-.env.development
-.env.production
-.env*.local
+.env.*
 server/.env
-client/.env.local
 client/.env
-
-# Secrets folder
-secrets/
+admin/.env
 
 # Build outputs
 .next/
@@ -39,11 +33,12 @@ Thumbs.db
 # Coverage
 coverage/
 
-# Misc
+# Certificates & secrets
 *.pem
 *.key
 *.crt
 *.p12
+secrets/
 
 # Project docs (local only)
 CLAUDE.md
@@ -51,7 +46,18 @@ CLAUDE_ARCHIVE.md
 CLAUDE_archive_*.md
 DEPLOY.md
 HANDOVER.md
+HANDOVER.html
+HANDOVER.pdf
+MakeMee_Handover.pdf
 
-# Policy source documents (converted to HTML in client/public/policies/)
+# Policy source documents
 *.docx
-*.pdf
+
+# Handover assets
+skincare*.png
+terms.txt
+tree.txt
+
+# Root package files (not needed - each subfolder has its own)
+/package.json
+/package-lock.json
